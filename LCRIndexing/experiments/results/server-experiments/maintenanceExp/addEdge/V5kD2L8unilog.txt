@@ -1,0 +1,92 @@
+DGraph fileName=experiments/graphs/synthetic/PA/uni/V5kD2L8uni.edge
+DGraph |V|=5000,|E|=9997,|L|=8
+DGraph size(byte)=159952, time(s)=0.00201392
+DGraph fileName=experiments/graphs/synthetic/PA/uni/V5kD2L8uni.edge
+DGraph |V|=5000,|E|=9997,|L|=8
+DGraph size(byte)=159952, time(s)=0.0020349
+167
+buildIndex name=LandmarkedIndex2(o)-k=100-m=1-b=0,continueCode=0
+LandmarkedIndex::determineLandmarks noOfLandmarks=100 ,method=1
+LandmarkedIndex2(o)-k=100-m=1-b=0-Index initialized
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=5 5% , ,roundNo=1,size(MB)=936,time(s)=0.463531
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=10 10% , ,roundNo=1,size(MB)=1956,time(s)=0.923934
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=15 15% , ,roundNo=1,size(MB)=2963,time(s)=1.20964
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=20 20% , ,roundNo=1,size(MB)=3954,time(s)=1.47458
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=25 25% , ,roundNo=1,size(MB)=4955,time(s)=1.83813
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=30 30% , ,roundNo=1,size(MB)=5972,time(s)=2.09658
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=35 35% , ,roundNo=1,size(MB)=6979,time(s)=2.38475
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=40 40% , ,roundNo=1,size(MB)=7943,time(s)=2.58984
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=45 45% , ,roundNo=1,size(MB)=8946,time(s)=2.83105
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=50 50% , ,roundNo=1,size(MB)=9925,time(s)=3.04324
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=55 55% , ,roundNo=1,size(MB)=10955,time(s)=3.25072
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=60 60% , ,roundNo=1,size(MB)=11955,time(s)=3.48954
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=65 65% , ,roundNo=1,size(MB)=12951,time(s)=3.71201
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=70 70% , ,roundNo=1,size(MB)=13957,time(s)=3.88615
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=75 75% , ,roundNo=1,size(MB)=15009,time(s)=4.07633
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=80 80% , ,roundNo=1,size(MB)=15978,time(s)=4.30744
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=85 85% , ,roundNo=1,size(MB)=16908,time(s)=4.45626
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=90 90% , ,roundNo=1,size(MB)=17719,time(s)=4.5582
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=95 95% , ,roundNo=1,size(MB)=18671,time(s)=4.7229
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=100 100% , ,roundNo=1,size(MB)=19587,time(s)=4.87337
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex built all landmarks size(MB)=19587 ,time(s)=4.87355
+LandmarkedIndex construction time(s)=4.87556
+LandmarkedIndex size=19747316,isBlockedMode=0, noOfLandmarks=100 ,propagateCode=0
+addEdge time(s)=4.87556
+addition of edges
+addEdge time(s)=0.275479,size(byte)=19747276
+addEdge time(s)=0.293309,size(byte)=19747296
+addEdge time(s)=0.276566,size(byte)=19747320
+addEdge time(s)=0.305041,size(byte)=19747336
+addEdge time(s)=3.09944e-06,size(byte)=19747352
+addEdge time(s)=0.301854,size(byte)=19747368
+addEdge time(s)=0.282712,size(byte)=19747384
+addEdge time(s)=0.279434,size(byte)=19747400
+addEdge time(s)=4.05312e-06,size(byte)=19747416
+addEdge time(s)=0.291615,size(byte)=19747432
+addEdge time(s)=0.293318,size(byte)=19747448
+addEdge time(s)=0.274919,size(byte)=19747464
+addEdge time(s)=0.261888,size(byte)=19747480
+addEdge time(s)=0.306477,size(byte)=19747496
+addEdge time(s)=0.319444,size(byte)=19747512
+addEdge time(s)=3.09944e-06,size(byte)=19747528
+addEdge time(s)=0.321531,size(byte)=19747544
+addEdge time(s)=0.303849,size(byte)=19747560
+addEdge time(s)=1.90735e-06,size(byte)=19747576
+addEdge time(s)=3.09944e-06,size(byte)=19747592
+addEdge time(s)=1.90735e-06,size(byte)=19747608
+addEdge time(s)=0.289974,size(byte)=19747624
+addEdge time(s)=0.293341,size(byte)=19747640
+addEdge time(s)=0.308209,size(byte)=19747656
+addEdge time(s)=0.281478,size(byte)=19747672
+addEdge time(s)=0.275935,size(byte)=19747696
+addEdge time(s)=1.90735e-06,size(byte)=19747712
+addEdge time(s)=0.281458,size(byte)=19747728
+addEdge time(s)=1.90735e-06,size(byte)=19747744
+addEdge time(s)=2.86102e-06,size(byte)=19747760
+buildIndex name=LandmarkedIndex2(o)-k=100-m=1-b=0,continueCode=0
+LandmarkedIndex::determineLandmarks noOfLandmarks=100 ,method=1
+LandmarkedIndex2(o)-k=100-m=1-b=0-Index initialized
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=5 5% , ,roundNo=1,size(MB)=941,time(s)=0.473307
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=10 10% , ,roundNo=1,size(MB)=1965,time(s)=0.930082
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=15 15% , ,roundNo=1,size(MB)=2978,time(s)=1.21801
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=20 20% , ,roundNo=1,size(MB)=3974,time(s)=1.48518
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=25 25% , ,roundNo=1,size(MB)=4981,time(s)=1.85199
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=30 30% , ,roundNo=1,size(MB)=6003,time(s)=2.10531
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=35 35% , ,roundNo=1,size(MB)=7016,time(s)=2.39233
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=40 40% , ,roundNo=1,size(MB)=7989,time(s)=2.59949
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=45 45% , ,roundNo=1,size(MB)=8996,time(s)=2.84247
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=50 50% , ,roundNo=1,size(MB)=9981,time(s)=3.04392
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=55 55% , ,roundNo=1,size(MB)=11013,time(s)=3.26975
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=60 60% , ,roundNo=1,size(MB)=12003,time(s)=3.46591
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=65 65% , ,roundNo=1,size(MB)=13011,time(s)=3.72336
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=70 70% , ,roundNo=1,size(MB)=14024,time(s)=3.89085
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=75 75% , ,roundNo=1,size(MB)=15066,time(s)=4.08277
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=80 80% , ,roundNo=1,size(MB)=16103,time(s)=4.32688
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=85 85% , ,roundNo=1,size(MB)=17038,time(s)=4.47638
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=90 90% , ,roundNo=1,size(MB)=17853,time(s)=4.57872
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=95 95% , ,roundNo=1,size(MB)=18810,time(s)=4.74441
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex (landmarks) cc=100 100% , ,roundNo=1,size(MB)=19731,time(s)=4.89601
+LandmarkedIndex2(o)-k=100-m=1-b=0::buildIndex built all landmarks size(MB)=19731 ,time(s)=4.8962
+LandmarkedIndex construction time(s)=4.89823
+LandmarkedIndex size=19892048,isBlockedMode=0, noOfLandmarks=100 ,propagateCode=0
+all 200 tests passed 

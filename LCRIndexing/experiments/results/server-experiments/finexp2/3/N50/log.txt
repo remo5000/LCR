@@ -1,0 +1,1 @@
+build/default/runExperiment ./experiments/graphs/real/citeseer/citeseerL8exp.edge 3 experiments/results/server-experiments/finexp2/3/N50/results-citeseerL8exp.csv > experiments/results/server-experiments/finexp2/3/N50/output-citeseerL8exp.txt

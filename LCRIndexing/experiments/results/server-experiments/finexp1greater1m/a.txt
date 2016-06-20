@@ -1,0 +1,25 @@
+Datasets	k	b	Index construction time (s)	Index size (MB)
+NotreDame	325	32	365.05	1031.49
+webStanford	281	28	358.91	1400.43
+webBerkStan	685	68	2046.9	4131.97
+webGoogle	875	87	5197.73	13558.27
+				
+Datasets	k 	b	Index construction time (s)	Index size (MB)
+NotreDame	651	65	355	1033.12
+webStanford	563	56	462.7	2504.47
+webBerkStan	1370	137	2636.97	9499.67
+webGoogle	1750	175	7201.07	26761.88
+
+Datasets	qs0-true	qs0-false	qs1-true	qs1-false	qs2-true	qs2-false
+NotreDame	79.59	38.28	68.01	13.64	90.76	3.92
+webStanford	2253.9	3.93	272.76	5.42	2646.24	4.71
+webBerkStan	1009.95	4.4	178.78	3.69	407.78	3.78
+webGoogle	5608.96	1.52	4120.15	2.76	4884.98	2.18
+						
+Datasets	qs0-true	qs0-false	qs1-true	qs1-false	qs2-true	qs2-false
+NotreDame	78.92	38.07	67.49	13.62	89.84	3.96
+webStanford	2617.2	6.18	334.38	4.1	2699.41	4.37
+webBerkStan	1007.21	4.57	182.17	5.45	528.86	8.35
+webGoogle	5485.38	1.58	4065.91	2.48	4862.25	2.19
+
+
