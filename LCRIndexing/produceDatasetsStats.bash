@@ -42,7 +42,8 @@ do
     name=$(echo $i | sed 's/.*\///' | sed 's/\.csv//g' );
 
 
-    echo "textbf{"$name"} "$N" "$M" "$L" "$mod" "$maxSCC" "$tr" "$di;
+    echo "textbf{"$name"} "$N" "$M" "$L";
+    #"$mod" "$maxSCC" "$tr" "$di;
 done | sort -n -k 2 | sed 's:\ :\ \&\ :g' | sed 's:$:\ \\\\:g'
 
 

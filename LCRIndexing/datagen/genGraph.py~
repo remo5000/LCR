@@ -64,7 +64,7 @@ for EI in UGraph.Edges():
     if dist == "uni":
         label = random.uniform(0,L);
     if dist == "exp":
-        label = random.expovariate( 1.0 / L )
+        label = random.expovariate( 1.0 / L/1.0 )
         
 
     label = max(0,label);

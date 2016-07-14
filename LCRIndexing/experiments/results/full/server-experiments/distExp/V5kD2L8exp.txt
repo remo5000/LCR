@@ -1,0 +1,54 @@
+DGraph fileName=experiments/graphs/synthetic/PA/exp/V5kD2L8exp.edge
+DGraph |V|=5000,|E|=9997,|L|=8
+DGraph size(byte)=159952, time(s)=0.0014329
+determineLandmarks noOfLandmarks=500
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=250 5% , ,roundNo=0,size=37092896 ,isLandmark=1 vToLandmark[i]=480
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=500 10% , ,roundNo=0,size=61736472 ,isLandmark=1 vToLandmark[i]=403
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=750 15% , ,roundNo=0,size=76104832 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=1000 20% , ,roundNo=0,size=89019464 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=1250 25% , ,roundNo=0,size=92969120 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=1500 30% , ,roundNo=0,size=96045896 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=1750 35% , ,roundNo=0,size=99021040 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=2000 40% , ,roundNo=0,size=100556704 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=2250 45% , ,roundNo=0,size=101748664 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=2500 50% , ,roundNo=0,size=101915008 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=2750 55% , ,roundNo=0,size=101915008 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=3000 60% , ,roundNo=0,size=101915008 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=3250 65% , ,roundNo=0,size=101915008 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=3500 70% , ,roundNo=0,size=102191488 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=3750 75% , ,roundNo=0,size=102191488 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=4000 80% , ,roundNo=0,size=102191488 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=4250 85% , ,roundNo=0,size=102191488 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=4500 90% , ,roundNo=0,size=102191488 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0::buildIndex (o) i=4750 95% , ,roundNo=0,size=102191488 ,isLandmark=0 vToLandmark[i]=-1
+LandmarkedIndexWD_k=500_b=0 time(s)=4.52508 ,size(byte)=102351440
+LandmarkedIndex::determineLandmarks noOfLandmarks=500 ,method=1
+LandmarkedIndex12(oe)-k=500-m=1-b=0-Index initialized
+setPathLogic mapping.size()=9
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=25 5% , ,roundNo=6817,size=1746024,time(s)=0.0480661
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=75 15% , ,roundNo=209,size=4891140,time(s)=0.104188
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=100 20% , ,roundNo=209,size=6159404,time(s)=0.126034
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=125 25% , ,roundNo=5777,size=7408340,time(s)=0.14963
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=150 30% , ,roundNo=785,size=8482496,time(s)=0.170413
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=175 35% , ,roundNo=0,size=9639100,time(s)=0.189447
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=200 40% , ,roundNo=0,size=11104572,time(s)=0.216931
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=250 50% , ,roundNo=0,size=13329796,time(s)=0.255245
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=300 60% , ,roundNo=0,size=15183348,time(s)=0.289434
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=375 75% , ,roundNo=209,size=17872700,time(s)=0.336512
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=425 85% , ,roundNo=417,size=19195992,time(s)=0.36058
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=450 90% , ,roundNo=0,size=20042108,time(s)=0.375054
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=500 100% , ,roundNo=0,size=21455044,time(s)=0.396845
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=600 120% , ,roundNo=209,size=23722496,time(s)=0.43081
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=650 130% , ,roundNo=0,size=24698576,time(s)=0.44892
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=775 155% , ,roundNo=0,size=26780388,time(s)=0.485771
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=875 175% , ,roundNo=0,size=28723104,time(s)=0.517011
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=950 190% , ,roundNo=0,size=29710464,time(s)=0.535458
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=1125 225% , ,roundNo=0,size=31246948,time(s)=0.56215
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (landmarks) (o) i=1575 315% , ,roundNo=0,size=33121096,time(s)=0.592829
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex built all landmarks
+LandmarkedIndex12(oe)-k=500-m=1-b=0size=35211496 ,time=0.001433
+LandmarkedIndex12(oe)-k=500-m=1-b=0::buildIndex (others) (o) i=4900 108.889% , ,roundNo=0,size(MB)=34971072,time(s)=0.767359
+LandmarkedIndex construction time=0.769586
+LandmarkedIndex size=35211496,isBlockedMode=0, noOfLandmarks=500 ,propagateCode=0
+lI-size(MB)=35211,lIWD-size(MB)=102351,r=2.90
+lI-time(s)=0.769586,lIWD-time(s)=4.52508,r=5.87

@@ -1,0 +1,1 @@
+build/default/runExperiment ./experiments/graphs/synthetic/PL/plV125L8ka2.0exp.edge 3 experiments/results/server-experiments/finexp2/3/N100/results-plV125L8ka2.0exp.csv > experiments/results/server-experiments/finexp2/3/N100/output-plV125L8ka2.0exp.txt

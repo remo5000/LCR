@@ -157,8 +157,8 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
     int MIN_DIFFICULTY = 0;
     if( N >= 500000 )
     {
-        MAX_DIFFICULTY = 10 + N/100;
-        MIN_DIFFICULTY = 10 + min((int) log2(N), N);
+        MAX_DIFFICULTY = 50 + N/50;
+        MIN_DIFFICULTY = 50 + min((int) log2(N), N);
     }
     else
     {
@@ -198,6 +198,7 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
         {
             int minDiff = max(min(MAX_DIFFICULTY, diffDistribution(generator2)) - roundNo/10 , MIN_DIFFICULTY); // a random minimal difficulty
             VertexID s = vertexDistribution(generator); // a random start point
+	    VertexID t = vertexDistribution(generator); // another random point
             int quotum = min(nq, max((nq/100) + (roundNo / 100), 1));
 
             minDiff = max(1, minDiff - (roundNo/100) ); // minDiff can scale down
@@ -208,8 +209,8 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
 
             // loop over all nodes that have minimal difficulty
             int c = 0;
-	        int tried = 0;
-            for(int t = 0; t < N; t++)
+	    int tried = 0;
+            for(; t < N; t++)
             {
                 if( s == t )
                 {
@@ -218,7 +219,7 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
 
                 tried++;
 
-                if( c < 2 && tried > max((N/500),10) )
+                if( c < 2 && tried > min((N/500),100) )
                 {
                     break;
                 }
@@ -246,19 +247,19 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
 
                     if( b == true)
                     {
-                        if( qss[i].size() < nq )
+                        if( qss[i].size() < nq && qss[i].count( q ) == 0 )
                         {
                             qss[i].insert( q );
-                            cout << "query=" << s << "," << t << "," << labelSetToString(ls) << "," << b << ",actualDiff=" << actualDist << endl;
-                            c++;
+			    cout << "q=(" << s << "," << t << "," << ls << ") with " << b << ",actualDiff=" << actualDist << endl;                            
+		            c++;
                         }
                     }
                     else
                     {
-                        if( qss[i+1].size() < nq )
+                        if( qss[i+1].size() < nq && qss[i+1].count( q ) == 0 )
                         {
                             qss[i+1].insert( q );
-                            cout << "query=" << s << "," << t << "," << labelSetToString(ls) << "," << b << ",actualDiff=" << actualDist << endl;
+                            cout << "q=(" << s << "," << t << "," << ls << ") with " << b << ",actualDiff=" << actualDist << endl;
                             c++;
                         }
                     }

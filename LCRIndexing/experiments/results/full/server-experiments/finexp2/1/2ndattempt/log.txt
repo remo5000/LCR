@@ -1,0 +1,1 @@
+build/default/runExperiment ./experiments/graphs/synthetic/ER/ERV1kD5L8uni.edge 3 experiments/results/server-experiments/finexp2/1/2ndattempt/results-ERV1kD5L8uni.csv > experiments/results/server-experiments/finexp2/1/2ndattempt/output-ERV1kD5L8uni.txt

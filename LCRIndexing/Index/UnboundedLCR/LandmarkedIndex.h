@@ -94,6 +94,20 @@ using namespace std;
     class LandmarkedIndex : public Index
     {
         public:
+
+            /*
+            Default constructor. Will start building the index immediately.
+
+            mg: the directed labelled graph used as input
+            doIndexOthers : 2nd extension of paper (OTH)
+            doExtensive: 3rd extension of paper (EXTv2), 1st extension is no longer available
+            k: number of landmarks
+            b: budget per non-landmark vertex, determining the number of entries for each
+
+            */
+            LandmarkedIndex(Graph* mg, bool doIndexOthers, bool doExtensive, int k, int b);
+
+            /* Other constructors */
             LandmarkedIndex(Graph* mg);
             LandmarkedIndex(Graph* mg, int noOfLandmarks, int method, int propagateCode);
             LandmarkedIndex(Graph* mg, int noOfLandmarks, int method, int propagateCode, bool doIndexOthers, int othersBudget);
@@ -101,6 +115,13 @@ using namespace std;
             LandmarkedIndex(Graph* mg, int noOfLandmarks, int method, int propagateCode, bool doIndexOthers, int othersBudget, int coverPercentage, bool doExtensive);
             ~LandmarkedIndex();
 
+            /*
+            Method called by all constructors. Does the actual work.
+
+            propagateCode: can turn on/off propagation (fwProp in thesis)
+            method: method used to find all landmarks (1 by default)
+
+            */
             void construct(Graph* mg, int noOfLandmarks, int method, int propagateCode, bool doIndexOthers, int othersBudget, int coverPercentage,
                 bool doExtensive);
 
@@ -114,12 +135,18 @@ using namespace std;
 
             void printIndexStats();
 
+            /*
+            Starts the index building.
+
+            By giving a different continueCode (0,1,2) we can either do a full
+            rebuild (0) or skip some part (1 or 2).
+            */
             void buildIndex(int continueCode);
 
-            int buildIndexForNodePQ(VertexID w, bool doPropagate, bool isMaintenance);
-            int buildIndexForNodePQ(VertexID w, bool doPropagate, bool isMaintenance,
+            int labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance);
+            int labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
                 priority_queue< landmarkedns::BitEntry, vector<landmarkedns::BitEntry>, landmarkedns::PQBitEntries >& q);
-            int findPathstoLandmarks(VertexID w, bool doPropagate);
+            int labelledBFSPerNonLM(VertexID w, bool doPropagate);
 
             bool tryInsert(VertexID w, VertexID v, LabelSet ls);
             int insertSeqEntry(VertexID w, LabelSet ls);

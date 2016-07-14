@@ -50,6 +50,11 @@ void LandmarkedIndex::construct(Graph* mg, int noOfLandmarks, int method, int pr
     buildIndex(0);
 }
 
+LandmarkedIndex::LandmarkedIndex(Graph* mg, bool doIndexOthers, bool doExtensive, int k, int b)
+{
+    construct(mg, k, 1, 0, doIndexOthers, b, 0, doExtensive);
+};
+
 LandmarkedIndex::LandmarkedIndex(Graph* mg, int noOfLandmarks, int method, int propagateCode, bool doIndexOthers,
     int othersBudget, int coverPercentage, bool doExtensive)
 {
@@ -578,7 +583,7 @@ void LandmarkedIndex::buildIndex(int continueCode)
             // build index for landmark
             hasBeenIndexed[ i ] = 0;
 
-            a = buildIndexForNodePQ( i , this->propagateCode == 0 , false );
+            a = labelledBFSPerLM( i , this->propagateCode == 0 , false );
 
             hasBeenIndexed[ i ] = 1;
             size += getIndexSizeInBytesM( i );
@@ -684,7 +689,7 @@ void LandmarkedIndex::buildIndex(int continueCode)
                 // build index for normal node, having <budgetOthers> paths to landmarks
                 hasBeenIndexed[ i ] = 0;
 
-                a = findPathstoLandmarks( i , this->propagateCode == 0 );
+                a = labelledBFSPerNonLM( i , this->propagateCode == 0 );
 
                 hasBeenIndexed[ i ] = 1;
                 size += getIndexSizeInBytesM( i );
@@ -714,11 +719,12 @@ void LandmarkedIndex::buildIndex(int continueCode)
 };
 
 
-int LandmarkedIndex::buildIndexForNodePQ(VertexID w, bool doPropagate, bool isMaintenance)
+int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance)
 {
-    // buildIndexForNodePQ does the same as buildIndexForNode but uses a heap
-    // with the Triplet-struct s.t. whenever w hits a node v with a path with
-    // labelset LS it has not been visited before with a subset of LS
+    /* labelledBFSPerLM uses a heap  with the Triplet-struct s.t.
+    whenever w hits a node v with a path with
+    labelset LS it has not been visited before with a subset of LS
+    */
 
     // start with a queue containing pair (w,0)
     priority_queue< BitEntry, vector<BitEntry>, PQBitEntries > q;
@@ -731,10 +737,10 @@ int LandmarkedIndex::buildIndexForNodePQ(VertexID w, bool doPropagate, bool isMa
 
     q.push( t );
 
-    buildIndexForNodePQ(w, doPropagate, isMaintenance, q );
+    labelledBFSPerLM(w, doPropagate, isMaintenance, q );
 };
 
-int LandmarkedIndex::buildIndexForNodePQ(VertexID w, bool doPropagate, bool isMaintenance,
+int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
     priority_queue< BitEntry, vector<BitEntry>, PQBitEntries >& q)
 {
     int roundNo = 0;
@@ -981,7 +987,7 @@ int LandmarkedIndex::buildIndexForNodePQ(VertexID w, bool doPropagate, bool isMa
     return roundNo;
 };
 
-int LandmarkedIndex::findPathstoLandmarks(VertexID w, bool doPropagate)
+int LandmarkedIndex::labelledBFSPerNonLM(VertexID w, bool doPropagate)
 {
     int roundNo = 0;
     int N = graph->getNumberOfVertices();
@@ -1007,16 +1013,6 @@ int LandmarkedIndex::findPathstoLandmarks(VertexID w, bool doPropagate)
         Quadret tr = q.top();
         q.pop();
 
-        /*if( tr.y != tr.x )
-        {
-            auto it = lower_bound( cPerVertex[tr.x].begin(), cPerVertex[tr.x].end(), tr.y );
-            if( it != cPerVertex[tr.x].end() )
-            {
-                continue;
-            }
-            int pos = it - cPerVertex[tr.x].begin();
-            cPerVertex[tr.x].insert( cPerVertex[tr.x].begin() + pos, tr.y);
-        }*/
         if( marked[tr.x] == 1 || tr.dist > MAXDIST )
         {
             continue;
@@ -1065,7 +1061,8 @@ int LandmarkedIndex::findPathstoLandmarks(VertexID w, bool doPropagate)
 
                 }
 
-                continue;
+                /*if( vToLandmark[x] > -1 )
+                    continue;*/
             }
         }
 
@@ -1653,12 +1650,12 @@ void LandmarkedIndex::addEdge(VertexID v, VertexID w, LabelID lID)
         if( isLandmark == true )
         {
             // build index for landmark
-            a = buildIndexForNodePQ( x , this->propagateCode == 0, true );
+            a = labelledBFSPerLM( x , this->propagateCode == 0, true );
         }
         else
         {
             // build index for normal node, having <budgetOthers> paths to landmarks
-            //a = findPathstoLandmarks( x , this->propagateCode == 0 );
+            //a = labelledBFSPerNonLM( x , this->propagateCode == 0 );
         }
         hasBeenIndexed[ x ] = 1;
 
@@ -1697,7 +1694,7 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
         this->noOfLandmarks++;
 
         tIn[w].clear();
-        buildIndexForNodePQ(w, true , false );
+        labelledBFSPerLM(w, true , false );
         hasBeenIndexed[ w ] = 1;
     }
 
@@ -1709,7 +1706,7 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
     }
 
     tIn[v].clear();
-    buildIndexForNodePQ(v, true , false );
+    labelledBFSPerLM(v, true , false );
     hasBeenIndexed[ v ] = 1;
 
     // find all labelsets between v and w
@@ -1834,7 +1831,7 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
 
                     //cout << "q.size()=" << q.size() << endl;
 
-                    buildIndexForNodePQ(x, true, false, q);
+                    labelledBFSPerLM(x, true, false, q);
                 }
 
                 hasBeenIndexed[ x ] = 1;
@@ -1861,27 +1858,19 @@ void LandmarkedIndex::setDoExtensive(bool doExtensive)
 
 void LandmarkedIndex::updateName()
 {
-    this->name = "LandmarkedIndex";
+    this->name = "LI";
 
-    if( doIndexOthers == false && doExtensive == false )
+    if( doIndexOthers == true )
     {
-        this->name += "()-k=" + to_string(this->noOfLandmarks);
+        this->name += "+OTH";
     }
 
-    if( doIndexOthers == true && doExtensive == false )
+    if( doExtensive == true )
     {
-        this->name += "2(o)-k=" + to_string(this->noOfLandmarks) + "-b=" + to_string(this->budgetOthers);
+        this->name += "+EXTv2-b=" + to_string(this->budgetOthers);
     }
 
-    if( doIndexOthers == false && doExtensive == true )
-    {
-        this->name += "3(E)-k=" + to_string(this->noOfLandmarks);
-    }
-
-    if( doIndexOthers == true && doExtensive == true )
-    {
-        this->name += "23(oE)-k=" + to_string(this->noOfLandmarks) + "-b=" + to_string(this->budgetOthers);
-    }
+    this->name += "-k=" + to_string(this->noOfLandmarks);
 }
 
 void LandmarkedIndex::setOthersBudget(int budgetOthers)

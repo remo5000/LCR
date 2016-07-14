@@ -136,7 +136,6 @@ using namespace std;
             };
 
             void produceNeighTriplets(zhouns::NeighTriplet& nt, Graph* graph, zhouns::NeighTriplets& nts);
-            void backPropagate(VertexID v, VertexID w, LabelSet ls);
             bool tryInsert(VertexID w, VertexID v, LabelSet ls);
             unsigned long getIndexSizeInBytes();
 

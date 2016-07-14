@@ -243,10 +243,27 @@ void Zou::buildIndex()
                 continue;
             }
 
-            //cout << "step 7: vN=" << v << " ,wN=" << wN << " , ls=" << ls << endl;
-
             tryInsert(vN, wN, ls);
-            backPropagate(wN, vN, ls);
+
+            /* Copy all of w's entries into v */
+            LabelSet ls1 = ls;
+            for(int m = 0; m < tIn[wN].size(); m++)
+            {
+                for(int o = 0; o < tIn[wN][m].second.size(); o++)
+                {
+                    if( vN == tIn[wN][m].first )
+                    {
+                        continue;
+                    }
+
+                    LabelSet ls2 = tIn[wN][m].second[o];
+                    LabelSet ls3 = joinLabelSets(ls1, ls2);
+
+                    //cout << "step 7: vN=" << vN << ",wN=" << wN << " ,t=" << tIn[wN][m].first << ",ls1=" << ls1 << ",ls2=" << ls2 << ",ls3=" << ls3 << endl;
+                    tryInsert(vN, tIn[wN][m].first , ls3);
+                }
+            }
+
         }
     }
 
@@ -270,8 +287,24 @@ void Zou::buildIndex()
 
                 for(int l = 0; l < lss.size(); l++)
                 {
-                    //cout << "out to inner: vN=" << vN << " ,wN=" << wN << " , lss[l]=" << lss[l] << endl;
-                    backPropagate(wN, vN, lss[l]);
+                    LabelSet ls1 = lss[l];
+                    for(int m = 0; m < tIn[wN].size(); m++)
+                    {
+                        for(int o = 0; o < tIn[wN][m].second.size(); o++)
+                        {
+                            VertexID t = tIn[wN][m].first; // the target
+                            if( vN == t || wN == t )
+                            {
+                                continue;
+                            }
+
+                            LabelSet ls2 = tIn[wN][m].second[o];
+                            LabelSet ls3 = joinLabelSets(ls1, ls2);
+                            //cout << "step 8: vN=" << vN << " ,wN=" << wN << " ,t=" << t << ",ls1=" << ls1 << ",ls2=" << ls2 << ",ls3=" << ls3 << endl;
+
+                            tryInsert(vN, t , ls3);
+                        }
+                    }
                 }
             }
         }
@@ -297,8 +330,24 @@ void Zou::buildIndex()
 
                 for(int l = 0; l < lss.size(); l++)
                 {
-                    //cout << "inner to out: vN=" << vN << " ,wN=" << wN << " , lss[l]=" << lss[l] << endl;
-                    backPropagate(wN, vN, lss[l]);
+                    LabelSet ls1 = lss[l];
+                    for(int m = 0; m < tIn[wN].size(); m++)
+                    {
+                        for(int o = 0; o < tIn[wN][m].second.size(); o++)
+                        {
+                            VertexID t = tIn[wN][m].first; // the target
+                            if( vN == t || wN == t )
+                            {
+                                continue;
+                            }
+
+                            LabelSet ls2 = tIn[wN][m].second[o];
+                            LabelSet ls3 = joinLabelSets(ls1, ls2);
+                            //cout << "step 9: vN=" << vN << " ,wN=" << wN << " ,t=" << t << ",ls1=" << ls1 << ",ls2=" << ls2 << ",ls3=" << ls3 << endl;
+
+                            tryInsert(vN, t , ls3);
+                        }
+                    }
                 }
             }
         }
@@ -331,6 +380,7 @@ void Zou::buildIndex()
                         for(int p = 0; p < lss2.size(); p++)
                         {
                             LabelSet ls3 = joinLabelSets(lss1[m],lss2[p]);
+                            //cout << "step 10: v=" << v << " ,u=" << u << ",lss1[m]=" << lss1[m] << ",lss2[p]=" << lss2[p] << endl;
                             tryInsert(v, u, ls3);
                         }
                     }
@@ -341,37 +391,13 @@ void Zou::buildIndex()
 
     cout << "Step 10 (last step): " << print_digits( getCurrentTimeInMilliSec()-constStartTime, 2 ) << endl;
 
-    /*// in-portals
-    for(int i = 0; i < SCCs.size(); i++)
-    {
-        for(int j = 0; j < this->inPortals[i].size(); j++)
-        {
-            VertexID v = this->inPortals[i][j];
-            VertexID vN = v % N;
-
-            for(int k = 0; k < N; k++)
-            {
-                VertexID w = k;
-                VertexID wN = w % N;
-
-                LabelSets lss;
-                getLabelSetsPerPair(vN, wN, lss);
-
-                for(int l = 0; l < lss.size(); l++)
-                {
-                    //cout << "in to inners: vN=" << vN << " ,wN=" << wN << " , lss[l]=" << lss[l] << endl;
-                    backPropagate(wN, vN, lss[l]);
-                }
-            }
-        }
-    }
-
-    cout << "Step 10 (inportal to inner vertex): " << print_digits( getCurrentTimeInMilliSec()-constStartTime, 2 ) << endl;*/
 
     //cout << toString() << endl;
     cout << "D->M=" << D->getNumberOfEdges() << endl;
 
     constEndTime = getCurrentTimeInMilliSec();
+    totalConstTime = constEndTime - constStartTime;
+
 };
 
 void Zou::buildIndex(int SCCID, Graph* sG)
@@ -386,49 +412,6 @@ void Zou::buildIndex(int SCCID, Graph* sG)
             cout << "buildIndex sG->i=" << i << endl;*/
         eDijkstra(SCCID, i, sG);
     }
-};
-
-void Zou::backPropagate(VertexID v, VertexID w, LabelSet ls)
-{
-    //cout << "backPropagate: v=" << v << ",w=" << w << ",ls=" << labelSetToString(ls) << endl;
-
-    // assume we have edge (w,v,ls), i.e. v is an in-neighbour of w
-    int N = graph->getNumberOfVertices();
-    if( isBlockedMode == true )
-    {
-        for(int i = 0; i < N; i++)
-        {
-            if( i == w )
-            {
-                continue;
-            }
-
-            for(int j = 0; j < cIn[v][i].size(); j++)
-            {
-                LabelSet ls1 = joinLabelSets(ls, cIn[v][i][j]);
-                tryInsert(w, i, ls1);
-            }
-
-        }
-    }
-    else
-    {
-        for(int i = 0; i < tIn[v].size(); i++)
-        {
-            Tuple tu = tIn[v][i];
-            if( tu.first == w )
-            {
-                continue;
-            }
-
-            for(int j=0; j < tu.second.size(); j++)
-            {
-                LabelSet ls1 = joinLabelSets(ls, tu.second[j]);
-                tryInsert(w, tu.first, ls1);
-            }
-        }
-    }
-
 };
 
 bool Zou::tryInsert(VertexID w, VertexID v, LabelSet ls)

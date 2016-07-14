@@ -33,47 +33,10 @@ int main(int argc, char *argv[])
     int t = 1;
     Zou* zI = new Zou(g1);
 
-    runQuery(zI,0,5,11,true,t);
-    runQuery(zI,0,5,21,true,t);
-    runQuery(zI,2,3,21,true,t);
-    runQuery(zI,2,3,25,true,t);
-    runQuery(zI,2,4,7,true,t);
-    runQuery(zI,2,9,19,true,t);
-    runQuery(zI,3,6,7,true,t);
-    runQuery(zI,3,6,19,true,t);
-    runQuery(zI,4,0,11,true,t);
-    runQuery(zI,4,0,13,true,t);
-    runQuery(zI,6,5,22,true,t);
-    runQuery(zI,6,8,28,true,t);
-    runQuery(zI,6,9,13,true,t);
-    runQuery(zI,6,9,21,true,t);
-    runQuery(zI,8,6,7,true,t);
-    runQuery(zI,8,9,14,true,t);
-    runQuery(zI,11,9,11,true,t);
-    runQuery(zI,13,0,25,true,t);
-    runQuery(zI,13,1,11,true,t);
-    runQuery(zI,13,3,21,true,t);
+    cout << zI->toString() << endl;
 
-    runQuery(zI,5,0,11,false,t);
-    runQuery(zI,5,0,19,false,t);
-    runQuery(zI,5,2,21,false,t);
-    runQuery(zI,6,0,22,false,t);
-    runQuery(zI,7,0,22,false,t);
-    runQuery(zI,7,1,7,false,t);
-    runQuery(zI,7,2,22,false,t);
-    runQuery(zI,8,0,14,false,t);
-    runQuery(zI,8,0,19,false,t);
-    runQuery(zI,8,0,28,false,t);
-    runQuery(zI,10,0,13,false,t);
-    runQuery(zI,10,0,26,false,t);
-    runQuery(zI,10,1,11,false,t);
-    runQuery(zI,10,1,13,false,t);
-    runQuery(zI,10,8,26,false,t);
-    runQuery(zI,11,0,11,false,t);
-    runQuery(zI,11,1,7,false,t);
-    runQuery(zI,11,1,13,false,t);
-    runQuery(zI,12,1,19,false,t);
-    runQuery(zI,13,0,28,false,t);
+
+    return 1;
 
     //cout << zI->toString() << endl;
 

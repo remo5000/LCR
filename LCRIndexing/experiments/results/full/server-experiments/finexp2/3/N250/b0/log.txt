@@ -1,0 +1,3 @@
+build/default/runExperiment ./experiments/graphs/real/zhishihudong/zhishihudongL8exp.edge 3 experiments/results/server-experiments/finexp2/3/N250/results-zhishihudongL8exp.csv > experiments/results/server-experiments/finexp2/3/N250/output-zhishihudongL8exp.txt
+build/default/runExperiment ./experiments/graphs/real/webGoogle/webGoogleL8exp.edge 3 experiments/results/server-experiments/finexp2/3/N250/results-webGoogleL8exp.csv > experiments/results/server-experiments/finexp2/3/N250/output-webGoogleL8exp.txt
+build/default/runExperiment ./experiments/graphs/real/usPatents/usPatentsL8exp.edge 3 experiments/results/server-experiments/finexp2/3/N250/results-usPatentsL8exp.csv > experiments/results/server-experiments/finexp2/3/N250/output-usPatentsL8exp.txt

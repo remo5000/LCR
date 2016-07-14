@@ -35,8 +35,8 @@ void DGraph::construct(EdgeSet* edgeSet, int pN, int pL, bool allowMultipleEdges
     buildGraph(edgeSet);
     this->constEndTime = getCurrentTimeInMilliSec();
     this->allowMultipleEdges = false;
-    cout << "DGraph |V|=" << N << ",|E|=" << M << ",|L|=" << L << endl;
-    cout << "DGraph size(byte)=" << getGraphSizeInBytes() << ", time(s)=" << getGraphConstructionTime() << endl;
+    //cout << "DGraph |V|=" << N << ",|E|=" << M << ",|L|=" << L << endl;
+    //cout << "DGraph size(byte)=" << getGraphSizeInBytes() << ", time(s)=" << getGraphConstructionTime() << endl;
 }
 
 DGraph::DGraph(EdgeSet* edgeSet, int pN, int pL, bool allowMultipleEdges)

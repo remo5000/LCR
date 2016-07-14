@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
-    noOfMethods = 4;
+    noOfMethods = 2;
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
@@ -263,25 +263,57 @@ int main(int argc, char *argv[]) {
         if( i == 0 )
             index = new BFSIndex(graph);
 
+        // LI (no extensions)
         if( i == 1 )
 	    {
-            int k = N/500, l = 15;
-            index = new LandmarkedIndex(graph, k , 1, 0, true, l, 0, true);
+            int k = 1250 + sqrt(N);
+            int b = 20;
+            index = new LandmarkedIndex(graph, true, true, k, b);
 	    }
 
-        if( i == 2 )
-        {
-            LandmarkedIndex* lindex = dynamic_cast<LandmarkedIndex*>(index);
-            int k = N/500, l = 30;
-            lindex->setOthersBudget( l );
-            lindex->buildIndex( 2 );
-        }
+        /*if( i == 1 )
+	    {
+            int k = 1000;
+            int b = 20;
+            index = new LandmarkedIndex(graph, false, false, k, b);
+	    }
 
+        // LI+OTH (2nd extension only)
+        if( i == 2 )
+	    {
+            int k = 1000;
+            int b = 20;
+            index = new LandmarkedIndex(graph, true, false, k, b);
+	    }
+
+        // LI+EXTv2 (3rd extension only)
         if( i == 3 )
         {
-            int k = N/500, l = 15;
-            index = new LandmarkedIndex(graph, k , 1, 0, true, l, 0, false);
+            int k = 1000;
+            int b = 20;
+            index = new LandmarkedIndex(graph, false, true, k, b);
         }
+
+        // LI+OTH+EXTv2 (2nd and 3rd extension, b=20)
+        if( i == 4 )
+        {
+            int k = 1000;
+            int b = 20;
+            index = new LandmarkedIndex(graph, true, true, k, b);
+        }*/
+
+        /* Full LI and Zou */
+        /*if( i == 1 )
+        {
+            int k = N;
+            int b = 20;
+            index = new LandmarkedIndex(graph, false, false, k, b);
+        }*/
+
+        /*if( i == 2 )
+        {
+            index = new Zou(graph);
+        }*/
 
         string indexName = index->getIndexTypeAsString();
         cout << "runTestsPerIndex index=" << indexName;
