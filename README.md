@@ -43,10 +43,10 @@ python2.7 waf build
 ## Contributors
 
 Myself: 
-Lucien Valstar (l dot d dot j at (last name in lower case letters).student.tue.nl)
+Lucien Valstar: l dot d dot j dot at (last name in lower case letters).student.tue.nl
 
 My supervisors:
-G.H.L Fletcher (g dot h dot l at (last name in lower case letters).tue.nl)
-Y. Yoshida (y dot (last name in lower case letters) at gmail.com)
+G.H.L Fletcher: g dot h dot l dot at (last name in lower case letters).tue.nl
+Y. Yoshida: y dot (last name in lower case letters) at gmail.com
 
 
