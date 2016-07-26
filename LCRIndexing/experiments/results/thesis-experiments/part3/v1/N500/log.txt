@@ -1,1 +1,0 @@
-build/default/runExperiment ./experiments/graphs/real/pokec/socPokecRelationshipsL8exp.edge 3 experiments/results/server-experiments/finexp2/3/N500/results-socPokecRelationshipsL8exp.csv > experiments/results/server-experiments/finexp2/3/N500/output-socPokecRelationshipsL8exp.txt

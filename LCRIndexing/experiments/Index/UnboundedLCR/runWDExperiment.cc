@@ -17,13 +17,8 @@
 
 #include "../../Index/UnboundedLCR/Index.h"
 #include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Index/UnboundedLCR/DoubleBFS.cc"
 #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 #include "../../Index/UnboundedLCR/WD/LandmarkedIndexWD.cc"
-#include "../../Index/UnboundedLCR/Zou.cc"
-#include "../../Index/UnboundedLCR/ClusteredExactIndex.cc"
-#include "../../Index/UnboundedLCR/PartialIndex.cc"
-#include "../../Index/UnboundedLCR/NeighbourExchange.cc"
 
 #include "../../Graph/DGraph.cc"
 

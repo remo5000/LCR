@@ -1,2 +1,0 @@
-build/default/runExperiment ./experiments/graphs/synthetic/PA/exp/V625kD5L8exp.edge 3 experiments/results/server-experiments/finexp2/3/N250/results-V625kD5L8exp.csv > experiments/results/server-experiments/finexp2/3/N250/output-V625kD5L8exp.txt
-build/default/runExperiment ./experiments/graphs/synthetic/PL/plV625ka2.0L8exp.edge 3 experiments/results/server-experiments/finexp2/3/N250/results-plV625ka2.0L8exp.csv > experiments/results/server-experiments/finexp2/3/N250/output-plV625ka2.0L8exp.txt

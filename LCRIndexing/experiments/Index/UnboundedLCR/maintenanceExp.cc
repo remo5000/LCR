@@ -20,7 +20,6 @@
 
 #include "../../Index/UnboundedLCR/Index.h"
 #include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Index/UnboundedLCR/DoubleBFS.cc"
 #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 #include "../../Graph/DGraph.cc"
 

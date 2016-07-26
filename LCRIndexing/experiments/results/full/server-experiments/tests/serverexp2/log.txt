@@ -1,9 +1,0 @@
-build/default/runExperiment experiments/graphs/real/advogato/advogato.edge 3 experiments/results/serverexp2/results-advogato.csv > experiments/results/serverexp2/output-advogato.txt
-build/default/runExperiment experiments/graphs/real/arXivhepph/arXivhepphL8exp.edge 3 experiments/results/serverexp2/results-arXivhepphL8exp.csv > experiments/results/serverexp2/output-arXivhepphL8exp.txt
-build/default/runExperiment experiments/graphs/real/notredame/NotreDameL8exp.edge 3 experiments/results/serverexp2/results-NotreDameL8exp.csv > experiments/results/serverexp2/output-NotreDameL8exp.txt
-build/default/runExperiment experiments/graphs/real/p2p-Gnutella/p2p-GnutellaL8exp.edge 3 experiments/results/serverexp2/results-p2p-GnutellaL8exp.csv > experiments/results/serverexp2/output-p2p-GnutellaL8exp.txt
-build/default/runExperiment experiments/graphs/real/soc-sign-epinions/soc-sign-epinionsL8exp.edge 3 experiments/results/serverexp2/results-soc-sign-epinionsL8exp.csv > experiments/results/serverexp2/output-soc-sign-epinionsL8exp.txt
-build/default/runExperiment experiments/graphs/real/subelj_cora/subeljCoraL8exp.edge 3 experiments/results/serverexp2/results-subeljCoraL8exp.csv > experiments/results/serverexp2/output-subeljCoraL8exp.txt
-build/default/runExperiment experiments/graphs/synthetic/PA/exp/V125kD2L8exp.edge 3 experiments/results/serverexp2/results-V125kD2L8exp.csv > experiments/results/serverexp2/output-V125kD2L8exp.txt
-build/default/runExperiment experiments/graphs/synthetic/PA/exp/V25kD2L8exp.edge 3 experiments/results/serverexp2/results-V25kD2L8exp.csv > experiments/results/serverexp2/output-V25kD2L8exp.txt
-build/default/runExperiment experiments/graphs/synthetic/PA/exp/V5kD2L8exp.edge 3 experiments/results/serverexp2/results-V5kD2L8exp.csv > experiments/results/serverexp2/output-V5kD2L8exp.txt

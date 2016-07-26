@@ -417,6 +417,8 @@ as a string or insert a LabelSet into a set of LabelSets.
 
             string name;
 
+            bool didComplete; // returns whether the idnex construction process completed or not
+
         public:
             virtual bool query(VertexID source, VertexID target, LabelSet ls) = 0;
             virtual unsigned long getIndexSizeInBytes() = 0;
@@ -1028,6 +1030,11 @@ as a string or insert a LabelSet into a set of LabelSets.
                     }
                 }
 
+            }
+
+            bool didCompleteBuilding()
+            {
+                return this->didComplete;
             }
 
     };

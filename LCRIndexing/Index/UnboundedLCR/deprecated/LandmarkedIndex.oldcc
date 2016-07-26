@@ -50,11 +50,6 @@ void LandmarkedIndex::construct(Graph* mg, int noOfLandmarks, int method, int pr
     buildIndex(0);
 }
 
-LandmarkedIndex::LandmarkedIndex(Graph* mg, bool doIndexOthers, bool doExtensive, int k, int b)
-{
-    construct(mg, k, 1, 0, doIndexOthers, b, 0, doExtensive);
-};
-
 LandmarkedIndex::LandmarkedIndex(Graph* mg, int noOfLandmarks, int method, int propagateCode, bool doIndexOthers,
     int othersBudget, int coverPercentage, bool doExtensive)
 {
@@ -89,21 +84,15 @@ LandmarkedIndex::~LandmarkedIndex()
 
 unsigned long LandmarkedIndex::getIndexSizeInBytes()
 {
-    int N = graph->getNumberOfVertices();
     unsigned long size = getIndexSizeInBytesM();
 
     int emptyVectorSize = 3*sizeof(int);
-    /*for(int i = 0; i < landmarkPaths.size(); i++)
+    for(int i = 0; i < landmarkPaths.size(); i++)
     {
         for(int j = 0; j < landmarkPaths[i].size(); j++)
         {
             size += emptyVectorSize + landmarkPaths[i][j].size() * sizeof(VertexID);
         }
-    }*/
-    // Each SequenceEntry uses a LabelSet and a Bitset of N/8 bytes
-    for(int i = 0; i < noOfLandmarks; i++)
-    {
-        size += emptyVectorSize + seqEntries[i].size() * ( sizeof(LabelSet) + N/8 );
     }
 
     return size;
@@ -491,13 +480,55 @@ void LandmarkedIndex::determineLandmarks()
             << " bO=" << this->budgetOthers << endl;
 }
 
+void LandmarkedIndex::setPathLogic()
+{
+    int L = graph->getNumberOfLabels();
+    this->minPathLabelSetSize = 1; // only paths with 1 label
+    this->maxPathLabelSetSize = 1; // only paths with 1 label
+    this->noOfPaths = ( L + 1 ); //L*(L+1)/2 ); // this many combinations exist with at most 2 labels
+
+    landmarkPaths = vector< vector < vector< VertexID > > >();
+    for(int i = 0; i < noOfLandmarks; i++)
+    {
+        vector< vector<VertexID> > vec = vector< vector<VertexID> >();
+        for(int j = 0; j < noOfPaths; j++)
+        {
+            vec.push_back( vector<VertexID>() );
+        }
+        landmarkPaths.push_back( vec );
+    }
+
+    // mapping maps a labelset to an id in landmarkPaths, e.g. ls=3 -> 0 , ls=7 -> 2
+    mapping = vector< int >(L+1, -1);
+    int c = 0;
+    for(int i = 0; i < L; i++)
+    {
+        //LabelSet ls = 0;
+        //ls |= labelIDToLabelSet(i);
+        mapping[i] = c;
+        c++;
+        //cout << "ls=" << ls << " ,c=" << c << endl;
+        /*for(int j = i; j < L; j++)
+        {
+            LabelSet ls = 0;
+            ls |= labelIDToLabelSet(i);
+            ls |= labelIDToLabelSet(j);
+            mapping[ls] = c;
+            c++;
+
+
+        }*/
+    }
+
+    cout << "setPathLogic mapping.size()=" << mapping.size() << endl;
+}
+
 void LandmarkedIndex::buildIndex(int continueCode)
 {
     constStartTime = getCurrentTimeInMilliSec();
 
     // change the name
     updateName();
-    this->didComplete = false;
     cout << "buildIndex name=" << this->name << ",continueCode=" << continueCode << endl;
 
     int N = graph->getNumberOfVertices();
@@ -513,12 +544,6 @@ void LandmarkedIndex::buildIndex(int continueCode)
         hasBeenIndexed = dynamic_bitset<>(N);
         determineLandmarks();
         initializeIndex(N);
-
-        seqEntries = vector< vector< SequenceEntry > >();
-        for(int i = 0; i < noOfLandmarks; i++)
-        {
-            seqEntries.push_back( vector< SequenceEntry >() );
-        }
     }
     if( continueCode == 1 )
     {
@@ -536,6 +561,9 @@ void LandmarkedIndex::buildIndex(int continueCode)
         this->totalConstTime = 0.0;
     }
 
+    if( this->doExtensive )
+        setPathLogic();
+
     // Builds a full index for each landmark
     // and indexes the remaining vertices with paths to (a subset of) all landmarks
     int quotum = max(noOfLandmarks/20, 1);
@@ -546,8 +574,7 @@ void LandmarkedIndex::buildIndex(int continueCode)
     // Build all (or more) landmarks
     if( continueCode == 0 || continueCode == 1 )
     {
-        int progress = 0;
-        double timePassed = getCurrentTimeInMilliSec()-constStartTime + landmarkTime;
+        int cc = 0;
         cout << this->name << "::buildIndex build landmarks, quotum=" << quotum << endl;
 
         for(int x = 0; x < N; x++)
@@ -557,13 +584,9 @@ void LandmarkedIndex::buildIndex(int continueCode)
             if( isLandmark == false )
                 continue;
 
-            /* TIMEOUT is 6 hours. Or if we have not built 12% of the landmarks within
-             0.25 of the TIMEOUT we also stop. */
-            if(
-              ( (timePassed) >= TIMEOUT ) ||
-              ( (progress*100 / noOfLandmarks) < 12 && (timePassed) >= TIMEOUT/4  ) )
+            if( (getCurrentTimeInMilliSec()-constStartTime + landmarkTime) >= TIMEOUT )
             {
-                cout << this->name << "::buildIndex (landmarks) times out ,time(s)=" << (timePassed) << endl;
+                cout << this->name << "::buildIndex (landmarks) times out" << endl;
                 I = i;
                 didNotComplete = true;
                 break;
@@ -589,61 +612,29 @@ void LandmarkedIndex::buildIndex(int continueCode)
             // build index for landmark
             hasBeenIndexed[ i ] = 0;
 
-            a = labelledBFSPerLM( i , this->propagateCode == 0 , false );
+            a = buildIndexForNodePQ( i , this->propagateCode == 0 , false );
 
             hasBeenIndexed[ i ] = 1;
             size += getIndexSizeInBytesM( i );
 
-            progress++;
-            timePassed = getCurrentTimeInMilliSec()-constStartTime + landmarkTime;
+            cc++;
 
-            if( ((progress+1)%quotum) == 0 && progress > 0 )
+            if( ((cc+1)%quotum) == 0 && cc > 0 )
             {
-                double perc = progress;
+                double perc = cc;
                 perc /= (noOfLandmarks);
                 perc *= 100.0;
 
-                cout << this->name << "::buildIndex (landmarks) progress=" << progress << " " << perc << "% , " << ",roundNo=" << a << ",Esize(kB)=" << size/1000
-                    << ",time(s)=" << (timePassed) << endl;
+                cout << this->name << "::buildIndex (landmarks) cc=" << cc << " " << perc << "% , " << ",roundNo=" << a << ",size(MB)=" << size/1000
+                    << ",time(s)=" << (getCurrentTimeInMilliSec()-constStartTime) << endl;
             }
 
         }
 
-        if( doExtensive == true )
-        {
-            for(int i = 0; i < N; i++)
-            {
-                if( vToLandmark[i] == -1 )
-                    continue;
-
-                for(int j = 0; j < N; j++)
-                {
-                    if( vToLandmark[j] == -1 || i == j )
-                        continue;
-
-                    LabelSets lss;
-                    getLabelSetsPerPair(i,j,lss);
-
-                    for(int k = 0; k < lss.size(); k++)
-                    {
-                        LabelSet ls1 = lss[k];
-                        int id1 = findSeqEntryId(ls1, i);
-                        int id2 = findSeqEntryId(ls1, j);
-
-                        if( id1 != -1 && id2 != -1 )
-                        {
-                            seqEntries[ vToLandmark[i] ][ id1 ].V |= seqEntries[ vToLandmark[j] ][ id2 ].V;
-                        }
-                    }
-                }
-            }
-        }
-
-        cout << this->name << "::buildIndex built all landmarks size(kB)=" << size/1000 << " ,time(s)=" << landmarkTime << endl;
         this->landmarkTime += (getCurrentTimeInMilliSec()-constStartTime);
     }
 
-    // In case the landmark process exceeded either its time or memory limit
+    // In case the landmark process took more than the time or memory limits
     if( didNotComplete == true )
     {
         for(int i = I; i < N; i++)
@@ -662,12 +653,12 @@ void LandmarkedIndex::buildIndex(int continueCode)
     }
     else
     {
+        cout << this->name << "::buildIndex built all landmarks size(MB)=" << size/1000 << " ,time(s)=" << landmarkTime << endl;
         quotum = max( (N - noOfLandmarks)/20 , 1);
         cout << this->name << "::buildIndex build others, quotum=" << quotum << endl;
 
         constStartTime = getCurrentTimeInMilliSec();
-        int progress = 0;
-        double timePassed = getCurrentTimeInMilliSec()-constStartTime;
+        int cc = 0;
 
         if( budgetOthers > 0 && doIndexOthers == true )
         {
@@ -678,14 +669,10 @@ void LandmarkedIndex::buildIndex(int continueCode)
                 if( isLandmark == true )
                     continue;
 
-                /* TIMEOUT is 6 hours. Or if we have not built 12% of the landmarks within
-                 0.25 of the TIMEOUT we also stop. */
-                if(
-                  ( (timePassed) >= TIMEOUT ) ||
-                  ( (progress*100 / (N-noOfLandmarks)) < 12 && (timePassed) >= TIMEOUT/4  ) )
+                if( getCurrentTimeInMilliSec()-constStartTime + landmarkTime >= TIMEOUT )
                 {
-                    cout << this->name << "::buildIndex (others) times out ,time(s)=" << (timePassed) << endl;
-                    didNotComplete = true;
+                    cout << this->name << "LandmarkedIndex::buildIndex (others) times out" << endl;
+                    I = i;
                     break;
                 }
 
@@ -701,21 +688,20 @@ void LandmarkedIndex::buildIndex(int continueCode)
                 // build index for normal node, having <budgetOthers> paths to landmarks
                 hasBeenIndexed[ i ] = 0;
 
-                a = labelledBFSPerNonLM( i , this->propagateCode == 0 );
+                a = findPathstoLandmarks( i , this->propagateCode == 0 );
 
                 hasBeenIndexed[ i ] = 1;
                 size += getIndexSizeInBytesM( i );
-                progress++;
-                timePassed = getCurrentTimeInMilliSec()-constStartTime;
+                cc++;
 
-                if( ((progress+1)%quotum) == 0 && progress > 0 )
+                if( ((cc+1)%quotum) == 0 && cc > 0 )
                 {
-                    double perc = progress;
+                    double perc = cc;
                     perc /= (N-noOfLandmarks);
                     perc *= 100.0;
 
-                    cout << this->name << "::buildIndex (others) (o) progress=" << progress << " " << perc << "% , " << ",roundNo=" << a << ",Esize(kB)=" << size/1000
-                        << ",time(s)=" << (timePassed) << endl;
+                    cout << this->name << "::buildIndex (others) (o) cc=" << cc << " " << perc << "% , " << ",roundNo=" << a << ",size(MB)=" << size/1000
+                        << ",time(s)=" << (getCurrentTimeInMilliSec()-constStartTime) << endl;
                 }
             }
         }
@@ -723,7 +709,6 @@ void LandmarkedIndex::buildIndex(int continueCode)
         othersTime = getCurrentTimeInMilliSec() - constStartTime;
     }
 
-    this->didComplete = !didNotComplete;
     constEndTime = getCurrentTimeInMilliSec();
     totalConstTime = landmarkTime + othersTime;
 
@@ -733,76 +718,39 @@ void LandmarkedIndex::buildIndex(int continueCode)
 };
 
 
-int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance)
+int LandmarkedIndex::buildIndexForNodePQ(VertexID w, bool doPropagate, bool isMaintenance)
 {
-    /* labelledBFSPerLM uses a heap  with the Triplet-struct s.t.
-    whenever w hits a node v with a path with
-    labelset LS it has not been visited before with a subset of LS
-    */
+    // buildIndexForNodePQ does the same as buildIndexForNode but uses a heap
+    // with the Triplet-struct s.t. whenever w hits a node v with a path with
+    // labelset LS it has not been visited before with a subset of LS
 
     // start with a queue containing pair (w,0)
-    priority_queue< BitEntry, vector<BitEntry>, PQBitEntries > q;
+    priority_queue< Triplet, vector<Triplet>, priorityQueueTriplets > q;
 
-    BitEntry t;
+    Triplet t;
     t.x = w;
     t.ls = 0;
     t.dist = 0;
-    t.id = -1;
 
     q.push( t );
 
-    labelledBFSPerLM(w, doPropagate, isMaintenance, q );
+    buildIndexForNodePQ(w, doPropagate, isMaintenance, q );
 };
 
-int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
-    priority_queue< BitEntry, vector<BitEntry>, PQBitEntries >& q)
+int LandmarkedIndex::buildIndexForNodePQ(VertexID w, bool doPropagate, bool isMaintenance,
+    priority_queue< Triplet, vector<Triplet>, priorityQueueTriplets >& q)
 {
     int roundNo = 0;
     int N = graph->getNumberOfVertices();
-    int L = graph->getNumberOfLabels();
-
-    int MAXDIST = L/4 + 1; // MAXDIST is the maximal number of labels for each SequenceEntry in ls (L=8 -> 3)
-    int minReachLength = min(50 + (int) sqrt(N)/2, N); // minReachLength is the minimal number of vertices
-    // that needs to be covered by a SequenceEntry
-
     while( q.empty() == false )
     {
         roundNo++;
-        BitEntry tr = q.top();
+        Triplet tr = q.top();
         VertexID v1 = tr.x;
         VertexID ls1 = tr.ls;
-        int id1 = tr.id;
         q.pop();
 
         //cout << "v1=" << v1 << ",ls1=" << ls1 << endl;
-
-        if( this->doExtensive == true )
-        {
-            if( v1 != w && tr.dist > 0 && tr.dist <= MAXDIST)
-            {
-                if( id1 == -1 ) // tr.ls might have been created already
-                {
-                    id1 = findSeqEntryId(tr.ls, w);
-                }
-                if( id1 == -1 ) // tr.ls needs to be added, it has not been created yet
-                {
-                    id1 = insertSeqEntry(w, tr.ls);
-                }
-
-                if( hasBeenIndexed[v1] == 0 ) // v1 is always a landmark in this case
-                {
-                    seqEntries[ vToLandmark[w] ][ id1 ].V[ v1 ] = 1;
-                }
-                else
-                {
-                    int idx = findSeqEntryId(ls1, v1);
-                    if( idx != -1 )
-                    {
-                        seqEntries[ vToLandmark[w] ][ id1 ].V |= seqEntries[ vToLandmark[v1] ][ idx ].V;
-                    }
-                }
-            }
-        }
 
         // we try to insert the entry (v1,ls1) to cIn[w]
         // b is false if and only if inserting (v1,ls1) would create
@@ -819,6 +767,20 @@ int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaint
                 else
                 {
                     continue;
+                }
+            }
+        }
+
+        if( this->doExtensive == true && v1 != w && tr.ls > 0 )
+        {
+            if( tr.dist == 1 )
+            {
+                int l = (int) log2( tr.ls );
+                //cout << "l=" << l << ",ls=" << tr.ls << ",k=" << landmarkPaths[ vToLandmark[w] ].size() << endl;
+                auto p = lower_bound(landmarkPaths[ vToLandmark[w] ][l].begin(), landmarkPaths[ vToLandmark[w] ][l].end(), v1);
+                if( p == landmarkPaths[vToLandmark[w]][l].end() || v1 < *p )
+                {
+                    landmarkPaths[vToLandmark[w]][l].insert( p , v1 );
                 }
             }
         }
@@ -866,7 +828,6 @@ int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaint
             VertexID v2 = ses[i].first;
             LabelSet ls2 = ses[i].second;
             LabelSet ls3 = joinLabelSets(ls1, ls2);
-            int id2 = id1;
 
             if( v2 == w )
             {
@@ -877,135 +838,24 @@ int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaint
             if( ls3 != ls1 || ls3 != ls2 )
             {
                 dist += 1; // labels are added one by one
-                id2 = -1;
             }
 
-            BitEntry tr2;
+            Triplet tr2;
             tr2.x = v2;
             tr2.ls = ls3;
             tr2.dist = dist;
-            tr2.id = id2;
 
             q.push( tr2 );
         }
     }
 
-    if( this->doExtensive == false )
-    {
-        return roundNo;
-    }
-
-    for(int j = 0; j < seqEntries[ vToLandmark[w] ].size(); j++)
-    {
-        seqEntries[ vToLandmark[w] ][j].count = seqEntries[ vToLandmark[w] ][j].V.count();
-    }
-
-    /*
-        First we need to merge the entries
-    */
-    int i = 0;
-    while( i < 2 ) // It could be done in a single iteration if the order of the labelsets were from small to large
-    {
-        for(int j = 0; j < seqEntries[ vToLandmark[w] ].size(); j++)
-        {
-            LabelSet ls1 = seqEntries[ vToLandmark[w] ][j].ls;
-
-            for(int k = 0; k < seqEntries[ vToLandmark[w] ].size(); k++)
-            {
-                LabelSet ls2 = seqEntries[ vToLandmark[w] ][k].ls;
-
-                if( j != k && isLabelSubset(ls1, ls2) == true )
-                {
-                    seqEntries[ vToLandmark[w] ][k].V |= seqEntries[ vToLandmark[w] ][j].V;
-                }
-            }
-        }
-        i++;
-    }
-
-    for(int j = 0; j < seqEntries[ vToLandmark[w] ].size(); j++)
-    {
-        seqEntries[ vToLandmark[w] ][j].count = seqEntries[ vToLandmark[w] ][j].V.count();
-    }
-
-    /*
-        Remove those entries that not add minPathLength more than any of their subsets
-    */
-    for(int j = 0; j < seqEntries[ vToLandmark[w] ].size(); j++)
-    {
-        LabelSet ls1 = seqEntries[ vToLandmark[w] ][j].ls;
-        int c1 = (double) seqEntries[ vToLandmark[w] ][j].count;
-
-        for(int k = 0; k < seqEntries[ vToLandmark[w] ].size(); k++)
-        {
-            LabelSet ls2 = seqEntries[ vToLandmark[w] ][k].ls;
-            int c2 = (double) seqEntries[ vToLandmark[w] ][k].count;
-
-            if( j != k && isLabelSubset(ls1, ls2) == true )
-            {
-                if( (c2-c1) <= minReachLength )
-                {
-                    seqEntries[ vToLandmark[w] ].erase( seqEntries[ vToLandmark[w] ].begin() + k );
-                    k--;
-                }
-            }
-        }
-    }
-
-    /* We wish to only retain those SequenceEntry with at most MAXDIST labels
-    * and at least minPathLength bits set.
-    */
-    vector< pair< LabelSet, int > > Lv = vector< pair< LabelSet, int > >();
-
-    struct sort_pred
-    {
-        bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right)
-        {
-            return left.second > right.second;
-        }
-    };
-
-    for(int i = 0; i < seqEntries[ vToLandmark[w] ].size(); i++)
-    {
-        LabelSet ls = seqEntries[ vToLandmark[w] ][i].ls;
-        int c = seqEntries[ vToLandmark[w] ][i].count;
-        if( c < minReachLength )
-        {
-            seqEntries[ vToLandmark[w] ].erase( seqEntries[ vToLandmark[w] ].begin() + i );
-            i--;
-            continue;
-        }
-        Lv.push_back( make_pair(ls, c) );
-    }
-
-    // sort on the count
-    sort(Lv.begin(), Lv.end(), sort_pred() );
-    double avg = 0.0;
-    for(int i = 0; i < Lv.size(); i++)
-    {
-        int ID = findSeqEntryId(Lv[i].first, w);
-
-        // swap the two
-        SequenceEntry r = seqEntries[ vToLandmark[w] ][ i ];
-        seqEntries[ vToLandmark[w] ][ i ] = seqEntries[ vToLandmark[w] ][ ID ];
-        seqEntries[ vToLandmark[w] ][ ID ] = r;
-
-        //avg += seqEntries[ vToLandmark[w] ][i].count;
-
-        //cout << "*w=" << w << ",ls=" << seqEntries[ vToLandmark[w] ][ i ].ls << ",c=" << seqEntries[ vToLandmark[w] ][ i ].count << endl;
-    }
-
-    //avg /= seqEntries[ vToLandmark[w] ].size();
-    //cout << "*w=" << w << " #seqEntries=" << seqEntries[ vToLandmark[w] ].size() << " ,avg=" << avg << endl;
-
     return roundNo;
 };
 
-int LandmarkedIndex::labelledBFSPerNonLM(VertexID w, bool doPropagate)
+int LandmarkedIndex::findPathstoLandmarks(VertexID w, bool doPropagate)
 {
     int roundNo = 0;
     int N = graph->getNumberOfVertices();
-    int L = graph->getNumberOfLabels();
 
     //vector< vector< int > > cPerVertex = vector< vector< int > >(N);
     dynamic_bitset<> marked = dynamic_bitset<>(N);
@@ -1020,14 +870,23 @@ int LandmarkedIndex::labelledBFSPerNonLM(VertexID w, bool doPropagate)
     q.push( t );
 
     int entriesLeft = budgetOthers;
-    int MAXDIST = L/4 + 1;
 
     while( q.empty() == false && entriesLeft > 0 )
     {
         Quadret tr = q.top();
         q.pop();
 
-        if( marked[tr.x] == 1 || tr.dist > MAXDIST )
+        /*if( tr.y != tr.x )
+        {
+            auto it = lower_bound( cPerVertex[tr.x].begin(), cPerVertex[tr.x].end(), tr.y );
+            if( it != cPerVertex[tr.x].end() )
+            {
+                continue;
+            }
+            int pos = it - cPerVertex[tr.x].begin();
+            cPerVertex[tr.x].insert( cPerVertex[tr.x].begin() + pos, tr.y);
+        }*/
+        if( marked[tr.x] == 1 )
         {
             continue;
         }
@@ -1058,12 +917,7 @@ int LandmarkedIndex::labelledBFSPerNonLM(VertexID w, bool doPropagate)
 
                     for(int j = 0; j < tIn[x][i].second.size(); j++)
                     {
-                        LabelSet ls3 = joinLabelSets(tIn[x][i].second[j],tr.ls);
-                        int dist3 = getNumberOfLabelsInLabelSet( ls3 );
-                        if( dist3 > MAXDIST )
-                            continue;
-
-                        bool b = tryInsert(w, y, ls3 );
+                        bool b = tryInsert(w, y, joinLabelSets(tIn[x][i].second[j],tr.ls) );
                         if( b )
                             entriesLeft--;
                     }
@@ -1075,8 +929,7 @@ int LandmarkedIndex::labelledBFSPerNonLM(VertexID w, bool doPropagate)
 
                 }
 
-                /*if( vToLandmark[x] > -1 )
-                    continue;*/
+                continue;
             }
         }
 
@@ -1103,41 +956,6 @@ int LandmarkedIndex::labelledBFSPerNonLM(VertexID w, bool doPropagate)
 
     return roundNo;
 }
-
-int LandmarkedIndex::findSeqEntryId(LabelSet ls, VertexID w)
-{
-    // assumes w is a landmark
-    if( ls == 0 )
-    {
-        return -1;
-    }
-
-    for(int i = 0; i < seqEntries[ vToLandmark[w] ].size(); i++)
-    {
-        LabelSet ls1 = seqEntries[ vToLandmark[w] ][i].ls;
-
-        if( ls == ls1 )
-        {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-int LandmarkedIndex::insertSeqEntry(VertexID w, LabelSet ls)
-{
-    // assumes w is a landmark
-    int N = graph->getNumberOfVertices();
-
-    SequenceEntry se;
-    se.ls = ls;
-    se.V = dynamic_bitset<>(N);
-    se.count = 0;
-    seqEntries[ vToLandmark[w] ].push_back( se );
-
-    return seqEntries[ vToLandmark[w] ].size() - 1;
-};
 
 bool LandmarkedIndex::tryInsert(VertexID w, VertexID v, LabelSet ls)
 {
@@ -1240,7 +1058,6 @@ void LandmarkedIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& c
         {
             if( count%frequency == 0 )
             {
-                // seqEntries[ vSource ][i].V;
                 for(int i = 0; i < tIn[x].size(); i++)
                 {
                     VertexID x1 = tIn[x][i].first;
@@ -1294,22 +1111,18 @@ bool LandmarkedIndex::queryShellAdapted(VertexID source, VertexID target, LabelS
     int roundNo = 0;
     int count = 0;
     int noOfQueries = 0;
-    int FREQ = 3;
 
     dynamic_bitset<> visited = dynamic_bitset<>(N);
 
     // freq determines how often we will do an extensive direct query
     int cc = 0;
     if( this->doExtensive == true )
-        cc = 2;
+        cc = 1;
 
     // try each reachable landmark from source
     for(int i = 0; i < tIn[source].size(); i++)
     {
         VertexID x = tIn[source][i].first; // x is a landmark
-
-        if( visited[x] == 1 )
-            continue;
 
         for(int j = 0; j < tIn[source][i].second.size(); j++)
         {
@@ -1319,7 +1132,7 @@ bool LandmarkedIndex::queryShellAdapted(VertexID source, VertexID target, LabelS
 
             if( isLabelSubset(ls1, ls) == true )
             {
-                if( cc > 0 )//&& lSize > 4 )
+                if( cc == 1 )//&& lSize > 4 )
                 {
                     cc--;
                     if( extensiveQueryDirect(x, target, ls, visited) == true )
@@ -1369,7 +1182,7 @@ bool LandmarkedIndex::queryShellAdapted(VertexID source, VertexID target, LabelS
         if( vToLandmark[v1] != -1 )
         {
             count++;
-            if( count%FREQ == 0 )
+            if( count%frequency == 0 )
             {
                 /*
                 We can either run a "extensive" direct query or just a direct
@@ -1381,10 +1194,23 @@ bool LandmarkedIndex::queryShellAdapted(VertexID source, VertexID target, LabelS
                 any more.
                 */
 
-                if( extensiveQueryDirect(v1, target, ls, visited) )
+                /*noOfQueries++;
+                if( noOfQueries % freq == 0 )
                 {
-                    return true;
+                    if( extensiveQueryDirect(v1, target, ls, visited) )
+                    {
+                        //cout << "noOfQueries=" << noOfQueries << endl;
+                        return true;
+                    }
                 }
+                else
+                {*/
+                    if( queryDirect(v1, target, ls) )
+                    {
+                        //cout << "noOfQueries=" << noOfQueries << endl;
+                        return true;
+                    }
+                //}
 
                 continue;
             }
@@ -1422,6 +1248,9 @@ bool LandmarkedIndex::queryShell(VertexID source, VertexID target, LabelSet ls)
     int roundNo = 0;
     int count = 0;
     int noOfQueries = 0;
+
+    //double p = max(computeQueryFilterProbability(ls),0.1);
+    //int freq = 3 / p;
 
     while( q.empty() == false )
     {
@@ -1551,9 +1380,9 @@ bool LandmarkedIndex::extensiveQueryDirect(VertexID source, VertexID target, Lab
         return true;
 
     // then prune as much as possible
-    //int L = graph->getNumberOfLabels();
+    int L = graph->getNumberOfLabels();
     int vSource = vToLandmark[source];
-    /*for(int i = 0; i < L; i++)
+    for(int i = 0; i < L; i++)
     {
         LabelSet ls1 = (1 << i) & ls;
         if( ls1 == 0 )
@@ -1566,16 +1395,26 @@ bool LandmarkedIndex::extensiveQueryDirect(VertexID source, VertexID target, Lab
             marked[ x ] = 1;
         }
 
-    }*/
-
-    for(int i = 0; i < seqEntries[ vSource ].size(); i++)
-    {
-        if( isLabelSubset(seqEntries[ vSource ][i].ls,ls) == true )
+        // for 2-labeled paths
+        /*for(int j = i; j < L; j++)
         {
-            marked |= seqEntries[ vSource ][i].V;
+            int J = (1 << j);
+            if( (J & ls) == 0 )
+                continue;
 
-            break;
-        }
+            LabelSet ls2 = ls1;
+            ls2 |= J;
+
+            //cout << "ls2=" << ls2 << endl;
+            //cout << "mapping[ls2]=" << mapping[ls2] << endl;
+
+            for(int k = 0; k < landmarkPaths[ vToLandmark[source] ][ mapping[ls2] ].size(); k++)
+            {
+                VertexID x = landmarkPaths[ vToLandmark[source] ][ mapping[ls2] ][k];
+                //cout << "lID=" << lID << " ,x=" << x << endl;
+                marked[ x ] = 1;
+            }
+        }*/
     }
 
     return false;
@@ -1662,12 +1501,12 @@ void LandmarkedIndex::addEdge(VertexID v, VertexID w, LabelID lID)
         if( isLandmark == true )
         {
             // build index for landmark
-            a = labelledBFSPerLM( x , this->propagateCode == 0, true );
+            a = buildIndexForNodePQ( x , this->propagateCode == 0, true );
         }
         else
         {
             // build index for normal node, having <budgetOthers> paths to landmarks
-            //a = labelledBFSPerNonLM( x , this->propagateCode == 0 );
+            //a = findPathstoLandmarks( x , this->propagateCode == 0 );
         }
         hasBeenIndexed[ x ] = 1;
 
@@ -1706,7 +1545,7 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
         this->noOfLandmarks++;
 
         tIn[w].clear();
-        labelledBFSPerLM(w, true , false );
+        buildIndexForNodePQ(w, true , false );
         hasBeenIndexed[ w ] = 1;
     }
 
@@ -1718,7 +1557,7 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
     }
 
     tIn[v].clear();
-    labelledBFSPerLM(v, true , false );
+    buildIndexForNodePQ(v, true , false );
     hasBeenIndexed[ v ] = 1;
 
     // find all labelsets between v and w
@@ -1796,7 +1635,7 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
 
             if( isLandmark )
             {
-                priority_queue< BitEntry, vector<BitEntry>, PQBitEntries > q;
+                priority_queue< Triplet, vector<Triplet>, priorityQueueTriplets > q;
                 dynamic_bitset<> hasBeenPushed = dynamic_bitset<>(N);
                 for(int y = 0; y < N; y++)
                 {
@@ -1824,26 +1663,24 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
                         {
                             //cout << "- z=" << ses[j].first << ",ls=" << tIn[x][pos].second[k] << endl;
 
-                            BitEntry t;
+                            Triplet t;
                             t.x = y;
                             t.ls = joinLabelSets(tIn[x][pos].second[k] , ses[j].second);
                             t.dist = getNumberOfLabelsInLabelSet( t.ls );
-                            t.id = -1;
 
                             q.push(t);
                         }
                     }
 
-                    BitEntry t;
+                    Triplet t;
                     t.x = x;
                     t.ls = 0;
                     t.dist = 0;
-                    t.id = 1;
                     q.push(t);
 
                     //cout << "q.size()=" << q.size() << endl;
 
-                    labelledBFSPerLM(x, true, false, q);
+                    buildIndexForNodePQ(x, true, false, q);
                 }
 
                 hasBeenIndexed[ x ] = 1;
@@ -1866,23 +1703,32 @@ void LandmarkedIndex::setDoExtensive(bool doExtensive)
     this->doExtensive = doExtensive;
 
     updateName();
+    this->landmarkPaths.clear();
 };
 
 void LandmarkedIndex::updateName()
 {
-    this->name = "LI";
+    this->name = "LandmarkedIndex";
 
-    if( doIndexOthers == true )
+    if( doIndexOthers == false && doExtensive == false )
     {
-        this->name += "+OTH";
+        this->name += "()-k=" + to_string(this->noOfLandmarks) + "-m=" + to_string(this->method);
     }
 
-    if( doExtensive == true )
+    if( doIndexOthers == true && doExtensive == false )
     {
-        this->name += "+EXTv2-b=" + to_string(this->budgetOthers);
+        this->name += "2(o)-k=" + to_string(this->noOfLandmarks) + "-m=" + to_string(this->method) + "-b=" + to_string(this->budgetOthers);
     }
 
-    this->name += "-k=" + to_string(this->noOfLandmarks);
+    if( doIndexOthers == false && doExtensive == true )
+    {
+        this->name += "1(e)-k=" + to_string(this->noOfLandmarks) + "-m=" + to_string(this->method);
+    }
+
+    if( doIndexOthers == true && doExtensive == true )
+    {
+        this->name += "12(oe)-k=" + to_string(this->noOfLandmarks) + "-m=" + to_string(this->method) + "-b=" + to_string(this->budgetOthers);
+    }
 }
 
 void LandmarkedIndex::setOthersBudget(int budgetOthers)

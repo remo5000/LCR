@@ -17,7 +17,6 @@
 
 #include "../../Index/UnboundedLCR/Index.h"
 #include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Index/UnboundedLCR/DoubleBFS.cc"
 #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 #include "../../Graph/DGraph.cc"
 
@@ -59,7 +58,7 @@ LabelSet generateLabelSet(LabelSet& ls, int nK, int L, std::uniform_int_distribu
     return ls;
 }
 
-int runQueryAll(Index* lI, Index* bfs, VertexID v, LabelSet ls, int N)
+int runQueryAll(Index* lI, Index* bfs, VertexID v, LabelSet ls, int N, double& sum)
 {
     dynamic_bitset<> bs1 = dynamic_bitset<>(N);
     dynamic_bitset<> bs2 = dynamic_bitset<>(N);
@@ -74,7 +73,9 @@ int runQueryAll(Index* lI, Index* bfs, VertexID v, LabelSet ls, int N)
 
     bool b = bs1.is_subset_of(bs2) && bs2.is_subset_of(bs1);
     cout << "(" << v << "," << ls << ")," << print_digits( (bfs->getLastQueryTime() / lI->getLastQueryTime()),2 )
-        << "," << bs1.count() << "," << bs2.count() << endl;
+       << "," << bs1.count() << "," << bs2.count() << endl;
+
+    sum += (bfs->getLastQueryTime() / lI->getLastQueryTime());
 
     bs1.reset();
     bs2.reset();
@@ -131,13 +132,15 @@ int main(int argc, char *argv[])
     for(int i = 0; i < noOfDifficulties; i++)
     {
         cout << "arr[i]=" << arr[i] << endl;
+        double sum = 0.0;
+        int Nk = 100;
 
-        for(int j = 0; j < 100; j++)
+        for(int j = 0; j < Nk; j++)
         {
             VertexID s = vertexDistribution(generator); // a random start point
             LabelSet ls = 0;
             ls = generateLabelSet(ls, arr[i], L, labelDistribution, generator2);
-            int a = runQueryAll(lI, bfs, s, ls, N);
+            int a = runQueryAll(lI, bfs, s, ls, N, sum);
             if( a == 1 )
             {
                 return 1;
@@ -147,6 +150,8 @@ int main(int argc, char *argv[])
                 j--;
             }
         }
+
+        cout << "arr[i]=" << arr[i] << ", avg=" << (sum / Nk) << endl;
     }
 
     return 0;

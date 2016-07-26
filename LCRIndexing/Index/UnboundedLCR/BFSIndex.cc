@@ -21,6 +21,7 @@ BFSIndex::BFSIndex(Graph* mg)
 
     totalConstTime = constEndTime - constStartTime;
     constEndTime = getCurrentTimeInMilliSec();
+    this->didComplete = true;
 }
 
 BFSIndex::~BFSIndex()

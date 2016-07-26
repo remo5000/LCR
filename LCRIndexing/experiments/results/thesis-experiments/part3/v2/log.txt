@@ -1,1 +1,0 @@
-build/default/runExperiment ./experiments/graphs/real/webStanford/webStanfordL8exp.edge 3 experiments/results/server-experiments/finexp2/4/results-webStanfordL8exp.csv > experiments/results/server-experiments/finexp2/4/output-webStanfordL8exp.txt

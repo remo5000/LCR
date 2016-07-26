@@ -1,6 +1,7 @@
 #!/bin/bash
 #datasets=`find ./experiments/graphs/ | egrep '\.edge$' | sed 's:\.edge::g' | egrep -i '(V5kD(2|3|4|5)L8exp)'`;
-datasets=`find ./experiments/graphs/ | egrep '\.edge$' | sed 's:\.edge::g' | egrep -i '(advogato|robots)'`;
+datasets=`find ./experiments/graphs/ | egrep '\.edge$' | sed 's:\.edge::g' | egrep 'L8exp' | egrep 'V5kD'`;
+
 #datasets=`find ./experiments/graphs/ | egrep '\.edge$' | sed 's:\.edge::g' | egrep -i '(notre|bio)'`;
 
 

@@ -17,12 +17,8 @@
 
 #include "../../Index/UnboundedLCR/Index.h"
 #include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Index/UnboundedLCR/DoubleBFS.cc"
 #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 #include "../../Index/UnboundedLCR/Zou.cc"
-#include "../../Index/UnboundedLCR/ClusteredExactIndex.cc"
-#include "../../Index/UnboundedLCR/PartialIndex.cc"
-#include "../../Index/UnboundedLCR/NeighbourExchange.cc"
 
 #include "../../Graph/DGraph.cc"
 
@@ -249,7 +245,7 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
-    noOfMethods = 2;
+    noOfMethods = 4;
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
@@ -263,71 +259,57 @@ int main(int argc, char *argv[]) {
         if( i == 0 )
             index = new BFSIndex(graph);
 
-        // LI (no extensions)
+        // LI+ (both extensions)
         if( i == 1 )
-	    {
+	      {
             int k = 1250 + sqrt(N);
             int b = 20;
             index = new LandmarkedIndex(graph, true, true, k, b);
-	    }
+	      }
 
-        /*if( i == 1 )
-	    {
-            int k = 1000;
+        // LI (no extensions)
+        if( i == 2 )
+	      {
+            int k = 1250 + sqrt(N);
             int b = 20;
             index = new LandmarkedIndex(graph, false, false, k, b);
-	    }
+	      }
 
-        // LI+OTH (2nd extension only)
-        if( i == 2 )
-	    {
-            int k = 1000;
-            int b = 20;
-            index = new LandmarkedIndex(graph, true, false, k, b);
-	    }
-
-        // LI+EXTv2 (3rd extension only)
+        // Full-LI
         if( i == 3 )
-        {
-            int k = 1000;
-            int b = 20;
-            index = new LandmarkedIndex(graph, false, true, k, b);
-        }
+	      {
+            int k = N;
+            int b = 0;
+            index = new LandmarkedIndex(graph, false, false, k, b);
+	      }
 
-        // LI+OTH+EXTv2 (2nd and 3rd extension, b=20)
+        // Zou
         if( i == 4 )
         {
-            int k = 1000;
-            int b = 20;
-            index = new LandmarkedIndex(graph, true, true, k, b);
-        }*/
-
-        /* Full LI and Zou */
-        /*if( i == 1 )
-        {
-            int k = N;
-            int b = 20;
-            index = new LandmarkedIndex(graph, false, false, k, b);
-        }*/
-
-        /*if( i == 2 )
-        {
             index = new Zou(graph);
-        }*/
+        }
 
-        string indexName = index->getIndexTypeAsString();
-        cout << "runTestsPerIndex index=" << indexName;
-        double indexingTime = index->getIndexConstructionTimeInSec();
-        unsigned long size = index->getIndexSizeInBytes();
-        cout << indexName << " has index size (byte): " << size << endl;
-        cout << indexName << " required index construction time (s): " << indexingTime << endl;
-
-        methodNames.push_back( indexName );
-        int status = runTestsPerIndex(index, queryTimes, queryTimeSums, indexSizes, indexTimes, noOfQuerySets, edge_file , size, indexingTime );
-        if( status == 1 )
+        if( index->didCompleteBuilding() == true )
         {
-            cout << "Error with index=" << indexName << endl;
-            return 1;
+          string indexName = index->getIndexTypeAsString();
+          cout << "runTestsPerIndex index=" << indexName;
+          double indexingTime = index->getIndexConstructionTimeInSec();
+          unsigned long size = index->getIndexSizeInBytes();
+          cout << indexName << " has index size (byte): " << size << endl;
+          cout << indexName << " required index construction time (s): " << indexingTime << endl;
+
+          methodNames.push_back( indexName );
+          int status = runTestsPerIndex(index, queryTimes, queryTimeSums, indexSizes, indexTimes, noOfQuerySets, edge_file , size, indexingTime );
+          if( status == 1 )
+          {
+              cout << "Error with index=" << indexName << endl;
+              return 1;
+          }
+        }
+        else
+        {
+          string indexName = index->getIndexTypeAsString();
+          cout << "No experiments for index: " << indexName << " as it did not complete building the index successfully.";
         }
     }
 
