@@ -2,7 +2,20 @@
 
 This is the code + thesis for my graduation project at the Technical University of Eindhoven, July 2016.
 
-This project contains several methods for answering label-constraint reachability queries (LCR-queries). Our major contribution is the LandmarkedIndex-method. Please read the thesis for a more detailed introduction and explanation of the problem.
+This project contains several methods for answering label-constraint reachability queries (LCR-queries). Our major contribution is the LandmarkedIndex-method. 
+
+
+“
+To cite this work, please use the following reference.
+
+Landmark indexing for evaluation of label-constrained reachability queries. Lucien Valstar, George Fletcher, Yuichi Yoshida. SIGMOD 2017. http://doi.acm.org/10.1145/3035918.3035955
+
+For further details, please see the following work on which this is based.
+
+Landmark indexing for scalable evaluation of label-constrained reachability queries. Lucien Valstar.  MSc thesis, Eindhoven University of Technology, 2016. https://pure.tue.nl/ws/files/46945317/855447-1.pdf
+“
+
+
 
 ## Code Example
 
@@ -42,12 +55,9 @@ python2.7 waf build
 
 ## Contributors
 
-Myself: 
-Lucien Valstar: l dot d dot j dot at (last name in lower case letters).student.tue.nl
+Myself. Lucien Valstar: l + d + j + (last name in lower case letters) at gmail.com
 
-My supervisors:
-G.H.L Fletcher: g dot h dot l dot at (last name in lower case letters).tue.nl
+My supervisors. George Fletcher: g dot h dot l dot (last name in lower case letters) at tue.nl
 
-Y. Yoshida: y dot (last name in lower case letters) at gmail.com
-
+Yuichi Yoshida: y dot (last name in lower case letters) at gmail.com
 
