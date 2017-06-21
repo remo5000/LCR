@@ -4,8 +4,6 @@ This is the code + thesis for my graduation project at the Technical University 
 
 This project contains several methods for answering label-constraint reachability queries (LCR-queries). Our major contribution is the LandmarkedIndex-method. 
 
-
-“
 To cite this work, please use the following reference.
 
 Landmark indexing for evaluation of label-constrained reachability queries. Lucien Valstar, George Fletcher, Yuichi Yoshida. SIGMOD 2017. http://doi.acm.org/10.1145/3035918.3035955
@@ -13,7 +11,6 @@ Landmark indexing for evaluation of label-constrained reachability queries. Luci
 For further details, please see the following work on which this is based.
 
 Landmark indexing for scalable evaluation of label-constrained reachability queries. Lucien Valstar.  MSc thesis, Eindhoven University of Technology, 2016. https://pure.tue.nl/ws/files/46945317/855447-1.pdf
-“
 
 
 
