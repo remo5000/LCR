@@ -16,7 +16,7 @@ def configure(ctx):
 
 def build(bld):
 
-  IndexList = ['BFSIndex', 'DoubleBFS', 'LandmarkedIndex', 'Zou', 'ClusteredExactIndex'];
+  IndexList = ['BFSIndex', 'DoubleBFS', 'LandmarkedIndex', 'Zou', 'ClusteredExactIndex', 'TwoSidedBackboneIndex'];
 
   bld(features     = 'cxx cstaticlib',
       source       = ['Graph/DGraph.cc'],
@@ -48,6 +48,12 @@ def build(bld):
   bld(features     = 'cxx cstaticlib',
       source       = ['Index/UnboundedLCR/Zou.cc'],
       target       = 'Zou',
+      includes     = ['.'],
+      uselib_local = '')
+
+  bld(features     = 'cxx cstaticlib',
+      source       = ['Index/UnboundedLCR/TwoSidedBackboneIndex.cc'],
+      target       = 'TwoSidedBackboneIndex',
       includes     = ['.'],
       uselib_local = '')
 
@@ -122,6 +128,12 @@ def build(bld):
       target       = 'ZouTest',
       includes     = ['.'],
       uselib_local = ['Zou'])
+
+  bld(features     = 'cxx cprogram',
+      source       = ['tests/Index/UnboundedLCR/TwoSidedBackboneIndexTest.cc'],
+      target       = 'TwoSidedBackboneIndexTest',
+      includes     = ['.'],
+      uselib_local = ['TwoSidedBackboneIndex'])
 
   bld(features     = 'cxx cstaticlib',
       source       = ['Index/UnboundedLCR/WD/LandmarkedIndexWD.cc'],
