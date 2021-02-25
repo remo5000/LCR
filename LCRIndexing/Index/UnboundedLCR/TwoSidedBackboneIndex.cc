@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <utility>
+#include <tuple>
 
 using namespace twosidedbackbonens;
 using namespace indexns;
@@ -10,6 +11,7 @@ using namespace graphns;
 
 TwoSidedBackboneIndex::TwoSidedBackboneIndex(Graph* mg, unsigned int localSearchDistance) {
     this->graph = mg;
+    this->localSearchDistance = localSearchDistance;
     this->indexType = IndexType::TwoSidedBackbone;
 
     this->indexDirection = BOTHINDEX;
@@ -42,9 +44,57 @@ void TwoSidedBackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitse
 
 };
 
-LabelledReachabilityMap generateGoundSet(Graph* graph) {
-    LabelledReachabilityMap reachability;
-    return reachability;
+// Generate all vertex pairs that are distance epsilon+1 distance apart.
+LabelledReachabilityMap generateGoundSet(Graph* graph, unsigned int localSearchDistance) {
+    // Used to return the ground set
+    LabelledReachabilityMap twoSidedReachability;
+    // Used to track visited nodes
+    LabelledDistancedReachabilityMap reachability;
+
+    typedef unsigned int Distance;
+
+    for (VertexID source = 0; source < graph->getNumberOfVertices(); source++) {
+        vector< tuple<VertexID, LabelSet, Distance> > stack;
+        assert(isEmptyLabelSet(0));
+        stack.push_back(make_tuple(source,0,0));
+
+        while (!stack.empty()) {
+            VertexID vertex; LabelSet ls; Distance dist;
+            std::tie(vertex, ls, dist) = stack.back();
+            stack.pop_back();
+
+            // Stop BFS-ing if dist > epsilon+1
+            if (dist > localSearchDistance+1) continue;
+            // Add this to the resultant ground set if the distance is exactly epsilon+1
+            if (dist == localSearchDistance+1) {
+                twoSidedReachability.insert(source, vertex, ls);
+                continue;
+            }
+            // else, continue the BFS.
+
+            // If we have already visited this node, continue. Else, visit it.
+            if (reachability.isPresent(source, vertex, ls) || dist >= reachability.getDistance(source, vertex, ls)) continue;
+            reachability.insert(source, vertex, ls, dist);
+
+            // Add all neighbours
+            SmallEdgeSet ses;
+            graph->getOutNeighbours(vertex, ses);
+            for(const auto& p : ses)
+            {
+                VertexID neighbor = p.first;
+                LabelSet ls2 = p.second;
+
+                // Get the new LS
+                LabelSet newLs = joinLabelSets(ls, ls2);
+                // Get the (possibly) shorter distance
+                unsigned int newDist = min(reachability.getDistance(source, neighbor, newLs), reachability.getDistance(source, vertex, newLs)+1);
+
+                stack.push_back(make_tuple(neighbor, newLs, newDist));
+            }
+        }
+    }
+
+    return twoSidedReachability;
 }
 
 void TwoSidedBackboneIndex::buildIndex()
@@ -54,5 +104,5 @@ void TwoSidedBackboneIndex::buildIndex()
     int L = graph->getNumberOfLabels();
     // hasBeenIndexed = dynamic_bitset<>(N);
 
-    LabelledReachabilityMap groundSet = generateGoundSet(graph);
+    LabelledReachabilityMap groundSet = generateGoundSet(graph, this->localSearchDistance);
 };
