@@ -1,20 +1,24 @@
 #include "TwoSidedBackboneIndex.h"
 
+#include <vector>
+#include <utility>
+
 using namespace twosidedbackbonens;
 using namespace indexns;
+using namespace graphns;
 
 
-TwoSidedBackboneIndex::TwoSidedBackboneIndex(Graph* mg) {
+TwoSidedBackboneIndex::TwoSidedBackboneIndex(Graph* mg, unsigned int localSearchDistance) {
     this->graph = mg;
     this->indexType = IndexType::TwoSidedBackbone;
-    int N = graph->getNumberOfVertices();
-    int L = graph->getNumberOfLabels();
 
     this->indexDirection = BOTHINDEX;
     this->isBlockedMode = false; // TODO this has something to do with input
 
     // Construct index
     this->didComplete = false;
+    this->buildIndex();
+    this->didComplete = true;
 }
 
 unsigned long TwoSidedBackboneIndex::getIndexSizeInBytes()
@@ -38,7 +42,17 @@ void TwoSidedBackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitse
 
 };
 
+LabelledReachabilityMap generateGoundSet(Graph* graph) {
+    LabelledReachabilityMap reachability;
+    return reachability;
+}
+
 void TwoSidedBackboneIndex::buildIndex()
 {
+    Graph* graph = this->graph;
+    int N = graph->getNumberOfVertices();
+    int L = graph->getNumberOfLabels();
+    // hasBeenIndexed = dynamic_bitset<>(N);
 
+    LabelledReachabilityMap groundSet = generateGoundSet(graph);
 };

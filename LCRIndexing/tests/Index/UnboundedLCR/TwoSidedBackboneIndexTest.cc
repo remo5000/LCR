@@ -31,12 +31,12 @@ int main(int argc, char *argv[])
 {
     Graph* g1 = new DGraph("tests/graphs/Zoudummy.edge");
     int t = 1;
-    TwoSidedBackboneIndex* zI = new TwoSidedBackboneIndex(g1);
+    TwoSidedBackboneIndex* zI = new TwoSidedBackboneIndex(g1, 1);
 
     cout << zI->toString() << endl;
 
     g1 = new DGraph("tests/graphs/ZouGraph.edge");
-    zI = new TwoSidedBackboneIndex(g1);
+    zI = new TwoSidedBackboneIndex(g1, 1);
 
     runQuery(zI,0,5,13,true,t);
     runQuery(zI,0,6,21,true,t);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     cout << "-------------" << endl;
 
     g1 = new DGraph("tests/graphs/V100D5L8uni.edge");
-    zI = new TwoSidedBackboneIndex(g1);
+    zI = new TwoSidedBackboneIndex(g1, 1);
 
     runQuery(zI,4,0,304,true,t);
     runQuery(zI,10,1,28,true,t);

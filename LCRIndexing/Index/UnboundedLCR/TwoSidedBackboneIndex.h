@@ -9,13 +9,19 @@ using namespace graphns;
 #ifndef TWOSIDEDBACKBONEINDEX_H
 #define TWOSIDEDBACKBONEINDEX_H
 
-namespace twosidedbackbonens {}
+namespace twosidedbackbonens {
+    class LabelledReachabilityMap {
+        public:
+            void insert(VertexID source, VertexID destination, LabelSet ls);
+            bool isPresent(VertexID source, VertexID destination, LabelSet ls);
+    };
+}
 
 class TwoSidedBackboneIndex : public Index
 {
     public:
 
-        TwoSidedBackboneIndex(Graph* mg);
+        TwoSidedBackboneIndex(Graph* mg, unsigned int localSearchDistance);
 
         // To implement Index
         bool query(VertexID source, VertexID target, LabelSet ls);
