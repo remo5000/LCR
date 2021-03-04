@@ -98,6 +98,109 @@ LabelledDistancedReachabilityMap generateGoundSet(Graph* graph, unsigned int loc
     return twoSidedReachability;
 }
 
+void generateCandidatesDfs(
+    VertexID node,
+    Graph* graph,
+    vector<VertexID>& path,
+    unordered_map<VertexID, LabelledDistancedReachabilityMap>& candidates,
+    unsigned int localSearchDistance,
+    VertexID dest,
+    LabelSet ls
+)
+{
+    // Dist too long
+    if (path.size() > localSearchDistance+2) {
+        return;
+    }
+
+    // Add middle nodes to candidate set
+    if (path.size() == localSearchDistance+2 && node == dest) {
+        for (int i = 1; i < path.size()-1; ++i) {
+            VertexID source = path[0];
+            VertexID candidateNode = path[i];
+            candidates[candidateNode].insert(source, dest, ls, localSearchDistance+2);
+        }
+    }
+
+    SmallEdgeSet ses;
+    graph->getOutNeighbours(node, ses);
+    for(const auto& p : ses) {
+        VertexID neighbor = p.first;
+        LabelSet ls2 = p.second;
+        if (!isLabelSubset(ls, ls2)) {
+            continue;
+        }
+        if (find(path.begin(), path.end(), neighbor) != path.end()) {
+            continue;
+        }
+
+        path.push_back(neighbor);
+        generateCandidatesDfs(
+            neighbor,
+            graph,
+            path,
+            candidates,
+            localSearchDistance,
+            dest,
+            ls
+        );
+        path.pop_back();
+    }
+}
+
+
+unordered_map<VertexID, LabelledDistancedReachabilityMap> generateCandidates(
+    Graph* graph,
+    unsigned int localSearchDistance,
+    const LabelledDistancedReachabilityMap& twoSidedReachability
+)
+{
+    unordered_map<VertexID, LabelledDistancedReachabilityMap> candidates;
+    for (const auto& p1 :  twoSidedReachability.m) {
+        VertexID source = p1.first;
+        for (const auto& p2 : p1.second) {
+            VertexID dest = p2.first;
+            for (const auto& p3 : p2.second) {
+                LabelSet ls = p3.first;
+                assert(p3.second == localSearchDistance+1);
+
+                vector<VertexID> path = {source};
+                generateCandidatesDfs(
+                    source,
+                    graph,
+                    path,
+                    candidates,
+                    localSearchDistance,
+                    dest,
+                    ls
+                );
+            }
+        }
+    }
+
+    return candidates;
+}
+
+
+// Used for set cover
+typedef pair<VertexID, std::pair<VertexID, LabelSet>> Item;
+
+// TODO refactor names
+set<Item> reachabilityToSet(const LabelledDistancedReachabilityMap& groundSetMap) {
+    set<Item> uncovered;
+    for (const auto& p : groundSetMap.m) {
+        VertexID source = p.first;
+        for (const auto& p2 : p.second) {
+            VertexID dest = p2.first;
+            for (auto p3 : p2.second) {
+                const LabelSet& ls = p3.first;
+                uncovered.insert(make_pair(source, make_pair(dest, ls)));
+            }
+        }
+    }
+    return uncovered;
+}
+
 void TwoSidedBackboneIndex::buildIndex()
 {
     Graph* graph = this->graph;
@@ -105,5 +208,49 @@ void TwoSidedBackboneIndex::buildIndex()
     int L = graph->getNumberOfLabels();
     // hasBeenIndexed = dynamic_bitset<>(N);
 
-    LabelledReachabilityMap groundSet = generateGoundSet(graph, this->localSearchDistance);
+    LabelledDistancedReachabilityMap groundSetMap = generateGoundSet(graph, this->localSearchDistance);
+
+
+    // Generate candidates
+    // u -> reachability info that u covers
+    const unordered_map<VertexID, LabelledDistancedReachabilityMap>& candidatesToReachabilityMap = generateCandidates(
+        graph,
+        localSearchDistance,
+        groundSetMap
+    );
+    unordered_map<VertexID, set<Item>> candidates;
+    for (const auto& p : candidatesToReachabilityMap) {
+        VertexID candidate = p.first;
+        candidates[candidate] = reachabilityToSet(p.second);
+    }
+
+    // Compute the uncovered vertices
+    set<Item> uncovered = reachabilityToSet(groundSetMap);
+
+    unordered_set<VertexID> backboneVertices;
+    while (uncovered.size() > 0) {
+        VertexID biggestCoverVertex;
+        set<Item> biggestCover;
+        for (const auto& p : candidates) {
+            VertexID vertex = p.first;
+            set<Item> coveredByVertex = p.second;
+
+            set<Item> newCoveredItems;
+            for (const Item& item : coveredByVertex) {
+                if (!uncovered.count(item)) {
+                    newCoveredItems.insert(item);
+                }
+            }
+
+            if (newCoveredItems.size() > biggestCover.size()) {
+                biggestCover = newCoveredItems; // TODO evaluate if we should use `move` here
+                biggestCoverVertex = vertex;
+            }
+        }
+
+        for (const Item& item : biggestCover) {
+            uncovered.erase(item);
+        }
+        backboneVertices.insert(biggestCoverVertex);
+    }
 };
