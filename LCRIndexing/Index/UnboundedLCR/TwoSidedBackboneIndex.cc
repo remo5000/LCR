@@ -1,6 +1,7 @@
 #include "TwoSidedBackboneIndex.h"
 
 #include <vector>
+#include <algorithm>
 #include <utility>
 #include <tuple>
 
@@ -45,9 +46,9 @@ void TwoSidedBackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitse
 };
 
 // Generate all vertex pairs that are distance epsilon+1 distance apart.
-LabelledReachabilityMap generateGoundSet(Graph* graph, unsigned int localSearchDistance) {
+LabelledDistancedReachabilityMap generateGoundSet(Graph* graph, unsigned int localSearchDistance) {
     // Used to return the ground set
-    LabelledReachabilityMap twoSidedReachability;
+    LabelledDistancedReachabilityMap twoSidedReachability;
     // Used to track visited nodes
     LabelledDistancedReachabilityMap reachability;
 
@@ -67,7 +68,7 @@ LabelledReachabilityMap generateGoundSet(Graph* graph, unsigned int localSearchD
             if (dist > localSearchDistance+1) continue;
             // Add this to the resultant ground set if the distance is exactly epsilon+1
             if (dist == localSearchDistance+1) {
-                twoSidedReachability.insert(source, vertex, ls);
+                twoSidedReachability.insert(source, vertex, ls, dist);
                 continue;
             }
             // else, continue the BFS.
