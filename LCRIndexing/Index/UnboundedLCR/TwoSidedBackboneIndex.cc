@@ -38,7 +38,7 @@ bool TwoSidedBackboneIndex::query(VertexID source, VertexID target, LabelSet ls)
 {
     cout << "TwoSidedBackboneIndex::query source=" << to_string(source) << ",target=" << to_string(target) << ",ls=" << labelSetToString(ls) << endl;
     queryStart = getCurrentTimeInMilliSec();
-    bool b = true; // TODO
+    bool b = true; // TODO implement querying
     queryEndTime = getCurrentTimeInMilliSec();
     cout << "TwoSidedBackboneIndex::query answer =" << b << endl;
     return b;
@@ -133,20 +133,19 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
 // Used for set cover
 typedef pair<VertexID, std::pair<VertexID, LabelSet>> Item;
 
-// TODO refactor names
-set<Item> reachabilityToSet(const LabelledDistancedReachabilityMap& groundSetMap) {
-    set<Item> uncovered;
-    for (const auto& p : groundSetMap.m) {
+set<Item> reachabilityToSet(const LabelledDistancedReachabilityMap& reachabilityMap) {
+    set<Item> result;
+    for (const auto& p : reachabilityMap.m) {
         VertexID source = p.first;
         for (const auto& p2 : p.second) {
             VertexID dest = p2.first;
             for (auto p3 : p2.second) {
                 const LabelSet& ls = p3.first;
-                uncovered.insert(make_pair(source, make_pair(dest, ls)));
+                result.insert(make_pair(source, make_pair(dest, ls)));
             }
         }
     }
-    return uncovered;
+    return result;
 }
 
 void TwoSidedBackboneIndex::buildIndex()
@@ -175,7 +174,6 @@ void TwoSidedBackboneIndex::buildIndex()
     watch(candidates.size());
     watch(candidatesToReachabilityMap.size());
 
-    // TODO remove
     if (DEBUG)
     for (const auto& p : candidates) {
         watch(p.first);
@@ -189,10 +187,8 @@ void TwoSidedBackboneIndex::buildIndex()
 
     log("starting set cover");
     while (uncovered.size() > 0) {
-        // TODO update to use LabelledDistancedReachabilityMap before using
         log("Uncovered:");
         watch(uncovered.size());
-        // TODO FDSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSLSDJFIWHWEIUHSUDFL
         if (DEBUG)
         for (const auto& p1 : uncovered.m) {
             for (const auto& p2 : p1.second) {
