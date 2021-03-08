@@ -50,62 +50,11 @@ void TwoSidedBackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitse
 
 };
 
-// Generate all vertex pairs that are distance epsilon+1 distance apart.
-LabelledDistancedReachabilityMap generateGoundSet(Graph* graph, unsigned int localSearchDistance) {
-    // Used to return the ground set
-    LabelledDistancedReachabilityMap twoSidedReachability;
-    // Used to track visited nodes
-    LabelledDistancedReachabilityMap reachability;
-
-    typedef unsigned int Distance;
-
-    for (VertexID source = 0; source < graph->getNumberOfVertices(); source++) {
-        vector< tuple<VertexID, LabelSet, Distance> > stack;
-        assert(isEmptyLabelSet(0));
-        stack.push_back(make_tuple(source,0,0));
-
-        while (!stack.empty()) {
-            VertexID vertex; LabelSet ls; Distance dist;
-            std::tie(vertex, ls, dist) = stack.back();
-            stack.pop_back();
-
-            // Stop BFS-ing if dist > epsilon+1
-            if (dist > localSearchDistance+1) continue;
-            // Add this to the resultant ground set if the distance is exactly epsilon+1
-            if (dist == localSearchDistance+1) {
-                twoSidedReachability.insert(source, vertex, ls, dist);
-                continue;
-            }
-            // else, continue the BFS.
-
-            // If we have already visited this node, continue. Else, visit it.
-            if (reachability.isPresent(source, vertex, ls) && dist >= reachability.getDistance(source, vertex, ls)) continue;
-            reachability.insert(source, vertex, ls, dist);
-
-            // Add all neighbours
-            SmallEdgeSet ses;
-            graph->getOutNeighbours(vertex, ses);
-            for(const auto& p : ses)
-            {
-                VertexID neighbor = p.first;
-                LabelSet ls2 = p.second;
-
-                // Get the new LS
-                LabelSet newLs = joinLabelSets(ls, ls2);
-                // Get the (possibly) shorter distance
-                unsigned int newDist = min(reachability.getDistance(source, neighbor, newLs), reachability.getDistance(source, vertex, newLs)+1);
-
-                stack.push_back(make_tuple(neighbor, newLs, newDist));
-            }
-        }
-    }
-
-    return twoSidedReachability;
-}
-
-// Generate all vertex pairs that are distance epsilon+1 distance apart.
+// Generate all vertex pairs that are distance epsilon+1 distance apart,
+// and generate candidate vertices for the backbone set in the process.
+// This step is easier to not separate due to the fact that we would do almost-repeated computation otherwise.
 pair<LabelledDistancedReachabilityMap, unordered_map<VertexID, LabelledDistancedReachabilityMap>>
-generateGoundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
+generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
     // Used to return the ground set
     LabelledDistancedReachabilityMap twoSidedReachability;
     unordered_map<VertexID, LabelledDistancedReachabilityMap> candidates;
@@ -180,90 +129,6 @@ generateGoundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
     return {twoSidedReachability, candidates};
 }
 
-void generateCandidatesDfs(
-    VertexID node,
-    Graph* graph,
-    vector<VertexID>& path,
-    unordered_map<VertexID, LabelledDistancedReachabilityMap>& candidates,
-    unsigned int localSearchDistance,
-    VertexID dest,
-    LabelSet ls
-)
-{
-    // Dist too long
-    if (path.size() > localSearchDistance+2) {
-        return;
-    }
-
-    // Add middle nodes to candidate set
-    if (path.size() == localSearchDistance+2 && node == dest) {
-        for (int i = 1; i < path.size()-1; ++i) {
-            VertexID source = path[0];
-            VertexID candidateNode = path[i];
-            candidates[candidateNode].insert(source, dest, ls, localSearchDistance+2);
-        }
-    }
-
-    SmallEdgeSet ses;
-    graph->getOutNeighbours(node, ses);
-    for(const auto& p : ses) {
-        VertexID neighbor = p.first;
-        LabelSet ls2 = p.second;
-        if (!isLabelSubset(ls, ls2)) {
-            continue;
-        }
-        if (find(path.begin(), path.end(), neighbor) != path.end()) {
-            continue;
-        }
-
-        path.push_back(neighbor);
-        generateCandidatesDfs(
-            neighbor,
-            graph,
-            path,
-            candidates,
-            localSearchDistance,
-            dest,
-            ls
-        );
-        path.pop_back();
-    }
-}
-
-
-unordered_map<VertexID, LabelledDistancedReachabilityMap> generateCandidates(
-    Graph* graph,
-    unsigned int localSearchDistance,
-    const LabelledDistancedReachabilityMap& twoSidedReachability
-)
-{
-    unordered_map<VertexID, LabelledDistancedReachabilityMap> candidates;
-    for (const auto& p1 :  twoSidedReachability.m) {
-        VertexID source = p1.first;
-        for (const auto& p2 : p1.second) {
-            VertexID dest = p2.first;
-            for (const auto& p3 : p2.second) {
-                LabelSet ls = p3.first;
-                assert(p3.second == localSearchDistance+1);
-                cout << "start dfs " << source << " -> " << dest << " via " << labelSetToString(ls) << "." << endl;
-
-                vector<VertexID> path = {source};
-                generateCandidatesDfs(
-                    source,
-                    graph,
-                    path,
-                    candidates,
-                    localSearchDistance,
-                    dest,
-                    ls
-                );
-            }
-        }
-    }
-
-    return candidates;
-}
-
 
 // Used for set cover
 typedef pair<VertexID, std::pair<VertexID, LabelSet>> Item;
@@ -294,18 +159,13 @@ void TwoSidedBackboneIndex::buildIndex()
     log("generating ground set");
     LabelledDistancedReachabilityMap groundSetMap;
     unordered_map<VertexID, LabelledDistancedReachabilityMap> candidatesToReachabilityMap;
-    std::tie(groundSetMap, candidatesToReachabilityMap) = generateGoundSetAndCandidates(graph, this->localSearchDistance);
+    std::tie(groundSetMap, candidatesToReachabilityMap) = generateGroundSetAndCandidates(graph, this->localSearchDistance);
     log("generated ground set");
 
 
     // Generate candidates
     // u -> reachability info that u covers
     log("generating candidates");
-    // const unordered_map<VertexID, LabelledDistancedReachabilityMap>& candidatesToReachabilityMap = generateCandidates(
-    //     graph,
-    //     localSearchDistance,
-    //     groundSetMap
-    // );
     map<VertexID, set<Item>> candidates;
     for (const auto& p : candidatesToReachabilityMap) {
         VertexID candidate = p.first;
