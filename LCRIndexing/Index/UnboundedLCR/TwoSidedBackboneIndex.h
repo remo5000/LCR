@@ -79,7 +79,10 @@ class TwoSidedBackboneIndex : public Index
         void queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach);
 
     private:
+        // The "epsilon" parameter of the backbone
         unsigned int localSearchDistance;
+        // The backbone vertices
+        unordered_set<VertexID> backboneVertices;
         void buildIndex();
 };
 #endif
