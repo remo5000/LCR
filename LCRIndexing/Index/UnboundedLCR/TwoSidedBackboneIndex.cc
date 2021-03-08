@@ -237,3 +237,7 @@ void TwoSidedBackboneIndex::buildIndex()
         log(v);
     }
 };
+
+const unordered_set<VertexID>& TwoSidedBackboneIndex::getBackBoneVertices() const {
+    return backboneVertices;
+};
