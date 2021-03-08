@@ -79,7 +79,7 @@ LabelledDistancedReachabilityMap generateGoundSet(Graph* graph, unsigned int loc
             // else, continue the BFS.
 
             // If we have already visited this node, continue. Else, visit it.
-            if (reachability.isPresent(source, vertex, ls) || dist >= reachability.getDistance(source, vertex, ls)) continue;
+            if (reachability.isPresent(source, vertex, ls) && dist >= reachability.getDistance(source, vertex, ls)) continue;
             reachability.insert(source, vertex, ls, dist);
 
             // Add all neighbours
