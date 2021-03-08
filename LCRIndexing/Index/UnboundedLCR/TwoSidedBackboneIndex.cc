@@ -166,7 +166,7 @@ void TwoSidedBackboneIndex::buildIndex()
     // Generate candidates
     // u -> reachability info that u covers
     log("generating candidates");
-    map<VertexID, set<Item>> candidates;
+    unordered_map<VertexID, set<Item>> candidates;
     for (const auto& p : candidatesToReachabilityMap) {
         VertexID candidate = p.first;
         candidates[candidate] = reachabilityToSet(p.second);
