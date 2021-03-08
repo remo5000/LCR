@@ -1,9 +1,14 @@
 #include "TwoSidedBackboneIndex.h"
-
 #include <vector>
 #include <algorithm>
 #include <utility>
 #include <tuple>
+#include <map>
+
+#define watch(x) cout << (#x) << " is " << (x) << endl
+#define watch_vector(vect) cout << (#vect) << ": [";for (int i = 0; i < vect.size(); i++) cout << vect[i] << " ";cout << "]" << endl;
+
+#define log(x) cout << x << endl
 
 using namespace twosidedbackbonens;
 using namespace indexns;
@@ -163,6 +168,7 @@ unordered_map<VertexID, LabelledDistancedReachabilityMap> generateCandidates(
             for (const auto& p3 : p2.second) {
                 LabelSet ls = p3.first;
                 assert(p3.second == localSearchDistance+1);
+                cout << "start dfs " << source << " -> " << dest << " via " << labelSetToString(ls) << "." << endl;
 
                 vector<VertexID> path = {source};
                 generateCandidatesDfs(
