@@ -35,14 +35,34 @@ namespace twosidedbackbonens {
                 }
                 return false;
             }
+            void erase(VertexID source, VertexID destination, LabelSet ls) {
+                m.at(source).at(destination).erase(ls);
+                if (m.at(source).at(destination).size() == 0) m.at(source).erase(destination);
+                if (m.at(source).size() == 0) m.erase(source);
+            }
             unsigned int getDistance(VertexID source, VertexID destination, LabelSet ls) {
                 if (this->isPresent(source, destination, ls)) {
                     return this->m[source][destination][ls];
-                } else {
-                    return std::numeric_limits<unsigned int>::max();
                 }
+
+
+                for (auto p : m[source][destination]) {
+                    if (isLabelSubset(ls, p.first)) {
+                        return p.second;
+                    }
+                }
+
+                return std::numeric_limits<unsigned int>::max();
+            }
+            unsigned int size() {
+                unsigned int ans = 0;
+                for (const auto& p1 : m)
+                    for (const auto& p2 : p1.second)
+                        ans += p2.second.size();
+                return ans;
             }
             // source -> dest -> ls -> dist
+            // TODO make this private
             unordered_map<VertexID, unordered_map<VertexID, unordered_map<LabelSet, unsigned int> > > m;
     };
 }
