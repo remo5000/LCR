@@ -5,10 +5,10 @@
 #include <tuple>
 #include <map>
 
-#define watch(x) cout << (#x) << " is " << (x) << endl
-#define watch_vector(vect) cout << (#vect) << ": [";for (int i = 0; i < vect.size(); i++) cout << vect[i] << " ";cout << "]" << endl;
-
-#define log(x) cout << x << endl
+#define DEBUG 0
+#define watch(x) if (DEBUG) cout << (#x) << " is " << (x) << endl
+#define watch_vector(vect) if (DEBUG) cout << (#vect) << ": [";for (int i = 0; i < vect.size(); i++) if (DEBUG) cout << vect[i] << " "; if (DEBUG) cout << "]" << endl;
+#define log(x) if (DEBUG) cout << x << endl
 
 using namespace twosidedbackbonens;
 using namespace indexns;
@@ -176,6 +176,7 @@ void TwoSidedBackboneIndex::buildIndex()
     watch(candidatesToReachabilityMap.size());
 
     // TODO remove
+    if (DEBUG)
     for (const auto& p : candidates) {
         watch(p.first);
         for (const auto& item : p.second) {
@@ -192,6 +193,7 @@ void TwoSidedBackboneIndex::buildIndex()
         log("Uncovered:");
         watch(uncovered.size());
         // TODO FDSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSLSDJFIWHWEIUHSUDFL
+        if (DEBUG)
         for (const auto& p1 : uncovered.m) {
             for (const auto& p2 : p1.second) {
                 for (const auto& p3 : p2.second) {
