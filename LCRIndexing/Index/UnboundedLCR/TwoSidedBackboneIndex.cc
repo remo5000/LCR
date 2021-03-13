@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <utility>
 #include <tuple>
+#include <memory>
 #include <map>
+#include <deque>
 
 #define DEBUG 0
 #define watch(x) if (DEBUG) cout << (#x) << " is " << (x) << endl
@@ -34,11 +36,84 @@ unsigned long TwoSidedBackboneIndex::getIndexSizeInBytes()
     return getIndexSizeInBytesM();
 };
 
+bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
+    watch(source);
+    watch(target);
+    watch(labelSetToLetters(ls));
+
+    typedef unsigned int Distance;
+
+    deque<pair<VertexID, Distance>> sourceOut;
+    sourceOut.emplace_back(source, 0);
+    unordered_set<VertexID> outVisited;
+    for (const auto& p : sourceOut) {
+        log(p.first);
+    }
+
+    deque<pair<VertexID, Distance>> targetIn;
+    targetIn.emplace_back(target, 0);
+    unordered_set<VertexID> inVisited;
+
+    // Local BFS for epsilon distance
+    bool bfsOutwards = true;
+    // BFS until both queues are empty
+    while(sourceOut.size() > 0 &&  targetIn.size() > 0) {
+        VertexID vertex; Distance dist;
+        deque<pair<VertexID, Distance>>& q = bfsOutwards ? sourceOut : targetIn;
+        unordered_set<VertexID>& visitedSet = bfsOutwards ? outVisited : inVisited;
+        const unordered_set<VertexID>& otherVisitedSet = bfsOutwards ? inVisited: outVisited;
+
+        std::tie(vertex, dist) = q.front();
+        q.pop_front();
+
+        // Dont search more than epsilon for local search
+        // TODO uncomment
+        // if (dist > this->localSearchDistance) continue;
+
+        // Quick return if the vertices are locally reachable
+        if (otherVisitedSet.count(vertex)) return true;
+
+        if (visitedSet.count(vertex)) continue;
+        else visitedSet.insert(vertex);
+
+
+        SmallEdgeSet ses;
+        if (bfsOutwards) {
+            this->graph->getOutNeighbours(vertex, ses);
+        } else {
+            this->graph->getInNeighbours(vertex, ses);
+        }
+
+        for(const auto& p : ses) {
+            VertexID neighbor = p.first;
+            LabelSet ls2 = p.second;
+            if (!isLabelSubset(ls2, ls)) continue;
+
+            q.push_back({neighbor, dist+1});
+        }
+        bfsOutwards = !bfsOutwards;
+    }
+
+    // watch(source);
+    // for (const auto& p : sourceOut) {
+    //     log(p.first);
+    // }
+    // watch(target);
+    // for (const auto& p : targetIn) {
+    //     log(p.first);
+    // }
+
+    return false;
+}
+
 bool TwoSidedBackboneIndex::query(VertexID source, VertexID target, LabelSet ls)
 {
     cout << "TwoSidedBackboneIndex::query source=" << to_string(source) << ",target=" << to_string(target) << ",ls=" << labelSetToString(ls) << endl;
     queryStart = getCurrentTimeInMilliSec();
-    bool b = true; // TODO implement querying
+
+    bool b = this->computeQuery(source, target, ls);
+    watch(b);
+
     queryEndTime = getCurrentTimeInMilliSec();
     cout << "TwoSidedBackboneIndex::query answer =" << b << endl;
     return b;
@@ -70,7 +145,6 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
         LabelSet startingLabelSet = 0;
         assert(isEmptyLabelSet(0));
         stack.push_back(make_tuple(source, startingLabelSet, 0, startingPath));
-        watch(source);
 
         while (!stack.empty()) {
             VertexID vertex; LabelSet ls; Distance dist; Path path;
@@ -99,10 +173,10 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
                 continue;
             }
 
-            watch(vertex);
-            watch(labelSetToString(ls));
-            watch(dist);
-            watch_vector(path);
+            // watch(vertex);
+            // watch(labelSetToString(ls));
+            // watch(dist);
+            // watch_vector(path);
 
             // Add all neighbours
             SmallEdgeSet ses;
