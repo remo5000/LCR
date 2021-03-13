@@ -19,6 +19,7 @@
 #include "../../Index/UnboundedLCR/BFSIndex.cc"
 #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 #include "../../Index/UnboundedLCR/Zou.cc"
+#include "../../Index/UnboundedLCR/TwoSidedBackboneIndex.cc"
 
 #include "../../Graph/DGraph.cc"
 
@@ -216,12 +217,12 @@ int main(int argc, char *argv[]) {
     loadQueryFile(edge_file + "0.true", tmpSet); // load the two query files
     int noOfQueries = tmpSet.size();
 
-    int noOfMethods = 3; // the total number of methods
+    int noOfMethods = 6; // the total number of methods
     if( argc == 5 )
     {
         noOfMethods = atoi(argv[4]);
     }
-    int firstMethod = 0; // the method to start with: BFS, ExactIndex, ExactHopIndex, Joindex
+    int firstMethod = 5; // the method to start with: BFS, ExactIndex, ExactHopIndex, Joindex
 
     cout << print_digits(10000000.0, 0) << endl;
     cout << "number of methods: " << noOfMethods << endl;
@@ -245,7 +246,7 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
-    noOfMethods = 4;
+    noOfMethods = 6;
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
@@ -287,6 +288,13 @@ int main(int argc, char *argv[]) {
         if( i == 4 )
         {
             index = new Zou(graph);
+        }
+
+        // Two Sided backbone;
+        if (i == 5) {
+            // TODO set to some function of N
+            unsigned int localDist = 2;
+            index = new TwoSidedBackboneIndex(graph, localDist);
         }
 
         if( index->didCompleteBuilding() == true )
