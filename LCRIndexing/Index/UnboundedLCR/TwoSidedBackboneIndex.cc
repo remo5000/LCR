@@ -185,20 +185,11 @@ void TwoSidedBackboneIndex::buildIndex()
     // Compute the uncovered vertices
     LabelledDistancedReachabilityMap& uncovered = groundSetMap;
 
+    // Compute the backbone vertices
     log("starting set cover");
     while (uncovered.size() > 0) {
         log("Uncovered:");
-        watch(uncovered.size());
-        if (DEBUG)
-        for (const auto& p1 : uncovered.m) {
-            for (const auto& p2 : p1.second) {
-                for (const auto& p3 : p2.second) {
-                    cout << "  ("  << p1.first;
-                    cout << "->" << p2.first << ", ";
-                    cout << labelSetToString(p3.first) << ")\n";
-                }
-            }
-        }
+        if (DEBUG) cout << uncovered.toString();
         log("----:");
 
         VertexID biggestCoverVertex;
@@ -228,12 +219,98 @@ void TwoSidedBackboneIndex::buildIndex()
         // Add the biggest vertex to the backbone vertices
         backboneVertices.insert(biggestCoverVertex);
     }
+
     log("backboneVertices:");
     for (auto v : backboneVertices) {
         log(v);
     }
+
+    // source -> dest -> {LS} in backbone
+    // Minimal in the sense that if u -L-> w -L-> v, and u,w,v are all in backbone,
+    // u-L->w is not included.
+     LabelledDistancedReachabilityMap backboneReachability;
+
+
+    // Compute the backbone reachability (to compute edges)
+    unsigned int DIST_NOT_USED = 0;
+    for (const VertexID& source : backboneVertices) {
+        // Keep a local reachability for the source vertex
+        LabelledDistancedReachabilityMap dfsReachability;
+
+        typedef vector<VertexID> Path;
+        vector<tuple<VertexID, LabelSet, Path>> stack;
+
+        Path startingPath = {source};
+        stack.emplace_back(source, 0, startingPath);
+
+        while(stack.size()) {
+            watch(stack.size());
+            VertexID vertex; LabelSet ls; Path path;
+            std::tie(vertex, ls, path) = stack.back();
+            stack.pop_back();
+
+            // If we are in a loop, quit (there must be a more efficient reachability path)
+            bool inPath = false;
+            for (int i = 0; i < path.size()-1; i++) if (path[i] == vertex) inPath = true;
+            if (inPath) continue;
+
+            // If we have already visited this node, continue. Else, visit it.
+            if (dfsReachability.isPresent(source, vertex, ls)) continue;
+            dfsReachability.insert(source, vertex, ls, DIST_NOT_USED);
+
+            // Track reachability between backbone vertices (this is a subset of reachability)
+            if (backboneVertices.count(vertex)) backboneReachability.insert(source, vertex, ls, DIST_NOT_USED);
+
+            // If the current vertex is in the backbone, we don't need to dfs further because we will
+            // obtain that reachability information eventually.
+            if (vertex != source && backboneVertices.count(vertex)) continue;
+
+
+            SmallEdgeSet ses;
+            graph->getOutNeighbours(vertex, ses);
+            for(const auto& p : ses)
+            {
+                VertexID neighbor = p.first;
+                LabelSet ls2 = p.second;
+
+                // Get the new LS
+                LabelSet newLs = joinLabelSets(ls, ls2);
+
+                Path newPath = path;
+                newPath.push_back(neighbor);
+
+                stack.push_back(make_tuple(neighbor, newLs, newPath));
+            }
+
+            log("\n\n");
+        }
+    }
+
+    // Clean up self-edges
+    for (const VertexID& source : backboneVertices) backboneReachability.erase(source, source);
+    log(backboneReachability.toString());
+
+    // Generate edges
+    EdgeSet emptyEdgeSet;
+    DGraph* dg = new DGraph(&emptyEdgeSet, this->graph->getNumberOfVertices(), 0, true);
+
+    for (const auto& p : backboneReachability.toEdgeMap()) {
+        for (const SmallEdge& smallEdge : p.second) {
+            VertexID u = p.first;
+            VertexID v = smallEdge.first;
+            LabelSet ls = smallEdge.second;
+            dg->addMultiEdge(u,v,ls);
+        }
+    }
+
+    // Set the bacbone
+    backbone = std::unique_ptr<const DGraph>(dg);
 };
 
 const unordered_set<VertexID>& TwoSidedBackboneIndex::getBackBoneVertices() const {
     return backboneVertices;
+};
+
+const DGraph& TwoSidedBackboneIndex::getBackBone() const {
+    return *backbone;
 };

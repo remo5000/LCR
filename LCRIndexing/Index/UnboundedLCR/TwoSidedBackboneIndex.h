@@ -140,6 +140,7 @@ class TwoSidedBackboneIndex : public Index
 
         // Backbone
         const unordered_set<VertexID>& getBackBoneVertices() const;
+        const DGraph& getBackBone() const;
 
 
     private:
@@ -147,6 +148,11 @@ class TwoSidedBackboneIndex : public Index
         unsigned int localSearchDistance;
         // The backbone vertices
         unordered_set<VertexID> backboneVertices;
+        // The backbone itself
+        // unique_ptr<const DGraph> backbone;
+        unique_ptr<const DGraph> backbone;
+
         void buildIndex();
+        bool computeQuery(VertexID source, VertexID target, LabelSet ls);
 };
 #endif
