@@ -8,9 +8,10 @@
 #include <deque>
 
 #define DEBUG 0
-#define watch(x) if (DEBUG) cout << (#x) << " is " << (x) << endl
+#define watch(x) if (DEBUG) cout << (#x) << " is " << (x) << endl; cout.flush();
 #define watch_vector(vect) if (DEBUG) cout << (#vect) << ": [";for (int i = 0; i < vect.size(); i++) if (DEBUG) cout << vect[i] << " "; if (DEBUG) cout << "]" << endl;
-#define log(x) if (DEBUG) cout << x << endl
+#define log(x) if (DEBUG) cout << x << endl; cout.flush();
+#define print(x) cout << x << endl; cout.flush();
 
 using namespace twosidedbackbonens;
 using namespace indexns;
@@ -37,6 +38,7 @@ unsigned long TwoSidedBackboneIndex::getIndexSizeInBytes()
 };
 
 bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
+    log("Starting query");
     watch(source);
     watch(target);
     watch(labelSetToLetters(ls));
