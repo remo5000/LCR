@@ -192,14 +192,14 @@ bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, Label
 
 bool TwoSidedBackboneIndex::query(VertexID source, VertexID target, LabelSet ls)
 {
-    cout << "TwoSidedBackboneIndex::query source=" << to_string(source) << ",target=" << to_string(target) << ",ls=" << labelSetToString(ls) << endl;
+    // cout << "TwoSidedBackboneIndex::query source=" << to_string(source) << ",target=" << to_string(target) << ",ls=" << labelSetToString(ls) << endl;
     queryStart = getCurrentTimeInMilliSec();
 
     bool b = this->computeQuery(source, target, ls);
     watch(b);
 
     queryEndTime = getCurrentTimeInMilliSec();
-    cout << "TwoSidedBackboneIndex::query answer =" << b << endl;
+    // cout << "TwoSidedBackboneIndex::query answer =" << b << endl;
     return b;
 }
 

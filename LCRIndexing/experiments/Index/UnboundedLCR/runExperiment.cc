@@ -123,7 +123,8 @@ int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTime
             double avg = 0.0;
             vector< double > avgs;
 
-            for(int k = 0; k < 5; k++)
+            int NUMBER_OF_RUNS = 5;
+            for(int k = 0; k < NUMBER_OF_RUNS; k++)
             {
                 if( index->query(from, to, ls) == false )
                 {
@@ -136,12 +137,11 @@ int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTime
             }
 
             sort( avgs.begin(), avgs.end() );
-            for(int k = 0; k < 3; k++)
+            for(int k = 0; k < NUMBER_OF_RUNS; k++)
             {
                 avg += avgs[k];
             }
-
-            avg /= 3;
+            avg /= NUMBER_OF_RUNS;
 
             cout << "*Query " << i << ": (" << from << "," << to << "," << labelSetToString(ls) << ", true), avg=" << print_digits(avg,11) << endl;
             i++;
@@ -222,7 +222,7 @@ int main(int argc, char *argv[]) {
     {
         noOfMethods = atoi(argv[4]);
     }
-    int firstMethod = 5; // the method to start with: BFS, ExactIndex, ExactHopIndex, Joindex
+    int firstMethod = 0; // the method to start with: BFS, ExactIndex, ExactHopIndex, Joindex
 
     cout << print_digits(10000000.0, 0) << endl;
     cout << "number of methods: " << noOfMethods << endl;
@@ -264,6 +264,7 @@ int main(int argc, char *argv[]) {
         if( i == 1 )
 	      {
             int k = 1250 + sqrt(N);
+            if (k >= N) k = sqrt(N);
             int b = 20;
             index = new LandmarkedIndex(graph, true, true, k, b);
 	      }
@@ -272,6 +273,7 @@ int main(int argc, char *argv[]) {
         if( i == 2 )
 	      {
             int k = 1250 + sqrt(N);
+            if (k >= N) k = sqrt(N);
             int b = 20;
             index = new LandmarkedIndex(graph, false, false, k, b);
 	      }
@@ -292,8 +294,7 @@ int main(int argc, char *argv[]) {
 
         // Two Sided backbone;
         if (i == 5) {
-            // TODO set to some function of N
-            unsigned int localDist = 2;
+            unsigned int localDist = sqrt(N);
             index = new TwoSidedBackboneIndex(graph, localDist);
         }
 
@@ -319,6 +320,8 @@ int main(int argc, char *argv[]) {
           string indexName = index->getIndexTypeAsString();
           cout << "No experiments for index: " << indexName << " as it did not complete building the index successfully.";
         }
+
+        free(index);
     }
 
     cout << "--- Writing out the data ---" << endl;
@@ -508,7 +511,7 @@ int main(int argc, char *argv[]) {
     }
     cout << "\\\\ \n";
 
-    for(int i = 1; i < methodNames.size(); i++)
+    for(int i = 0; i < methodNames.size(); i++)
     {
         cout << methodNames[i];
 

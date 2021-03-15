@@ -222,7 +222,6 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
                 // if( c < 2 && tried > min((N/500),100) )
                 if( tried > N/4 )
                 {
-                    watch("tried too many times -- changing to another node");
                     break;
                 }
 
