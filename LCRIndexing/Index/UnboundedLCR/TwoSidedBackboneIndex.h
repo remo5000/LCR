@@ -150,7 +150,7 @@ class TwoSidedBackboneIndex : public Index
         unordered_set<VertexID> backboneVertices;
         // The backbone itself
         // unique_ptr<const DGraph> backbone;
-        unique_ptr<const DGraph> backbone;
+        unique_ptr<DGraph> backbone;
 
         void buildIndex();
         bool computeQuery(VertexID source, VertexID target, LabelSet ls);
