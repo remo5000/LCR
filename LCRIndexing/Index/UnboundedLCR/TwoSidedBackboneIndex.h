@@ -107,7 +107,7 @@ namespace twosidedbackbonens {
                 s << "]\n";
                 return s.str();
             }
-            const map<VertexID, SmallEdgeSet> toEdgeMap() {
+            const map<VertexID, SmallEdgeSet> toEdgeMap() const {
                 map<VertexID, SmallEdgeSet> result;
                 for (const auto& p1 : m) {
                     for (const auto& p2 : p1.second) {
@@ -121,8 +121,24 @@ namespace twosidedbackbonens {
                 }
                 return result;
             }
+
+            typedef pair<VertexID, std::pair<VertexID, LabelSet>> Item;
+            set<Item> toTuples() const {
+                set<Item> result;
+                for (const auto& p1 : m) {
+                    for (const auto& p2 : p1.second) {
+                        for (const auto& p3 : p2.second) {
+                            VertexID u = p1.first;
+                            VertexID v = p2.first;
+                            LabelSet ls = p3.first;
+                            result.insert({u, {v, ls}});
+                        }
+                    }
+                }
+                return result;
+            }
+        private:
             // source -> dest -> ls -> dist
-            // TODO make this private
             map<VertexID, map<VertexID, map<LabelSet, unsigned int> > > m;
     };
 }
@@ -153,6 +169,21 @@ class TwoSidedBackboneIndex : public Index
         unique_ptr<DGraph> backbone;
 
         void buildIndex();
+        bool bfsLocally(
+            VertexID source,
+            VertexID target,
+            LabelSet ls,
+            // TODO remove these once backbones are indexed per node
+            unordered_set<VertexID>& outVisited,
+            unordered_set<VertexID>& inVisited
+        );
+        bool bfsBackbone(
+            deque<VertexID>& outgoingBackboneQueue,
+            deque<VertexID>& incomingBackboneQueue,
+            unordered_set<VertexID>& outVisited,
+            unordered_set<VertexID>& inVisited,
+            const LabelSet& ls
+        );
         bool computeQuery(VertexID source, VertexID target, LabelSet ls);
 };
 #endif
