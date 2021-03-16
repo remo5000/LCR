@@ -46,75 +46,50 @@ bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSe
                                        unordered_set<VertexID>& outVisited,
                                        unordered_set<VertexID>& inVisited
                                        ) {
-    deque<pair<VertexID, Distance>> sourceOut;
-    sourceOut.emplace_back(source, 0);
+    deque<VertexID> sourceOut;
+    sourceOut.push_back(source);
     // unordered_set<VertexID> outVisited;
-    for (const auto& p : sourceOut) {
-        log(p.first);
-    }
 
-    deque<pair<VertexID, Distance>> targetIn;
-    targetIn.emplace_back(target, 0);
+    deque<VertexID> targetIn;
+    targetIn.push_back(target);
     // unordered_set<VertexID> inVisited;
-
-    bool bfsOutwards = true;
 
     // -- Local BFS for epsilon distance --
     // BFS locally until both queues are empty
-    while(
-        bfsOutwards = !bfsOutwards,
-        sourceOut.size() > 0 || targetIn.size() > 0)
-    {
+    bool bfsOutwards = false;
+    for (Distance dist = 0; dist < 2*this->localSearchDistance; bfsOutwards = !bfsOutwards, dist++) {
         watch(bfsOutwards);
 
-        VertexID vertex; Distance dist;
-        deque<pair<VertexID, Distance>>& q = bfsOutwards ? sourceOut : targetIn;
+        VertexID vertex;
+        deque<VertexID>& q = bfsOutwards ? sourceOut : targetIn;
         unordered_set<VertexID>& visitedSet = bfsOutwards ? outVisited : inVisited;
         const unordered_set<VertexID>& otherVisitedSet = bfsOutwards ? inVisited: outVisited;
 
-        if (DEBUG) {
-            cout << (bfsOutwards ? "out" : "in")
-                 << " q: [";
-            for (const auto& p : q) cout << "(" << p.first << "," << p.second << "), ";
-            cout << "]\n";
+        // Expand the BFS for the current direction (bfsOutwards?) by one level
+        for(int itemsInCurrentLevel = q.size(); itemsInCurrentLevel > 0; itemsInCurrentLevel--) {
+            vertex = q.front();
+            q.pop_front();
+
+            // Quick return if the vertices are locally reachable
+            if (otherVisitedSet.count(vertex)) return true;
+
+            if (visitedSet.count(vertex)) continue;
+            else visitedSet.insert(vertex);
+
+            SmallEdgeSet ses;
+            if (bfsOutwards) {
+                this->graph->getOutNeighbours(vertex, ses);
+            } else {
+                this->graph->getInNeighbours(vertex, ses);
+            }
+
+            for(const auto& p : ses) {
+                VertexID neighbor = p.first;
+                LabelSet ls2 = p.second;
+                if (!isLabelSubset(ls2, ls)) continue;
+                q.push_back(neighbor);
+            }
         }
-
-        if (q.empty()) continue;
-        std::tie(vertex, dist) = q.front();
-        q.pop_front();
-
-        // Dont search more than epsilon for local search
-        if (dist > this->localSearchDistance) continue;
-
-        // Quick return if the vertices are locally reachable
-        if (otherVisitedSet.count(vertex)) return true;
-
-        if (visitedSet.count(vertex)) continue;
-        else visitedSet.insert(vertex);
-
-
-        SmallEdgeSet ses;
-        if (bfsOutwards) {
-            this->graph->getOutNeighbours(vertex, ses);
-        } else {
-            this->graph->getInNeighbours(vertex, ses);
-        }
-
-        for(const auto& p : ses) {
-            VertexID neighbor = p.first;
-            LabelSet ls2 = p.second;
-            if (!isLabelSubset(ls2, ls)) continue;
-            q.push_back({neighbor, dist+1});
-        }
-    }
-
-    log("Source reached:");
-    for (const auto& p : outVisited) {
-        log(p);
-    }
-    log("Target reached:");
-    for (const auto& p : inVisited) {
-        log(p);
     }
 
     return false;
