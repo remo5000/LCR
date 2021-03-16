@@ -17,6 +17,10 @@ using namespace twosidedbackbonens;
 using namespace indexns;
 using namespace graphns;
 
+typedef unsigned int Distance;
+typedef vector<VertexID> Path;
+
+
 
 TwoSidedBackboneIndex::TwoSidedBackboneIndex(Graph* mg, unsigned int localSearchDistance) {
     this->graph = mg;
@@ -37,24 +41,21 @@ unsigned long TwoSidedBackboneIndex::getIndexSizeInBytes()
     return getIndexSizeInBytesM();
 };
 
-bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
-    log("Starting query");
-    watch(source);
-    watch(target);
-    watch(labelSetToLetters(ls));
-
-    typedef unsigned int Distance;
-
+bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls,
+                                       // TODO remove these once backbones are indexed per node
+                                       unordered_set<VertexID>& outVisited,
+                                       unordered_set<VertexID>& inVisited
+                                       ) {
     deque<pair<VertexID, Distance>> sourceOut;
     sourceOut.emplace_back(source, 0);
-    unordered_set<VertexID> outVisited;
+    // unordered_set<VertexID> outVisited;
     for (const auto& p : sourceOut) {
         log(p.first);
     }
 
     deque<pair<VertexID, Distance>> targetIn;
     targetIn.emplace_back(target, 0);
-    unordered_set<VertexID> inVisited;
+    // unordered_set<VertexID> inVisited;
 
     bool bfsOutwards = true;
 
@@ -116,25 +117,21 @@ bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, Label
         log(p);
     }
 
+    return false;
+}
 
-    log("-- starting backbone bfs --:");
-
-
-    // -- Backbone BFS --
-
-    deque<VertexID> outgoingBackboneQueue;
-    for (const VertexID& vertex : outVisited)
-        if (this->backboneVertices.count(vertex))
-            outgoingBackboneQueue.push_back(vertex);
-    deque<VertexID> incomingBackboneQueue;
-    for (const VertexID& vertex : inVisited)
-        if (this->backboneVertices.count(vertex))
-            incomingBackboneQueue.push_back(vertex);
+bool TwoSidedBackboneIndex::bfsBackbone(
+    deque<VertexID>& outgoingBackboneQueue,
+    deque<VertexID>& incomingBackboneQueue,
+    unordered_set<VertexID>& outVisited,
+    unordered_set<VertexID>& inVisited,
+    const LabelSet& ls
+) {
 
     outVisited.clear();
     inVisited.clear();
 
-    bfsOutwards = true;
+    bool bfsOutwards = true;
 
 
     while(
@@ -186,8 +183,43 @@ bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, Label
         }
     }
 
-
     return false;
+}
+
+bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
+    log("Starting query");
+    watch(source);
+    watch(target);
+    watch(labelSetToLetters(ls));
+
+    unordered_set<VertexID> outVisited;
+    unordered_set<VertexID> inVisited;
+
+    // Quick checks
+    if (source == target) return true;
+    if (ls == 0) return false;
+
+    if (this->bfsLocally(source, target, ls, outVisited, inVisited)) return true;
+
+
+    // -- Backbone BFS --
+    log("-- starting backbone bfs --:");
+    deque<VertexID> outgoingBackboneQueue;
+    for (const VertexID& vertex : outVisited)
+        if (this->backboneVertices.count(vertex))
+            outgoingBackboneQueue.push_back(vertex);
+    deque<VertexID> incomingBackboneQueue;
+    for (const VertexID& vertex : inVisited)
+        if (this->backboneVertices.count(vertex))
+            incomingBackboneQueue.push_back(vertex);
+
+    return this->bfsBackbone(
+            outgoingBackboneQueue,
+            incomingBackboneQueue,
+            outVisited,
+            inVisited,
+            ls
+    );
 }
 
 bool TwoSidedBackboneIndex::query(VertexID source, VertexID target, LabelSet ls)
@@ -217,14 +249,12 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
     // Used to return the ground set
     LabelledDistancedReachabilityMap twoSidedReachability;
     unordered_map<VertexID, LabelledDistancedReachabilityMap> candidates;
-    // Used to track visited nodes
-    LabelledDistancedReachabilityMap reachability;
-
-    typedef unsigned int Distance;
-    typedef vector<VertexID> Path;
 
     log("Starting BFS from every vertex");
     for (VertexID source = 0; source < graph->getNumberOfVertices(); source++) {
+        // Used to track visited nodes from the source
+        LabelledDistancedReachabilityMap reachability;
+
         vector< tuple<VertexID, LabelSet, Distance, Path> > stack;
         Path startingPath = {source};
         LabelSet startingLabelSet = 0;
@@ -292,21 +322,6 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
 // Used for set cover
 typedef pair<VertexID, std::pair<VertexID, LabelSet>> Item;
 
-set<Item> reachabilityToSet(const LabelledDistancedReachabilityMap& reachabilityMap) {
-    set<Item> result;
-    for (const auto& p : reachabilityMap.m) {
-        VertexID source = p.first;
-        for (const auto& p2 : p.second) {
-            VertexID dest = p2.first;
-            for (auto p3 : p2.second) {
-                const LabelSet& ls = p3.first;
-                result.insert(make_pair(source, make_pair(dest, ls)));
-            }
-        }
-    }
-    return result;
-}
-
 void TwoSidedBackboneIndex::buildIndex()
 {
     Graph* graph = this->graph;
@@ -327,7 +342,7 @@ void TwoSidedBackboneIndex::buildIndex()
     unordered_map<VertexID, set<Item>> candidates;
     for (const auto& p : candidatesToReachabilityMap) {
         VertexID candidate = p.first;
-        candidates[candidate] = reachabilityToSet(p.second);
+        candidates[candidate] = p.second.toTuples();
     }
     log("generated candidates. Candidates size:");
     watch(candidates.size());
@@ -456,6 +471,9 @@ void TwoSidedBackboneIndex::buildIndex()
     // Set the bacbone
     backbone = std::unique_ptr<DGraph>(dg);
     print("Done building index");
+    print("sicko mode");
+    print(this->backboneVertices.size());
+    print(this->localSearchDistance);
 };
 
 const unordered_set<VertexID>& TwoSidedBackboneIndex::getBackBoneVertices() const {

@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
-    noOfMethods = 6;
+    noOfMethods = 5;
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
@@ -286,17 +286,18 @@ int main(int argc, char *argv[]) {
             index = new LandmarkedIndex(graph, false, false, k, b);
 	      }
 
+        // Two Sided backbone;
+        if (i == 4) {
+            unsigned int localDist = max(2, (int)log2(N));
+            index = new TwoSidedBackboneIndex(graph, localDist);
+        }
+
         // Zou
-        if( i == 4 )
+        if( i == 5 )
         {
             index = new Zou(graph);
         }
 
-        // Two Sided backbone;
-        if (i == 5) {
-            unsigned int localDist = sqrt(N);
-            index = new TwoSidedBackboneIndex(graph, localDist);
-        }
 
         if( index->didCompleteBuilding() == true )
         {
