@@ -19,6 +19,7 @@
 #include "../../Index/UnboundedLCR/BFSIndex.cc"
 #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 #include "../../Index/UnboundedLCR/Zou.cc"
+#include "../../Index/UnboundedLCR/TwoSidedBackboneIndex.cc"
 
 #include "../../Graph/DGraph.cc"
 
@@ -122,7 +123,8 @@ int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTime
             double avg = 0.0;
             vector< double > avgs;
 
-            for(int k = 0; k < 5; k++)
+            int NUMBER_OF_RUNS = 5;
+            for(int k = 0; k < NUMBER_OF_RUNS; k++)
             {
                 if( index->query(from, to, ls) == false )
                 {
@@ -135,12 +137,11 @@ int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTime
             }
 
             sort( avgs.begin(), avgs.end() );
-            for(int k = 0; k < 3; k++)
+            for(int k = 0; k < NUMBER_OF_RUNS; k++)
             {
                 avg += avgs[k];
             }
-
-            avg /= 3;
+            avg /= NUMBER_OF_RUNS;
 
             cout << "*Query " << i << ": (" << from << "," << to << "," << labelSetToString(ls) << ", true), avg=" << print_digits(avg,11) << endl;
             i++;
@@ -216,7 +217,7 @@ int main(int argc, char *argv[]) {
     loadQueryFile(edge_file + "0.true", tmpSet); // load the two query files
     int noOfQueries = tmpSet.size();
 
-    int noOfMethods = 3; // the total number of methods
+    int noOfMethods = 6; // the total number of methods
     if( argc == 5 )
     {
         noOfMethods = atoi(argv[4]);
@@ -245,7 +246,7 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
-    noOfMethods = 4;
+    noOfMethods = 5;
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
@@ -263,6 +264,7 @@ int main(int argc, char *argv[]) {
         if( i == 1 )
 	      {
             int k = 1250 + sqrt(N);
+            if (k >= N) k = sqrt(N);
             int b = 20;
             index = new LandmarkedIndex(graph, true, true, k, b);
 	      }
@@ -271,6 +273,7 @@ int main(int argc, char *argv[]) {
         if( i == 2 )
 	      {
             int k = 1250 + sqrt(N);
+            if (k >= N) k = sqrt(N);
             int b = 20;
             index = new LandmarkedIndex(graph, false, false, k, b);
 	      }
@@ -283,11 +286,18 @@ int main(int argc, char *argv[]) {
             index = new LandmarkedIndex(graph, false, false, k, b);
 	      }
 
+        // Two Sided backbone;
+        if (i == 4) {
+            unsigned int localDist = max(2, (int)log2(N));
+            index = new TwoSidedBackboneIndex(graph, localDist);
+        }
+
         // Zou
-        if( i == 4 )
+        if( i == 5 )
         {
             index = new Zou(graph);
         }
+
 
         if( index->didCompleteBuilding() == true )
         {
@@ -311,6 +321,8 @@ int main(int argc, char *argv[]) {
           string indexName = index->getIndexTypeAsString();
           cout << "No experiments for index: " << indexName << " as it did not complete building the index successfully.";
         }
+
+        free(index);
     }
 
     cout << "--- Writing out the data ---" << endl;
@@ -500,7 +512,7 @@ int main(int argc, char *argv[]) {
     }
     cout << "\\\\ \n";
 
-    for(int i = 1; i < methodNames.size(); i++)
+    for(int i = 0; i < methodNames.size(); i++)
     {
         cout << methodNames[i];
 

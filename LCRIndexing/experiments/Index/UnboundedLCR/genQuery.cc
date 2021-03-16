@@ -198,32 +198,32 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
         {
             int minDiff = max(min(MAX_DIFFICULTY, diffDistribution(generator2)) - roundNo/10 , MIN_DIFFICULTY); // a random minimal difficulty
             VertexID s = vertexDistribution(generator); // a random start point
-	    VertexID t = vertexDistribution(generator); // another random point
+            VertexID t = vertexDistribution(generator); // another random point
             int quotum = min(nq, max((nq/100) + (roundNo / 100), 1));
 
             minDiff = max(1, minDiff - (roundNo/100) ); // minDiff can scale down
             // if no queries are generated
 
             cout << "genQuery with minDiff=" << minDiff << ",s=" << s << ",quotum=" << quotum << endl;
-            vector< int > distances;
 
             // loop over all nodes that have minimal difficulty
             int c = 0;
-	    int tried = 0;
+            int tried = 0;
             for(; t < N; t++)
             {
+
+                // Ensure s -> t not self edge
                 if( s == t )
                 {
                     continue;
                 }
 
                 tried++;
-
-                if( c < 2 && tried > min((N/500),100) )
+                // if( c < 2 && tried > min((N/500),100) )
+                if( tried > N/4 )
                 {
                     break;
                 }
-                //cout << "genQuery: t=" << t << ",distances[t]=" << distances[t] << endl;
 
                 // try 10 random labelsets from s to t
                 int k = 0;

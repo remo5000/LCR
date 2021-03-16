@@ -278,6 +278,21 @@ using namespace boost;
             return a;
         }
 
+        // prints a labelset as a string of alphabets, e.g. the first label is
+        // 00000001 which gets printed as 'a'.
+        // 00000101 gets printed as 'ac' due to it having both 'a' and 'c'.
+        inline string labelSetToLetters(LabelSet ls1)
+        {
+            string lsString = labelSetToString(ls1);
+            string alphabets = "";
+            char current_alphabet = 'a';
+            for (int i = lsString.length()-1; i >= 0; current_alphabet++, i--)
+                if (lsString[i] == '1')
+                    alphabets += current_alphabet;
+            return alphabets;
+        }
+
+
         /*
         Translates a LabelSet to a LabelID (see description on top)
         */
