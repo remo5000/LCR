@@ -71,17 +71,15 @@ bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSe
             q.pop_front();
 
             // Quick return if the vertices are locally reachable
-            if (otherVisitedSet.count(vertex)) return true;
+            if (otherVisitedSet[vertex]) return true;
 
-            if (visitedSet.count(vertex)) continue;
-            else visitedSet.insert(vertex);
+            if (visitedSet[vertex]) continue;
+            else visitedSet[vertex] = 1;
 
-            SmallEdgeSet ses;
-            if (bfsOutwards) {
-                this->graph->getOutNeighbours(vertex, ses);
-            } else {
-                this->graph->getInNeighbours(vertex, ses);
-            }
+            const SmallEdgeSet& ses = bfsOutwards
+                ? this->graph->getOutNeighbours(vertex)
+                : this->graph->getInNeighbours(vertex);
+
 
             for(const auto& p : ses) {
                 VertexID neighbor = p.first;
@@ -136,18 +134,9 @@ bool TwoSidedBackboneIndex::bfsBackbone(
         else visitedSet.insert(vertex);
 
 
-        SmallEdgeSet ses;
-        if (bfsOutwards) {
-            this->backbone->getOutNeighbours(vertex, ses);
-            if (vertex == 1 && DEBUG) {
-                cout << "ses: [";
-                for (const auto& p : ses)
-                    cout << "(" << p.first << "," << labelSetToLetters(p.second) << "), ";
-                cout << "]\n";
-            }
-        } else {
-            this->backbone->getInNeighbours(vertex, ses);
-        }
+        const SmallEdgeSet& ses = bfsOutwards
+            ? this->backbone->getOutNeighbours(vertex)
+            : this->backbone->getInNeighbours(vertex);
 
         for(const auto& p : ses) {
             VertexID neighbor = p.first;

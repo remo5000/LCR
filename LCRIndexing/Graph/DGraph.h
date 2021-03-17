@@ -37,7 +37,9 @@ class DGraph : public Graph
         int getGraphSizeInBytes();
         double getGraphConstructionTime();
 
+        const SmallEdgeSet& getOutNeighbours(graphns::VertexID w);
         void getOutNeighbours(graphns::VertexID w, SmallEdgeSet& outNeighbours);
+        const SmallEdgeSet& getInNeighbours(graphns::VertexID w);
         void getInNeighbours(graphns::VertexID w, SmallEdgeSet& inNeighbours);
         void getAllNeighbours(graphns::VertexID w, SmallEdgeSet& allNeighbours);
 

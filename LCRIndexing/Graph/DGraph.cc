@@ -257,10 +257,20 @@ double DGraph::getGraphConstructionTime()
     return max(constEndTime - constStartTime, 0.00000001);
 };
 
+const SmallEdgeSet& DGraph::getOutNeighbours(graphns::VertexID w)
+{
+    return outE[w];
+};
+
 void DGraph::getOutNeighbours(graphns::VertexID w, SmallEdgeSet& outNeighbours)
 {
     outNeighbours.clear();
     outNeighbours = outE[w];
+};
+
+const SmallEdgeSet& DGraph::getInNeighbours(graphns::VertexID w)
+{
+    return inE[w];
 };
 
 void DGraph::getInNeighbours(graphns::VertexID w, SmallEdgeSet& inNeighbours)
