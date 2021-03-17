@@ -174,14 +174,12 @@ class TwoSidedBackboneIndex : public Index
             VertexID target,
             LabelSet ls,
             // TODO remove these once backbones are indexed per node
-            unordered_set<VertexID>& outVisited,
-            unordered_set<VertexID>& inVisited
+            dynamic_bitset<>& outVisited,
+            dynamic_bitset<>& inVisited
         );
         bool bfsBackbone(
             deque<VertexID>& outgoingBackboneQueue,
             deque<VertexID>& incomingBackboneQueue,
-            unordered_set<VertexID>& outVisited,
-            unordered_set<VertexID>& inVisited,
             const LabelSet& ls
         );
         bool computeQuery(VertexID source, VertexID target, LabelSet ls);

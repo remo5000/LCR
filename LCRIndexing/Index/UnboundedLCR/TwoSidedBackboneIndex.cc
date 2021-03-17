@@ -43,16 +43,16 @@ unsigned long TwoSidedBackboneIndex::getIndexSizeInBytes()
 
 bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls,
                                        // TODO remove these once backbones are indexed per node
-                                       unordered_set<VertexID>& outVisited,
-                                       unordered_set<VertexID>& inVisited
+                                       dynamic_bitset<>& outVisited,
+                                       dynamic_bitset<>& inVisited
                                        ) {
     deque<VertexID> sourceOut;
     sourceOut.push_back(source);
-    // unordered_set<VertexID> outVisited;
+    // dynamic_bitset<> outVisited;
 
     deque<VertexID> targetIn;
     targetIn.push_back(target);
-    // unordered_set<VertexID> inVisited;
+    // dynamic_bitset<> inVisited;
 
     // -- Local BFS for epsilon distance --
     // BFS locally until both queues are empty
@@ -62,8 +62,8 @@ bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSe
 
         VertexID vertex;
         deque<VertexID>& q = bfsOutwards ? sourceOut : targetIn;
-        unordered_set<VertexID>& visitedSet = bfsOutwards ? outVisited : inVisited;
-        const unordered_set<VertexID>& otherVisitedSet = bfsOutwards ? inVisited: outVisited;
+        dynamic_bitset<>& visitedSet = bfsOutwards ? outVisited : inVisited;
+        const dynamic_bitset<>& otherVisitedSet = bfsOutwards ? inVisited: outVisited;
 
         // Expand the BFS for the current direction (bfsOutwards?) by one level
         for(int itemsInCurrentLevel = q.size(); itemsInCurrentLevel > 0; itemsInCurrentLevel--) {
@@ -96,13 +96,11 @@ bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSe
 bool TwoSidedBackboneIndex::bfsBackbone(
     deque<VertexID>& outgoingBackboneQueue,
     deque<VertexID>& incomingBackboneQueue,
-    unordered_set<VertexID>& outVisited,
-    unordered_set<VertexID>& inVisited,
     const LabelSet& ls
 ) {
 
-    outVisited.clear();
-    inVisited.clear();
+    dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
+    dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
 
     bool bfsOutwards = true;
 
@@ -113,8 +111,8 @@ bool TwoSidedBackboneIndex::bfsBackbone(
     ) {
         VertexID vertex;
         deque<VertexID>& q = bfsOutwards ? outgoingBackboneQueue : incomingBackboneQueue;
-        unordered_set<VertexID>& visitedSet = bfsOutwards ? outVisited : inVisited;
-        const unordered_set<VertexID>& otherVisitedSet = bfsOutwards ? inVisited: outVisited;
+        dynamic_bitset<>& visitedSet = bfsOutwards ? outVisited : inVisited;
+        const dynamic_bitset<>& otherVisitedSet = bfsOutwards ? inVisited: outVisited;
 
         if (DEBUG) {
             cout << (bfsOutwards ? "backbone_out" : "backbone_in")
@@ -128,10 +126,10 @@ bool TwoSidedBackboneIndex::bfsBackbone(
         q.pop_front();
 
         // Quick return if the vertices are locally reachable
-        if (otherVisitedSet.count(vertex)) return true;
+        if (otherVisitedSet[vertex]) return true;
 
-        if (visitedSet.count(vertex)) continue;
-        else visitedSet.insert(vertex);
+        if (visitedSet[vertex]) continue;
+        else visitedSet[vertex] = 1;
 
 
         const SmallEdgeSet& ses = bfsOutwards
@@ -156,8 +154,8 @@ bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, Label
     watch(target);
     watch(labelSetToLetters(ls));
 
-    unordered_set<VertexID> outVisited;
-    unordered_set<VertexID> inVisited;
+    dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
+    dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
 
     // Quick checks
     if (source == target) return true;
@@ -169,19 +167,18 @@ bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, Label
     // -- Backbone BFS --
     log("-- starting backbone bfs --:");
     deque<VertexID> outgoingBackboneQueue;
-    for (const VertexID& vertex : outVisited)
-        if (this->backboneVertices.count(vertex))
+    for (const VertexID& vertex : backboneVertices)
+        if (outVisited[vertex])
             outgoingBackboneQueue.push_back(vertex);
+
     deque<VertexID> incomingBackboneQueue;
-    for (const VertexID& vertex : inVisited)
-        if (this->backboneVertices.count(vertex))
+    for (const VertexID& vertex : backboneVertices)
+        if (inVisited[vertex])
             incomingBackboneQueue.push_back(vertex);
 
     return this->bfsBackbone(
             outgoingBackboneQueue,
             incomingBackboneQueue,
-            outVisited,
-            inVisited,
             ls
     );
 }
@@ -435,9 +432,8 @@ void TwoSidedBackboneIndex::buildIndex()
     // Set the bacbone
     backbone = std::unique_ptr<DGraph>(dg);
     print("Done building index");
-    print("sicko mode");
-    print(this->backboneVertices.size());
-    print(this->localSearchDistance);
+    // print(this->backboneVertices.size());
+    // print(this->localSearchDistance);
 };
 
 const unordered_set<VertexID>& TwoSidedBackboneIndex::getBackBoneVertices() const {
