@@ -53,7 +53,7 @@ namespace twosidedbackbonens {
                 if (!m.count(source)) return false;
                 if (!m[source].count(destination)) return false;
                 for (auto p : m[source][destination]) {
-                    if (isLabelSubset(ls, p.first)) {
+                    if (isLabelSubset(p.first, ls)) {
                         return true;
                     }
                 }
@@ -77,7 +77,7 @@ namespace twosidedbackbonens {
 
 
                 for (auto p : m[source][destination]) {
-                    if (isLabelSubset(ls, p.first)) {
+                    if (isLabelSubset(p.first, ls)) {
                         return p.second;
                     }
                 }
