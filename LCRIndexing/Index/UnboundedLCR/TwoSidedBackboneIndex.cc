@@ -5,7 +5,7 @@
 #include <tuple>
 #include <memory>
 #include <map>
-#include <deque>
+#include <queue>
 
 #define DEBUG 0
 #define watch(x) if (DEBUG) cout << (#x) << " is " << (x) << endl; cout.flush();
@@ -41,61 +41,70 @@ unsigned long TwoSidedBackboneIndex::getIndexSizeInBytes()
     return getIndexSizeInBytesM();
 };
 
-bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls,
-                                       // TODO remove these once backbones are indexed per node
-                                       dynamic_bitset<>& outVisited,
-                                       dynamic_bitset<>& inVisited
-                                       ) {
-    deque<VertexID> sourceOut;
-    sourceOut.push_back(source);
-    // dynamic_bitset<> outVisited;
+bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls) {
+    unsigned int outPos = 0;
+    const SmallEdgeSet& outReachable = this->locallyReachableOut[source];
+    unsigned int inPos = 0;
+    const SmallEdgeSet& inReachable = this->locallyReachableIn[target];
 
-    deque<VertexID> targetIn;
-    targetIn.push_back(target);
-    // dynamic_bitset<> inVisited;
+    bool moveOutPos = false;
+    while (
+        moveOutPos = !moveOutPos,
+        inPos < inReachable.size() && outPos < outReachable.size())
+    {
+        unsigned int& pos = moveOutPos ? outPos : inPos;
+        unsigned int& otherPos = moveOutPos ? inPos : outPos;
+        const SmallEdgeSet& currentVector = moveOutPos ? outReachable : inReachable;
+        const auto currentVectorSize = currentVector.size();
+        const SmallEdgeSet& otherVector = moveOutPos ? inReachable : outReachable;
+        const auto otherVectorSize = otherVector.size();
 
-    // -- Local BFS for epsilon distance --
-    // BFS locally until both queues are empty
-    bool bfsOutwards = false;
-    for (Distance dist = 0; dist < 2*this->localSearchDistance; bfsOutwards = !bfsOutwards, dist++) {
-        watch(bfsOutwards);
-
-        VertexID vertex;
-        deque<VertexID>& q = bfsOutwards ? sourceOut : targetIn;
-        dynamic_bitset<>& visitedSet = bfsOutwards ? outVisited : inVisited;
-        const dynamic_bitset<>& otherVisitedSet = bfsOutwards ? inVisited: outVisited;
-
-        // Expand the BFS for the current direction (bfsOutwards?) by one level
-        for(int itemsInCurrentLevel = q.size(); itemsInCurrentLevel > 0; itemsInCurrentLevel--) {
-            vertex = q.front();
-            q.pop_front();
-
-            // Quick return if the vertices are locally reachable
-            if (otherVisitedSet[vertex]) return true;
-
-            if (visitedSet[vertex]) continue;
-            else visitedSet[vertex] = 1;
-
-            const SmallEdgeSet& ses = bfsOutwards
-                ? this->graph->getOutNeighbours(vertex)
-                : this->graph->getInNeighbours(vertex);
+        // Ensure VertexID are the same
+        if (currentVector[pos].first < otherVector[otherPos].first) {
+            pos++;
+            continue;
+        } else if (currentVector[pos].first > otherVector[otherPos].first) {
+            otherPos++;
+            continue;
+        }
 
 
-            for(const auto& p : ses) {
-                VertexID neighbor = p.first;
-                LabelSet ls2 = p.second;
-                if (!isLabelSubset(ls2, ls)) continue;
-                q.push_back(neighbor);
+
+        VertexID vertex = currentVector[pos].first;
+
+        // Go through all the VertexIDs, and
+        bool currentVectorHasLabelSubset = false;
+        for (; pos < currentVectorSize && currentVector[pos].first == vertex; pos++) {
+            LabelSet ls2 = currentVector[pos].second;
+            if (isLabelSubset(ls2, ls)) {
+                currentVectorHasLabelSubset = true;
+                break;
             }
         }
+        // TODO benchmark optimized becase
+        for (; pos < currentVectorSize && currentVector[pos].first == vertex; pos++);
+        bool otherVectorHasLabelSubset = false;
+        for (; otherPos < otherVectorSize && otherVector[otherPos].first == vertex; otherPos++) {
+            LabelSet ls2 = otherVector[otherPos].second;
+            if (isLabelSubset(ls2, ls)) {
+                otherVectorHasLabelSubset = true;
+                break;
+            }
+        }
+        if (currentVectorHasLabelSubset && otherVectorHasLabelSubset) return true;
+        // TODO benchmark optimized becase
+        for (; otherPos < otherVectorSize && otherVector[otherPos].first == vertex; otherPos++);
+
+
+        log("\n");
     }
 
     return false;
 }
 
 bool TwoSidedBackboneIndex::bfsBackbone(
-    deque<VertexID>& outgoingBackboneQueue,
-    deque<VertexID>& incomingBackboneQueue,
+    queue<VertexID>& outgoingBackboneQueue,
+    queue<VertexID>& incomingBackboneQueue,
     const LabelSet& ls
 ) {
 
@@ -110,20 +119,20 @@ bool TwoSidedBackboneIndex::bfsBackbone(
         outgoingBackboneQueue.size() > 0 || incomingBackboneQueue.size() > 0
     ) {
         VertexID vertex;
-        deque<VertexID>& q = bfsOutwards ? outgoingBackboneQueue : incomingBackboneQueue;
+        queue<VertexID>& q = bfsOutwards ? outgoingBackboneQueue : incomingBackboneQueue;
         dynamic_bitset<>& visitedSet = bfsOutwards ? outVisited : inVisited;
         const dynamic_bitset<>& otherVisitedSet = bfsOutwards ? inVisited: outVisited;
 
-        if (DEBUG) {
-            cout << (bfsOutwards ? "backbone_out" : "backbone_in")
-                 << " q: [";
-            for (const auto& v : q) cout << v << ", ";
-            cout << "]\n";
-        }
+        // if (DEBUG) {
+        //     cout << (bfsOutwards ? "backbone_out" : "backbone_in")
+        //          << " q: [";
+        //     for (const auto& v : q) cout << v << ", ";
+        //     cout << "]\n";
+        // }
 
         if (q.empty()) continue;
         vertex = q.front();
-        q.pop_front();
+        q.pop();
 
         // Quick return if the vertices are locally reachable
         if (otherVisitedSet[vertex]) return true;
@@ -141,7 +150,7 @@ bool TwoSidedBackboneIndex::bfsBackbone(
             LabelSet ls2 = p.second;
             if (!isLabelSubset(ls2, ls)) continue;
 
-            q.push_back(neighbor);
+            q.push(neighbor);
         }
     }
 
@@ -154,27 +163,29 @@ bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, Label
     watch(target);
     watch(labelSetToLetters(ls));
 
-    dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
-    dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
+    // dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
+    // dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
 
     // Quick checks
     if (source == target) return true;
     if (ls == 0) return false;
 
-    if (this->bfsLocally(source, target, ls, outVisited, inVisited)) return true;
+    if (this->bfsLocally(source, target, ls)) return true;
 
 
     // -- Backbone BFS --
     log("-- starting backbone bfs --:");
-    deque<VertexID> outgoingBackboneQueue;
-    for (const VertexID& vertex : backboneVertices)
-        if (outVisited[vertex])
-            outgoingBackboneQueue.push_back(vertex);
+    queue<VertexID> outgoingBackboneQueue;
+    for (const SmallEdge& p : this->locallyReachableOut[source]) {
+        if (isLabelSubset(p.second, ls) && this->backboneVertices.count(p.first))
+            outgoingBackboneQueue.push(p.first);
+    }
 
-    deque<VertexID> incomingBackboneQueue;
-    for (const VertexID& vertex : backboneVertices)
-        if (inVisited[vertex])
-            incomingBackboneQueue.push_back(vertex);
+    queue<VertexID> incomingBackboneQueue;
+    for (const SmallEdge& p : this->locallyReachableIn[target]) {
+        if (isLabelSubset(p.second, ls) && this->backboneVertices.count(p.first))
+            incomingBackboneQueue.push(p.first);
+    }
 
     return this->bfsBackbone(
             outgoingBackboneQueue,
@@ -222,7 +233,7 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
         assert(isEmptyLabelSet(0));
         stack.push_back(make_tuple(source, startingLabelSet, 0, startingPath));
 
-        watch(source);
+        // watch(source);
         while (!stack.empty()) {
             VertexID vertex; LabelSet ls; Distance dist; Path path;
             std::tie(vertex, ls, dist, path) = stack.back();
@@ -256,8 +267,7 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
             // watch_vector(path);
 
             // Add all neighbours
-            SmallEdgeSet ses;
-            graph->getOutNeighbours(vertex, ses);
+            const SmallEdgeSet& ses = graph->getOutNeighbours(vertex);
             for(const auto& p : ses)
             {
                 VertexID neighbor = p.first;
@@ -314,9 +324,9 @@ void TwoSidedBackboneIndex::buildIndex()
     // Compute the backbone vertices
     print("Starting set cover");
     while (uncovered.size() > 0) {
-        log("Uncovered:");
-        if (DEBUG) cout << uncovered.toString();
-        log("----:");
+        // log("Uncovered:");
+        // if (DEBUG) cout << uncovered.toString();
+        // log("----:");
 
         VertexID biggestCoverVertex;
         set<Item> biggestCover;
@@ -392,8 +402,7 @@ void TwoSidedBackboneIndex::buildIndex()
             if (vertex != source && backboneVertices.count(vertex)) continue;
 
 
-            SmallEdgeSet ses;
-            graph->getOutNeighbours(vertex, ses);
+            SmallEdgeSet ses = graph->getOutNeighbours(vertex);
             for(const auto& p : ses)
             {
                 VertexID neighbor = p.first;
@@ -431,9 +440,54 @@ void TwoSidedBackboneIndex::buildIndex()
 
     // Set the bacbone
     backbone = std::unique_ptr<DGraph>(dg);
-    print("Done building index");
     // print(this->backboneVertices.size());
     // print(this->localSearchDistance);
+
+    // Local search optimization -- memoize the locally reachable vertices
+
+    watch(this->localSearchDistance);
+    for (int bfsOutwards = 0; bfsOutwards < 2; bfsOutwards++) {
+        watch(bfsOutwards);
+        LabelledDistancedReachabilityMap reachability;
+        for (VertexID source = 0; source < graph->getNumberOfVertices(); source++) {
+            watch(source);
+            queue<tuple<VertexID, Distance, LabelSet>> q;
+            q.push(make_tuple(source, 0, 0));
+            while(q.size()) {
+                VertexID vertex; Distance dist; LabelSet ls;
+                std::tie(vertex, dist, ls) = q.front();
+                q.pop();
+
+                if (source == 0) {
+                    watch(vertex);
+                    watch(dist);
+                    watch(labelSetToString(ls));
+                }
+
+                if (dist > this->localSearchDistance) continue;
+
+                if (reachability.isPresent(source, vertex, ls)) continue;
+                else reachability.insert(source, vertex, ls, DIST_NOT_USED);
+
+                const SmallEdgeSet& ses = bfsOutwards
+                    ? this->graph->getOutNeighbours(vertex)
+                    : this->graph->getInNeighbours(vertex);
+
+                for (const auto& p : ses) {
+                    VertexID neighbor = p.first;
+                    LabelSet ls2 = p.second;
+                    q.push(make_tuple(neighbor, dist+1, joinLabelSets(ls, ls2)));
+                }
+            }
+        }
+        if (bfsOutwards) {
+            this->locallyReachableOut = reachability.toEdgeMap();
+        } else {
+            this->locallyReachableIn = reachability.toEdgeMap();
+        }
+    }
+
+    print("Done building index");
 };
 
 const unordered_set<VertexID>& TwoSidedBackboneIndex::getBackBoneVertices() const {

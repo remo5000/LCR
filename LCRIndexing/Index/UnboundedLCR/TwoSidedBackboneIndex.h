@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <map>
 #include <vector>
+#include <queue>
 #include <algorithm>
 #include <memory>
 #include <limits>
@@ -107,7 +108,7 @@ namespace twosidedbackbonens {
                 s << "]\n";
                 return s.str();
             }
-            const map<VertexID, SmallEdgeSet> toEdgeMap() const {
+            map<VertexID, SmallEdgeSet> toEdgeMap() const {
                 map<VertexID, SmallEdgeSet> result;
                 for (const auto& p1 : m) {
                     for (const auto& p2 : p1.second) {
@@ -172,16 +173,17 @@ class TwoSidedBackboneIndex : public Index
         bool bfsLocally(
             VertexID source,
             VertexID target,
-            LabelSet ls,
-            // TODO remove these once backbones are indexed per node
-            dynamic_bitset<>& outVisited,
-            dynamic_bitset<>& inVisited
+            LabelSet ls
         );
         bool bfsBackbone(
-            deque<VertexID>& outgoingBackboneQueue,
-            deque<VertexID>& incomingBackboneQueue,
+            queue<VertexID>& outgoingBackboneQueue,
+            queue<VertexID>& incomingBackboneQueue,
             const LabelSet& ls
         );
         bool computeQuery(VertexID source, VertexID target, LabelSet ls);
+
+        // Speedup Local BFS
+        map<VertexID, SmallEdgeSet> locallyReachableOut;
+        map<VertexID, SmallEdgeSet> locallyReachableIn;
 };
 #endif
