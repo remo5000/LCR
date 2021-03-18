@@ -176,8 +176,8 @@ class TwoSidedBackboneIndex : public Index
             LabelSet ls
         );
         bool bfsBackbone(
-            queue<VertexID>& outgoingBackboneQueue,
-            queue<VertexID>& incomingBackboneQueue,
+            VertexID source,
+            VertexID target,
             const LabelSet& ls
         );
         bool computeQuery(VertexID source, VertexID target, LabelSet ls);
@@ -185,5 +185,9 @@ class TwoSidedBackboneIndex : public Index
         // Speedup Local BFS
         map<VertexID, SmallEdgeSet> locallyReachableOut;
         map<VertexID, SmallEdgeSet> locallyReachableIn;
+
+        // Speedup reachable backbone vertices discovery
+        map<VertexID, SmallEdgeSet> backboneReachableOut;
+        map<VertexID, SmallEdgeSet> backboneReachableIn;
 };
 #endif
