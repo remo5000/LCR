@@ -47,9 +47,9 @@ bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSe
     unsigned int inPos = 0;
     const SmallEdgeSet& inReachable = this->locallyReachableIn[target];
 
-    bool moveOutPos = false;
+    bool moveOutPos = outReachable.size() <= inReachable.size();
     while (
-        moveOutPos = !moveOutPos,
+        // moveOutPos = !moveOutPos,
         inPos < inReachable.size() && outPos < outReachable.size())
     {
         unsigned int& pos = moveOutPos ? outPos : inPos;
@@ -92,7 +92,7 @@ bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSe
             }
         }
         if (currentVectorHasLabelSubset && otherVectorHasLabelSubset) return true;
-        // TODO benchmark optimized becase
+
         for (; otherPos < otherVectorSize && otherVector[otherPos].first == vertex; otherPos++);
 
 
@@ -444,7 +444,10 @@ void TwoSidedBackboneIndex::buildIndex()
     // Clean up self-edges
     for (const VertexID& source : backboneVertices) backboneReachability.erase(source, source);
 
-    log("Computed backbone. Backbone:");
+    print("Computed backbone vertices. |V*|:");
+    print(backboneVertices.size());
+
+    log("Backbone:");
     log(backboneReachability.toString());
 
     // Generate edges
