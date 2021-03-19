@@ -43,78 +43,100 @@ unsigned long TwoSidedBackboneIndex::getIndexSizeInBytes()
 };
 
 bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls) {
-     deque<VertexID> sourceOut;
-     sourceOut.push_back(source);
-     int outRounds = 0;
-     int maxOutRounds = (this->localSearchDistance/2 + this->localSearchDistance%2);
-     // int maxOutRounds = this->localSearchDistance/2 ;
-     // int maxOutRounds = this->localSearchDistance + 2;
-     // set<VertexID> outVisited;
+     queue<VertexID> sourceOut;
+     sourceOut.push(source);
+     for (int round = 0; round < this->localSearchDistance+1; round++) {
+        for (int itemsInCurrentLevel = sourceOut.size(); itemsInCurrentLevel > 0; itemsInCurrentLevel--) {
+            VertexID vertex = sourceOut.front();
+            sourceOut.pop();
 
-     deque<VertexID> targetIn;
-     targetIn.push_back(target);
-     int inRounds = 0;
-     // int maxInRounds = this->localSearchDistance/2 + 1;
-     int maxInRounds = this->localSearchDistance/2 ;
-     // set<VertexID> inVisited;
-     dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
-     dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
+            if (vertex == target) return true;
 
-     // Increment once as adding the source should not count as 1 round
-     maxOutRounds++;
-     maxInRounds++;
+            for(const auto& p : this->graph->getOutNeighbours(vertex)) {
+                VertexID neighbor = p.first;
+                LabelSet ls2 = p.second;
 
-     while (
-         outRounds < maxOutRounds || inRounds < maxInRounds)
-     {
-         if (outRounds < maxOutRounds) {
-            for (int itemsInCurrentLevel = sourceOut.size(); itemsInCurrentLevel > 0; itemsInCurrentLevel--) {
-                VertexID vertex = sourceOut.front();
-                sourceOut.pop_front();
+                if (!isLabelSubset(ls2, ls)) continue;
+                // if (this->backboneVertices.count(neighbor)) continue;
 
-                if (outVisited[vertex]) continue;
-                else outVisited[vertex] = 1;
-
-                if (inVisited[vertex]) return true;
-
-                for(const auto& p : this->graph->getOutNeighbours(vertex)) {
-                    VertexID neighbor = p.first;
-                    LabelSet ls2 = p.second;
-
-                    if (!isLabelSubset(ls2, ls)) continue;
-                    // if (this->backboneVertices.count(neighbor)) continue;
-
-                    sourceOut.push_back(neighbor);
-                }
+                sourceOut.push(neighbor);
             }
-            outRounds++;
-         }
-
-         if (inRounds < maxInRounds) {
-            for (int itemsInCurrentLevel = targetIn.size(); itemsInCurrentLevel > 0; itemsInCurrentLevel--) {
-                VertexID vertex = targetIn.front();
-                targetIn.pop_front();
-
-                if (inVisited[vertex]) continue;
-                else inVisited[vertex] = 1;
-
-                if (outVisited[vertex]) return true;
-
-                for(const auto& p : this->graph->getInNeighbours(vertex)) {
-                    VertexID neighbor = p.first;
-                    LabelSet ls2 = p.second;
-
-                    if (!isLabelSubset(ls2, ls)) continue;
-                    // if (this->backboneVertices.count(neighbor)) continue;
-
-                    targetIn.push_back(neighbor);
-                }
-            }
-            inRounds++;
-         }
+        }
      }
-
      return false;
+
+     // deque<VertexID> sourceOut;
+     // sourceOut.push_back(source);
+     // int outRounds = 0;
+     // int maxOutRounds = (this->localSearchDistance/2 + this->localSearchDistance%2);
+     // // int maxOutRounds = this->localSearchDistance/2 ;
+     // // int maxOutRounds = this->localSearchDistance + 2;
+     // // set<VertexID> outVisited;
+
+     // deque<VertexID> targetIn;
+     // targetIn.push_back(target);
+     // int inRounds = 0;
+     // // int maxInRounds = this->localSearchDistance/2 + 1;
+     // int maxInRounds = this->localSearchDistance/2 ;
+     // // set<VertexID> inVisited;
+     // dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
+     // dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
+
+     // // Increment once as adding the source should not count as 1 round
+     // maxOutRounds++;
+     // maxInRounds++;
+
+     // while (
+     //     outRounds < maxOutRounds || inRounds < maxInRounds)
+     // {
+     //     if (outRounds < maxOutRounds) {
+     //        for (int itemsInCurrentLevel = sourceOut.size(); itemsInCurrentLevel > 0; itemsInCurrentLevel--) {
+     //            VertexID vertex = sourceOut.front();
+     //            sourceOut.pop_front();
+
+     //            if (outVisited[vertex]) continue;
+     //            else outVisited[vertex] = 1;
+
+     //            if (inVisited[vertex]) return true;
+
+     //            for(const auto& p : this->graph->getOutNeighbours(vertex)) {
+     //                VertexID neighbor = p.first;
+     //                LabelSet ls2 = p.second;
+
+     //                if (!isLabelSubset(ls2, ls)) continue;
+     //                if (this->backboneVertices.count(neighbor)) continue;
+
+     //                sourceOut.push_back(neighbor);
+     //            }
+     //        }
+     //        outRounds++;
+     //     }
+
+     //     if (inRounds < maxInRounds) {
+     //        for (int itemsInCurrentLevel = targetIn.size(); itemsInCurrentLevel > 0; itemsInCurrentLevel--) {
+     //            VertexID vertex = targetIn.front();
+     //            targetIn.pop_front();
+
+     //            if (inVisited[vertex]) continue;
+     //            else inVisited[vertex] = 1;
+
+     //            if (outVisited[vertex]) return true;
+
+     //            for(const auto& p : this->graph->getInNeighbours(vertex)) {
+     //                VertexID neighbor = p.first;
+     //                LabelSet ls2 = p.second;
+
+     //                if (!isLabelSubset(ls2, ls)) continue;
+     //                if (this->backboneVertices.count(neighbor)) continue;
+
+     //                targetIn.push_back(neighbor);
+     //            }
+     //        }
+     //        inRounds++;
+     //     }
+     // }
+
+     // return false;
 }
 
 bool TwoSidedBackboneIndex::bfsBackbone(
@@ -127,14 +149,14 @@ bool TwoSidedBackboneIndex::bfsBackbone(
     log("-- starting backbone bfs --:");
 
     unsigned int pos;
-    queue<VertexID> outgoingBackboneQueue;
+    vector<VertexID> outgoingBackboneQueue;
     const SmallEdgeSet& outSes = this->backboneReachableOut[source];
     pos = 0;
     while(pos < outSes.size()) {
         VertexID v = outSes[pos].first;
         while(pos < outSes.size() && outSes[pos].first == v) {
             if (isLabelSubset(outSes[pos].second, ls)) {
-                outgoingBackboneQueue.push(v);
+                outgoingBackboneQueue.push_back(v);
                 break;
             }
             pos++;
@@ -142,14 +164,14 @@ bool TwoSidedBackboneIndex::bfsBackbone(
         while(pos < outSes.size() && outSes[pos].first == v) pos++;
     }
 
-    queue<VertexID> incomingBackboneQueue;
+    vector<VertexID> incomingBackboneQueue;
     const SmallEdgeSet& inSes = this->backboneReachableIn[target];
     pos = 0;
     while(pos < inSes.size()) {
         VertexID v = inSes[pos].first;
         while(pos < inSes.size() && inSes[pos].first == v) {
             if (isLabelSubset(inSes[pos].second, ls)) {
-                incomingBackboneQueue.push(v);
+                incomingBackboneQueue.push_back(v);
                 break;
             }
             pos++;
@@ -157,63 +179,12 @@ bool TwoSidedBackboneIndex::bfsBackbone(
         while(pos < inSes.size() && inSes[pos].first == v) pos++;
     }
 
-
-    dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
-    dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
-
-    VertexID vertex;
-
-    while(
-        outgoingBackboneQueue.size() > 0 || incomingBackboneQueue.size() > 0
-    ) {
-        if (outgoingBackboneQueue.size()) {
-            vertex = outgoingBackboneQueue.front();
-            outgoingBackboneQueue.pop();
-
-            // Quick return if the vertices are locally reachable
-            if (inVisited[vertex]) return true;
-
-            outVisited[vertex] = 1;
-
-
-            const SmallEdgeSet& ses = this->backbone->getOutNeighbours(vertex);
-
-            for(const auto& p : ses) {
-                VertexID neighbor = p.first;
-                LabelSet ls2 = p.second;
-                if (!isLabelSubset(ls2, ls)) continue;
-                if (outVisited[neighbor]) continue;
-
-                outgoingBackboneQueue.push(neighbor);
-            }
-        }
-
-        // --- Inwards ---
-        if (incomingBackboneQueue.size()) {
-            if (incomingBackboneQueue.empty()) continue;
-            vertex = incomingBackboneQueue.front();
-            incomingBackboneQueue.pop();
-
-            // Quick return if the vertices are locally reachable
-            if (outVisited[vertex]) return true;
-
-            inVisited[vertex] = 1;
-
-
-            const SmallEdgeSet& ses = this->backbone->getInNeighbours(vertex);
-
-            for(const auto& p : ses) {
-                VertexID neighbor = p.first;
-                LabelSet ls2 = p.second;
-                if (!isLabelSubset(ls2, ls)) continue;
-                if (inVisited[neighbor]) continue;
-
-                incomingBackboneQueue.push(neighbor);
-            }
-        }
-    }
-
+    for (const auto& u : outgoingBackboneQueue)
+        for (const auto& v : incomingBackboneQueue)
+            if (u == v || this->backboneTransitiveClosure.isPresent(u, v, ls))
+                return true;
     return false;
+
 }
 
 bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
@@ -401,7 +372,7 @@ void TwoSidedBackboneIndex::buildIndex()
     // source -> dest -> {LS} in backbone
     // Minimal in the sense that if u -L-> w -L-> v, and u,w,v are all in backbone,
     // u-L->w is not included.
-     LabelledDistancedReachabilityMap backboneReachability;
+    LabelledDistancedReachabilityMap backboneReachability;
 
 
     // Compute the backbone reachability (to compute edges)
@@ -543,6 +514,44 @@ void TwoSidedBackboneIndex::buildIndex()
             VertexID u = e.first;
             if (this->backboneVertices.count(u)) {
                 this->backboneReachableIn[v].push_back(e);
+            }
+        }
+    }
+
+    print("Computing Backbone TC");
+
+    for (const VertexID& source : backboneVertices) {
+        // Keep a local reachability for the source vertex
+        LabelledDistancedReachabilityMap dfsReachability;
+
+        vector<tuple<VertexID, LabelSet>> stack;
+        stack.emplace_back(source, 0);
+
+        while(stack.size()) {
+            VertexID vertex; LabelSet ls;
+            std::tie(vertex, ls) = stack.back();
+            stack.pop_back();
+
+            dfsReachability.insert(source, vertex, ls, DIST_NOT_USED);
+
+            // Track reachability between backbone vertices (this is a subset of reachability)
+            if (backboneVertices.count(vertex))
+                backboneTransitiveClosure.insert(source, vertex, ls, DIST_NOT_USED);
+
+
+
+            const SmallEdgeSet& ses = this->graph->getOutNeighbours(vertex);
+            for(const auto& p : ses)
+            {
+                VertexID neighbor = p.first;
+                LabelSet ls2 = p.second;
+
+                // Get the new LS
+                LabelSet newLs = joinLabelSets(ls, ls2);
+
+                if (dfsReachability.isPresent(source, neighbor, newLs)) continue;
+
+                stack.push_back(make_tuple(neighbor, newLs));
             }
         }
     }

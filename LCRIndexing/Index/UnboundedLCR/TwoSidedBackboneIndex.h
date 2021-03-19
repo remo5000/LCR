@@ -189,5 +189,7 @@ class TwoSidedBackboneIndex : public Index
         // Speedup reachable backbone vertices discovery
         map<VertexID, SmallEdgeSet> backboneReachableOut;
         map<VertexID, SmallEdgeSet> backboneReachableIn;
+
+        twosidedbackbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
 };
 #endif
