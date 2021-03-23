@@ -171,7 +171,7 @@ class TwoSidedBackboneIndex : public Index
             BackboneVertexSelectionMethod backboneVertexSelectionMethod,
             BackboneEdgeCreationMethod backboneEdgeCreationMethod,
             BackboneIndexingMethod backboneIndexingMethod,
-            LocalSearchMethod bocalSearchMethod
+            LocalSearchMethod localSearchMethod
         );
         TwoSidedBackboneIndex(Graph* mg, unsigned int localSearchDistance)
             : TwoSidedBackboneIndex(
@@ -197,7 +197,7 @@ class TwoSidedBackboneIndex : public Index
         BackboneVertexSelectionMethod backboneVertexSelectionMethod;
         BackboneEdgeCreationMethod backboneEdgeCreationMethod;
         BackboneIndexingMethod backboneIndexingMethod;
-        LocalSearchMethod bocalSearchMethod;
+        LocalSearchMethod localSearchMethod;
 
         // The "epsilon" parameter of the backbone
         unsigned int localSearchDistance;
@@ -207,20 +207,36 @@ class TwoSidedBackboneIndex : public Index
         // unique_ptr<const DGraph> backbone;
         unique_ptr<DGraph> backbone;
 
+        // Indexing
+        void selectBackboneVertices();
+        void createBackboneEdges();
+        void indexBackbone();
         void buildIndex();
-        bool bfsLocally(
-            VertexID source,
-            VertexID target,
-            LabelSet ls
-        );
-        bool bfsBackbone(
-            VertexID source,
-            VertexID target,
-            const LabelSet& ls
-        );
+
+        // General querying
+        bool bfsLocally(VertexID source, VertexID target, LabelSet ls);
+        bool queryBackbone(VertexID source, VertexID target, LabelSet ls);
         bool computeQuery(VertexID source, VertexID target, LabelSet ls);
 
-        // Speedup Local BFS
+
+
+        // -- Indexing method specific --
+        // BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA
+        void localMeetingCriteriaSetCover();
+
+        // BackboneIndexingMethod::BFS
+        bool bfsBackbone(VertexID source, VertexID target, LabelSet ls);
+        // BackboneIndexingMethod::TRANSITIVE_CLOSURE
+        bool backboneQueryTransitiveClosure(VertexID source, VertexID target, LabelSet ls);
+
+        // LocalSearchMethod::UNIDIRECTIONAL_BFS
+        bool uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);
+        // LocalSearchMethod::BIDIRECTIONAL_BFS
+        bool biDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);
+
+        // -- Misc --
+        void cacheVertexToBackboneReachability();
+        // Speedup backbone indexing
         map<VertexID, SmallEdgeSet> locallyReachableOut;
         map<VertexID, SmallEdgeSet> locallyReachableIn;
 
