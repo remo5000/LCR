@@ -235,12 +235,8 @@ class TwoSidedBackboneIndex : public Index
         bool biDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);
 
         // -- Misc --
-        void cacheVertexToBackboneReachability();
-        // Speedup backbone indexing
-        map<VertexID, SmallEdgeSet> locallyReachableOut;
-        map<VertexID, SmallEdgeSet> locallyReachableIn;
-
         // Speedup reachable backbone vertices discovery
+        void cacheVertexToBackboneReachability();
         map<VertexID, SmallEdgeSet> backboneReachableOut;
         map<VertexID, SmallEdgeSet> backboneReachableIn;
 
