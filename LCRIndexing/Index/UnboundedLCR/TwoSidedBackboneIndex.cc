@@ -57,7 +57,7 @@ bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSe
                 LabelSet ls2 = p.second;
 
                 if (!isLabelSubset(ls2, ls)) continue;
-                // if (this->backboneVertices.count(neighbor)) continue;
+                if (this->backboneVertices.count(neighbor)) continue;
 
                 sourceOut.push(neighbor);
             }
