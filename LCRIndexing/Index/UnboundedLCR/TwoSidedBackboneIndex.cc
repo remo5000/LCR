@@ -23,13 +23,26 @@ typedef vector<VertexID> Path;
 
 
 
-TwoSidedBackboneIndex::TwoSidedBackboneIndex(Graph* mg, unsigned int localSearchDistance) {
+TwoSidedBackboneIndex::TwoSidedBackboneIndex(
+    Graph* mg,
+    unsigned int localSearchDistance,
+    BackboneVertexSelectionMethod backboneVertexSelectionMethod,
+    BackboneEdgeCreationMethod backboneEdgeCreationMethod,
+    BackboneIndexingMethod backboneIndexingMethod,
+    LocalSearchMethod bocalSearchMethod
+) {
     this->graph = mg;
     this->localSearchDistance = localSearchDistance;
     this->indexType = IndexType::TwoSidedBackbone;
 
     this->indexDirection = BOTHINDEX;
     this->isBlockedMode = false; // TODO this has something to do with input
+
+    // Set parameters
+    this->backboneVertexSelectionMethod = backboneVertexSelectionMethod;
+    this->backboneEdgeCreationMethod = backboneEdgeCreationMethod;
+    this->backboneIndexingMethod = backboneIndexingMethod;
+    this->bocalSearchMethod = bocalSearchMethod;
 
     // Construct index
     this->didComplete = false;

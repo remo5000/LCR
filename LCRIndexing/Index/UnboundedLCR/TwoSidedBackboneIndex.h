@@ -144,11 +144,44 @@ namespace twosidedbackbonens {
     };
 }
 
+enum class BackboneVertexSelectionMethod {
+    LOCAL_MEETING_CRITERIA
+};
+
+enum class BackboneEdgeCreationMethod {
+    BFS
+};
+
+enum class BackboneIndexingMethod {
+    BFS,
+    TRANSITIVE_CLOSURE
+};
+
+enum class LocalSearchMethod {
+    UNIDIRECTIONAL_BFS,
+    BIDIRECTIONAL_BFS
+};
+
 class TwoSidedBackboneIndex : public Index
 {
     public:
-
-        TwoSidedBackboneIndex(Graph* mg, unsigned int localSearchDistance);
+        TwoSidedBackboneIndex(
+            Graph* mg,
+            unsigned int localSearchDistance,
+            BackboneVertexSelectionMethod backboneVertexSelectionMethod,
+            BackboneEdgeCreationMethod backboneEdgeCreationMethod,
+            BackboneIndexingMethod backboneIndexingMethod,
+            LocalSearchMethod bocalSearchMethod
+        );
+        TwoSidedBackboneIndex(Graph* mg, unsigned int localSearchDistance)
+            : TwoSidedBackboneIndex(
+                mg,
+                localSearchDistance,
+                BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA,
+                BackboneEdgeCreationMethod::BFS,
+                BackboneIndexingMethod::TRANSITIVE_CLOSURE,
+                LocalSearchMethod::UNIDIRECTIONAL_BFS
+            ) {};
 
         // To implement Index
         bool query(VertexID source, VertexID target, LabelSet ls);
@@ -161,6 +194,11 @@ class TwoSidedBackboneIndex : public Index
 
 
     private:
+        BackboneVertexSelectionMethod backboneVertexSelectionMethod;
+        BackboneEdgeCreationMethod backboneEdgeCreationMethod;
+        BackboneIndexingMethod backboneIndexingMethod;
+        LocalSearchMethod bocalSearchMethod;
+
         // The "epsilon" parameter of the backbone
         unsigned int localSearchDistance;
         // The backbone vertices
