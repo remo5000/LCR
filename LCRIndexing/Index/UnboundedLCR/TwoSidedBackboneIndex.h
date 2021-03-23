@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <map>
 #include <vector>
+#include <queue>
 #include <algorithm>
 #include <memory>
 #include <limits>
@@ -53,7 +54,7 @@ namespace twosidedbackbonens {
                 if (!m.count(source)) return false;
                 if (!m[source].count(destination)) return false;
                 for (auto p : m[source][destination]) {
-                    if (isLabelSubset(ls, p.first)) {
+                    if (isLabelSubset(p.first, ls)) {
                         return true;
                     }
                 }
@@ -77,7 +78,7 @@ namespace twosidedbackbonens {
 
 
                 for (auto p : m[source][destination]) {
-                    if (isLabelSubset(ls, p.first)) {
+                    if (isLabelSubset(p.first, ls)) {
                         return p.second;
                     }
                 }
@@ -107,7 +108,7 @@ namespace twosidedbackbonens {
                 s << "]\n";
                 return s.str();
             }
-            const map<VertexID, SmallEdgeSet> toEdgeMap() const {
+            map<VertexID, SmallEdgeSet> toEdgeMap() const {
                 map<VertexID, SmallEdgeSet> result;
                 for (const auto& p1 : m) {
                     for (const auto& p2 : p1.second) {
@@ -172,18 +173,23 @@ class TwoSidedBackboneIndex : public Index
         bool bfsLocally(
             VertexID source,
             VertexID target,
-            LabelSet ls,
-            // TODO remove these once backbones are indexed per node
-            unordered_set<VertexID>& outVisited,
-            unordered_set<VertexID>& inVisited
+            LabelSet ls
         );
         bool bfsBackbone(
-            deque<VertexID>& outgoingBackboneQueue,
-            deque<VertexID>& incomingBackboneQueue,
-            unordered_set<VertexID>& outVisited,
-            unordered_set<VertexID>& inVisited,
+            VertexID source,
+            VertexID target,
             const LabelSet& ls
         );
         bool computeQuery(VertexID source, VertexID target, LabelSet ls);
+
+        // Speedup Local BFS
+        map<VertexID, SmallEdgeSet> locallyReachableOut;
+        map<VertexID, SmallEdgeSet> locallyReachableIn;
+
+        // Speedup reachable backbone vertices discovery
+        map<VertexID, SmallEdgeSet> backboneReachableOut;
+        map<VertexID, SmallEdgeSet> backboneReachableIn;
+
+        twosidedbackbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
 };
 #endif

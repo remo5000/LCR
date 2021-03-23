@@ -489,7 +489,9 @@ using namespace boost;
             virtual int getGraphSizeInBytes() = 0;
             virtual double getGraphConstructionTime() = 0;
 
+            virtual const graphns::SmallEdgeSet& getOutNeighbours(graphns::VertexID w) = 0;
             virtual void getOutNeighbours(graphns::VertexID w, graphns::SmallEdgeSet& outNeighbours) = 0;
+            virtual const graphns::SmallEdgeSet& getInNeighbours(graphns::VertexID w) = 0;
             virtual void getInNeighbours(graphns::VertexID w, graphns::SmallEdgeSet& outNeighbours) = 0;
             virtual void getAllNeighbours(graphns::VertexID w, graphns::SmallEdgeSet& allNeighbours) = 0;
 
