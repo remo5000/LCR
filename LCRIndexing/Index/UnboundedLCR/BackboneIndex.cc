@@ -57,7 +57,18 @@ BackboneIndex::BackboneIndex(
 
 unsigned long BackboneIndex::getIndexSizeInBytes()
 {
-    return getIndexSizeInBytesM();
+    int N = graph->getNumberOfVertices();
+    unsigned long size = getIndexSizeInBytesM();
+
+    size += this->backboneVertices.size()*sizeof(VertexID);
+    size += this->backbone->getGraphSizeInBytes();
+
+    if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
+        size += this->backboneTransitiveClosure.getSizeInBytes();
+    }
+
+    size += this->graph->getGraphSizeInBytes();
+    return size;
 };
 
 bool BackboneIndex::uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls) {
@@ -717,11 +728,17 @@ void BackboneIndex::buildIndex()
     int N = graph->getNumberOfVertices();
     int L = graph->getNumberOfLabels();
 
+    constStartTime = getCurrentTimeInMilliSec();
+
     selectBackboneVertices();
     createBackboneEdges();
     indexBackbone();
 
+
     cacheVertexToBackboneReachability();
+
+    constEndTime = getCurrentTimeInMilliSec();
+    totalConstTime = constEndTime - constStartTime;
 
     print("Done building index");
 };

@@ -122,8 +122,8 @@ namespace backbonens {
                 }
                 return result;
             }
-
             typedef pair<VertexID, std::pair<VertexID, LabelSet>> Item;
+            // TODO change to triples
             set<Item> toTuples() const {
                 set<Item> result;
                 for (const auto& p1 : m) {
@@ -137,6 +137,19 @@ namespace backbonens {
                     }
                 }
                 return result;
+            }
+            unsigned long getSizeInBytes() {
+                unsigned long size = sizeof(m);
+                for (const auto& p1 : m) {
+                    size += sizeof(p1.second);
+                    for (const auto& p2 : p1.second) {
+                        size += sizeof(p2.second);
+                        for (const auto& p3 : p2.second) {
+                            size += sizeof(p3);
+                        }
+                    }
+                }
+                return size;
             }
         private:
             // source -> dest -> ls -> dist
@@ -185,13 +198,13 @@ class BackboneIndex : public Index
 
         // To implement Index
         bool query(VertexID source, VertexID target, LabelSet ls);
-        unsigned long getIndexSizeInBytes();
         void queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach);
 
         // Backbone
         const unordered_set<VertexID>& getBackBoneVertices() const;
         const DGraph& getBackBone() const;
 
+        unsigned long getIndexSizeInBytes();
 
     private:
         BackboneVertexSelectionMethod backboneVertexSelectionMethod;
@@ -227,6 +240,7 @@ class BackboneIndex : public Index
         // BackboneIndexingMethod::BFS
         bool bfsBackbone(VertexID source, VertexID target, LabelSet ls);
         // BackboneIndexingMethod::TRANSITIVE_CLOSURE
+        backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
         bool backboneQueryTransitiveClosure(VertexID source, VertexID target, LabelSet ls);
 
         // LocalSearchMethod::UNIDIRECTIONAL_BFS
@@ -239,7 +253,5 @@ class BackboneIndex : public Index
         void cacheVertexToBackboneReachability();
         map<VertexID, SmallEdgeSet> backboneReachableOut;
         map<VertexID, SmallEdgeSet> backboneReachableIn;
-
-        backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
 };
 #endif
