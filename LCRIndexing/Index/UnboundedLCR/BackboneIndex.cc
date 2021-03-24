@@ -1,4 +1,4 @@
-#include "TwoSidedBackboneIndex.h"
+#include "BackboneIndex.h"
 #include <vector>
 #include <algorithm>
 #include <utility>
@@ -16,7 +16,7 @@
 
 #define DIST_NOT_USED 0
 
-using namespace twosidedbackbonens;
+using namespace backbonens;
 using namespace indexns;
 using namespace graphns;
 
@@ -28,7 +28,7 @@ typedef pair<VertexID, std::pair<VertexID, LabelSet>> Item;
 
 
 
-TwoSidedBackboneIndex::TwoSidedBackboneIndex(
+BackboneIndex::BackboneIndex(
     Graph* mg,
     unsigned int localSearchDistance,
     BackboneVertexSelectionMethod backboneVertexSelectionMethod,
@@ -38,7 +38,7 @@ TwoSidedBackboneIndex::TwoSidedBackboneIndex(
 ) {
     this->graph = mg;
     this->localSearchDistance = localSearchDistance;
-    this->indexType = IndexType::TwoSidedBackbone;
+    this->indexType = IndexType::Backbone;
 
     this->indexDirection = BOTHINDEX;
     this->isBlockedMode = false; // TODO this has something to do with input
@@ -55,12 +55,12 @@ TwoSidedBackboneIndex::TwoSidedBackboneIndex(
     this->didComplete = true;
 }
 
-unsigned long TwoSidedBackboneIndex::getIndexSizeInBytes()
+unsigned long BackboneIndex::getIndexSizeInBytes()
 {
     return getIndexSizeInBytesM();
 };
 
-bool TwoSidedBackboneIndex::uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls) {
+bool BackboneIndex::uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls) {
         queue<VertexID> sourceOut;
         sourceOut.push(source);
         for (int round = 0; round < this->localSearchDistance+1; round++) {
@@ -84,7 +84,7 @@ bool TwoSidedBackboneIndex::uniDirectionalLocalBfs(VertexID source, VertexID tar
         return false;
 };
 
-bool TwoSidedBackboneIndex::biDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls) {
+bool BackboneIndex::biDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls) {
         queue<VertexID> sourceOut;
         sourceOut.push(source);
         int outRounds = 0;
@@ -154,7 +154,7 @@ bool TwoSidedBackboneIndex::biDirectionalLocalBfs(VertexID source, VertexID targ
         return false;
 };
 
-bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls) {
+bool BackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls) {
     if (this->localSearchMethod == LocalSearchMethod::UNIDIRECTIONAL_BFS) {
         return this->uniDirectionalLocalBfs(source, target, ls);
     } else if (this->localSearchMethod == LocalSearchMethod::BIDIRECTIONAL_BFS) {
@@ -165,7 +165,7 @@ bool TwoSidedBackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSe
     }
 }
 
-bool TwoSidedBackboneIndex::bfsBackbone(
+bool BackboneIndex::bfsBackbone(
     VertexID source,
     VertexID target,
     LabelSet ls
@@ -262,7 +262,7 @@ bool TwoSidedBackboneIndex::bfsBackbone(
     return false;
 }
 
-bool TwoSidedBackboneIndex::backboneQueryTransitiveClosure(
+bool BackboneIndex::backboneQueryTransitiveClosure(
     VertexID source,
     VertexID target,
     LabelSet ls
@@ -309,7 +309,7 @@ bool TwoSidedBackboneIndex::backboneQueryTransitiveClosure(
 
 }
 
-bool TwoSidedBackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls) {
+bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls) {
     if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
         return this->bfsBackbone(source, target, ls);
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
@@ -320,7 +320,7 @@ bool TwoSidedBackboneIndex::queryBackbone(VertexID source, VertexID target, Labe
     }
 }
 
-bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
+bool BackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
     log("Starting query");
     watch(source);
     watch(target);
@@ -335,21 +335,21 @@ bool TwoSidedBackboneIndex::computeQuery(VertexID source, VertexID target, Label
     return this->queryBackbone(source, target, ls);
 }
 
-bool TwoSidedBackboneIndex::query(VertexID source, VertexID target, LabelSet ls)
+bool BackboneIndex::query(VertexID source, VertexID target, LabelSet ls)
 {
-    // cout << "TwoSidedBackboneIndex::query source=" << to_string(source) << ",target=" << to_string(target) << ",ls=" << labelSetToString(ls) << endl;
+    // cout << "BackboneIndex::query source=" << to_string(source) << ",target=" << to_string(target) << ",ls=" << labelSetToString(ls) << endl;
     queryStart = getCurrentTimeInMilliSec();
 
     bool b = this->computeQuery(source, target, ls);
     watch(b);
 
     queryEndTime = getCurrentTimeInMilliSec();
-    // cout << "TwoSidedBackboneIndex::query answer =" << b << endl;
+    // cout << "BackboneIndex::query answer =" << b << endl;
     return b;
 }
 
 // For some reason this is blank for a lot of methods -- we shall leave it blank for now.
-void TwoSidedBackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach)
+void BackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach)
 {
 
 };
@@ -360,7 +360,7 @@ void TwoSidedBackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitse
 pair<LabelledDistancedReachabilityMap, unordered_map<VertexID, LabelledDistancedReachabilityMap>>
 generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
     // Used to return the ground set
-    LabelledDistancedReachabilityMap twoSidedReachability;
+    LabelledDistancedReachabilityMap localMeetingReachability;
     unordered_map<VertexID, LabelledDistancedReachabilityMap> candidates;
 
     log("Starting BFS from every vertex");
@@ -394,7 +394,7 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
 
             // Add this to the resultant ground set if the distance is exactly epsilon+1
             if (dist == localSearchDistance+1) {
-                twoSidedReachability.insert(source, vertex, ls, dist);
+                localMeetingReachability.insert(source, vertex, ls, dist);
                 for (int i = 1; i < path.size()-1; i++) {
                     VertexID intermediate = path[i];
                     candidates[intermediate].insert(source, vertex, ls, dist);
@@ -427,10 +427,10 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
         }
     }
 
-    return {twoSidedReachability, candidates};
+    return {localMeetingReachability, candidates};
 }
 
-void TwoSidedBackboneIndex::localMeetingCriteriaSetCover() {
+void BackboneIndex::localMeetingCriteriaSetCover() {
     print("Generating ground set");
     LabelledDistancedReachabilityMap groundSetMap;
     unordered_map<VertexID, LabelledDistancedReachabilityMap> candidatesToReachabilityMap;
@@ -494,7 +494,7 @@ void TwoSidedBackboneIndex::localMeetingCriteriaSetCover() {
 
 }
 
-void TwoSidedBackboneIndex::selectBackboneVertices() {
+void BackboneIndex::selectBackboneVertices() {
     if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA) {
         this->localMeetingCriteriaSetCover();
     } else {
@@ -503,7 +503,7 @@ void TwoSidedBackboneIndex::selectBackboneVertices() {
     }
 };
 
-void TwoSidedBackboneIndex::createBackboneEdges() {
+void BackboneIndex::createBackboneEdges() {
     if (this->backboneEdgeCreationMethod == BackboneEdgeCreationMethod::BFS) {
         // source -> dest -> {LS} in backbone
         // Minimal in the sense that if u -L-> w -L-> v, and u,w,v are all in backbone,
@@ -591,7 +591,7 @@ void TwoSidedBackboneIndex::createBackboneEdges() {
     }
 };
 
-void TwoSidedBackboneIndex::indexBackbone() {
+void BackboneIndex::indexBackbone() {
     if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
         print("Computing Backbone TC");
         for (const VertexID& source : backboneVertices) {
@@ -637,7 +637,7 @@ void TwoSidedBackboneIndex::indexBackbone() {
     }
 };
 
-void TwoSidedBackboneIndex::cacheVertexToBackboneReachability() {
+void BackboneIndex::cacheVertexToBackboneReachability() {
     // Inwards
     LabelledDistancedReachabilityMap inReachability;
     for (VertexID source : this->backboneVertices)
@@ -711,7 +711,7 @@ void TwoSidedBackboneIndex::cacheVertexToBackboneReachability() {
 };
 
 
-void TwoSidedBackboneIndex::buildIndex()
+void BackboneIndex::buildIndex()
 {
     Graph* graph = this->graph;
     int N = graph->getNumberOfVertices();
@@ -726,10 +726,10 @@ void TwoSidedBackboneIndex::buildIndex()
     print("Done building index");
 };
 
-const unordered_set<VertexID>& TwoSidedBackboneIndex::getBackBoneVertices() const {
+const unordered_set<VertexID>& BackboneIndex::getBackBoneVertices() const {
     return backboneVertices;
 };
 
-const DGraph& TwoSidedBackboneIndex::getBackBone() const {
+const DGraph& BackboneIndex::getBackBone() const {
     return *backbone;
 };
