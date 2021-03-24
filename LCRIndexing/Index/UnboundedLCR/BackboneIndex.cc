@@ -717,11 +717,17 @@ void BackboneIndex::buildIndex()
     int N = graph->getNumberOfVertices();
     int L = graph->getNumberOfLabels();
 
+    constStartTime = getCurrentTimeInMilliSec();
+
     selectBackboneVertices();
     createBackboneEdges();
     indexBackbone();
 
+
     cacheVertexToBackboneReachability();
+
+    constEndTime = getCurrentTimeInMilliSec();
+    totalConstTime = constEndTime - constStartTime;
 
     print("Done building index");
 };
