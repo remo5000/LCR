@@ -19,7 +19,7 @@
 #include "../../Index/UnboundedLCR/BFSIndex.cc"
 #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 #include "../../Index/UnboundedLCR/Zou.cc"
-#include "../../Index/UnboundedLCR/TwoSidedBackboneIndex.cc"
+#include "../../Index/UnboundedLCR/BackboneIndex.cc"
 
 #include "../../Graph/DGraph.cc"
 
@@ -286,10 +286,12 @@ int main(int argc, char *argv[]) {
             index = new LandmarkedIndex(graph, false, false, k, b);
 	      }
 
-        // Two Sided backbone;
+        // Backbone;
         if (i == 4) {
-            unsigned int localDist = max(2, (int)log2(N));
-            index = new TwoSidedBackboneIndex(graph, localDist);
+            float logn = log2(N);
+            float loglogn = log2(log2(N));
+            unsigned int localDist = max(2, (int)logn);
+            index = new BackboneIndex(graph, localDist);
         }
 
         // Zou

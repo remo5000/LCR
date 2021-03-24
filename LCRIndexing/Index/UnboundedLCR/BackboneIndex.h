@@ -19,10 +19,10 @@
 using namespace indexns;
 using namespace graphns;
 
-#ifndef TWOSIDEDBACKBONEINDEX_H
-#define TWOSIDEDBACKBONEINDEX_H
+#ifndef BACKBONEINDEX_H
+#define BACKBONEINDEX_H
 
-namespace twosidedbackbonens {
+namespace backbonens {
     class LabelledDistancedReachabilityMap {
         public:
             void insert(VertexID source, VertexID destination, LabelSet ls, unsigned int distance) {
@@ -162,10 +162,10 @@ enum class LocalSearchMethod {
     BIDIRECTIONAL_BFS
 };
 
-class TwoSidedBackboneIndex : public Index
+class BackboneIndex : public Index
 {
     public:
-        TwoSidedBackboneIndex(
+        BackboneIndex(
             Graph* mg,
             unsigned int localSearchDistance,
             BackboneVertexSelectionMethod backboneVertexSelectionMethod,
@@ -173,8 +173,8 @@ class TwoSidedBackboneIndex : public Index
             BackboneIndexingMethod backboneIndexingMethod,
             LocalSearchMethod localSearchMethod
         );
-        TwoSidedBackboneIndex(Graph* mg, unsigned int localSearchDistance)
-            : TwoSidedBackboneIndex(
+        BackboneIndex(Graph* mg, unsigned int localSearchDistance)
+            : BackboneIndex(
                 mg,
                 localSearchDistance,
                 BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA,
@@ -235,15 +235,11 @@ class TwoSidedBackboneIndex : public Index
         bool biDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);
 
         // -- Misc --
-        void cacheVertexToBackboneReachability();
-        // Speedup backbone indexing
-        map<VertexID, SmallEdgeSet> locallyReachableOut;
-        map<VertexID, SmallEdgeSet> locallyReachableIn;
-
         // Speedup reachable backbone vertices discovery
+        void cacheVertexToBackboneReachability();
         map<VertexID, SmallEdgeSet> backboneReachableOut;
         map<VertexID, SmallEdgeSet> backboneReachableIn;
 
-        twosidedbackbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
+        backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
 };
 #endif

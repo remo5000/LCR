@@ -1,4 +1,4 @@
-#include "../../Index/UnboundedLCR/TwoSidedBackboneIndex.cc"
+#include "../../Index/UnboundedLCR/BackboneIndex.cc"
 #include "../../Graph/DGraph.cc"
 
 #include <string>
@@ -35,7 +35,7 @@ void testBackboneVertices(
 )
 {
     Graph* g1 = new DGraph(edgeFileName);
-    const TwoSidedBackboneIndex index(g1, localDist);
+    const BackboneIndex index(g1, localDist);
     const unordered_set<VertexID>& actual = index.getBackBoneVertices();
     for (VertexID v : actual) cout << "vertex " << v << " is present in backbone\n";
     test(actual == expectedBackboneVertices, testId);
@@ -47,18 +47,18 @@ int main(int argc, char *argv[])
     int t = 1;
     unordered_set<VertexID> expectedBackboneVertices = {};
     // -- Test for no possible backbone vertices (all reachability is local) --
-    testBackboneVertices("tests/graphs/TwoSidedBackboneEmpty.edge", 2, expectedBackboneVertices, t);
-    testBackboneVertices("tests/graphs/TwoSidedBackboneComplete4.edge", 2, expectedBackboneVertices, t);
-    testBackboneVertices("tests/graphs/TwoSidedBackboneLine1.edge", 2, expectedBackboneVertices, t);
+    testBackboneVertices("tests/graphs/BackboneEmpty.edge", 2, expectedBackboneVertices, t);
+    testBackboneVertices("tests/graphs/BackboneComplete4.edge", 2, expectedBackboneVertices, t);
+    testBackboneVertices("tests/graphs/BackboneLine1.edge", 2, expectedBackboneVertices, t);
 
     // -- Test for >0 backbone vertices --
     expectedBackboneVertices = {1};
-    testBackboneVertices("tests/graphs/TwoSidedBackboneBranch1.edge", 2, expectedBackboneVertices, t);
+    testBackboneVertices("tests/graphs/BackboneBranch1.edge", 2, expectedBackboneVertices, t);
     expectedBackboneVertices = {2};
-    testBackboneVertices("tests/graphs/TwoSidedBackboneLine2.edge", 2, expectedBackboneVertices, t);
+    testBackboneVertices("tests/graphs/BackboneLine2.edge", 2, expectedBackboneVertices, t);
     // Regression -- either 0 or 2 works.
     expectedBackboneVertices = {0};
-    testBackboneVertices("tests/graphs/TwoSidedBackboneCycle1.edge", 2, expectedBackboneVertices, t);
+    testBackboneVertices("tests/graphs/BackboneCycle1.edge", 2, expectedBackboneVertices, t);
 
 
     return 0;

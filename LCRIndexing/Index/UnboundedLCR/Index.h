@@ -110,7 +110,7 @@ as a string or insert a LabelSet into a set of LabelSets.
         typedef vector< altIndexPN > altIndexF;
 
         /* All indexes have one of the following types */
-        enum IndexType { BFS, Exact, DoubleBFSenum, Join, Clustered, Partial, Landmarked, ZouType, TwoSidedBackbone };
+        enum IndexType { BFS, Exact, DoubleBFSenum, Join, Clustered, Partial, Landmarked, ZouType, Backbone };
 
         typedef struct
         {
@@ -468,8 +468,8 @@ as a string or insert a LabelSet into a set of LabelSets.
                     case indexns::IndexType::ZouType:
                         a = "Zou";
                         break;
-                    case indexns::IndexType::TwoSidedBackbone:
-                        a = "TwoSidedBackbone";
+                    case indexns::IndexType::Backbone:
+                        a = "Backbone";
                         break;
                     default:
                         break;
