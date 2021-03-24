@@ -240,6 +240,7 @@ class BackboneIndex : public Index
         // BackboneIndexingMethod::BFS
         bool bfsBackbone(VertexID source, VertexID target, LabelSet ls);
         // BackboneIndexingMethod::TRANSITIVE_CLOSURE
+        backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
         bool backboneQueryTransitiveClosure(VertexID source, VertexID target, LabelSet ls);
 
         // LocalSearchMethod::UNIDIRECTIONAL_BFS
@@ -252,8 +253,5 @@ class BackboneIndex : public Index
         void cacheVertexToBackboneReachability();
         map<VertexID, SmallEdgeSet> backboneReachableOut;
         map<VertexID, SmallEdgeSet> backboneReachableIn;
-
-
-        backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
 };
 #endif
