@@ -3,6 +3,7 @@
 #include <vector>
 #include <random>
 #include <queue>
+#include <memory>
 #include <algorithm>
 #include <string>
 #include <math.h>
@@ -15,13 +16,12 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#include "../../Index/UnboundedLCR/Index.h"
-#include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
-#include "../../Index/UnboundedLCR/Zou.cc"
-#include "../../Index/UnboundedLCR/BackboneIndex.cc"
-
-#include "../../Graph/DGraph.cc"
+#include "../../../Index/UnboundedLCR/Index.h"
+#include "../../../Index/UnboundedLCR/BFSIndex.h"
+#include "../../../Index/UnboundedLCR/LandmarkedIndex.cc"
+#include "../../../Index/UnboundedLCR/Zou.cc"
+#include "../../../Index/UnboundedLCR/BackboneIndex.cc"
+#include "../../../Graph/DGraph.cc"
 
 using namespace std;
 using namespace indexns;
@@ -79,7 +79,7 @@ time, index size and query times are logged.
 
 Each query is executed 10 times and the performance is averaged.
 */
-int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTimes,
+int runTestsPerIndex(std::unique_ptr<Index>& index, vector< vector< vector<double> > >& queryTimes,
         vector< double >& queryTimeSums,
         vector<unsigned long>& indexSizes, vector<double>& indexTimes, unsigned int noOfQuerySets,
         string edgeFile, unsigned long size, double indexingTime)
@@ -253,12 +253,12 @@ int main(int argc, char *argv[]) {
     {
         cout << "method i=" << i << endl;
 
-        Index* index;
+        std::unique_ptr<Index> index;
 
         long altSize = -1;
 
         if( i == 0 )
-            index = new BFSIndex(graph);
+            index = std::unique_ptr<Index>(new BFSIndex(graph));
 
         // LI+ (both extensions)
         if( i == 1 )
@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
             int k = 1250 + sqrt(N);
             if (k >= N) k = sqrt(N);
             int b = 20;
-            index = new LandmarkedIndex(graph, true, true, k, b);
+            index = std::unique_ptr<Index>(new LandmarkedIndex(graph, true, true, k, b));
 	      }
 
         // LI (no extensions)
@@ -275,7 +275,7 @@ int main(int argc, char *argv[]) {
             int k = 1250 + sqrt(N);
             if (k >= N) k = sqrt(N);
             int b = 20;
-            index = new LandmarkedIndex(graph, false, false, k, b);
+            index = std::unique_ptr<Index>(new LandmarkedIndex(graph, false, false, k, b));
 	      }
 
         // Full-LI
@@ -283,7 +283,7 @@ int main(int argc, char *argv[]) {
 	      {
             int k = N;
             int b = 0;
-            index = new LandmarkedIndex(graph, false, false, k, b);
+            index = std::unique_ptr<Index>(new LandmarkedIndex(graph, false, false, k, b));
 	      }
 
         // Backbone;
@@ -291,13 +291,13 @@ int main(int argc, char *argv[]) {
             float logn = log2(N);
             float loglogn = log2(log2(N));
             unsigned int localDist = max(2, (int)loglogn);
-            index = new BackboneIndex(graph, localDist);
+            index = std::unique_ptr<Index>(new BackboneIndex(graph, localDist));
         }
 
         // Zou
         if( i == 5 )
         {
-            index = new Zou(graph);
+            index = std::unique_ptr<Index>(new Zou(graph));
         }
 
 
@@ -323,8 +323,6 @@ int main(int argc, char *argv[]) {
           string indexName = index->getIndexTypeAsString();
           cout << "No experiments for index: " << indexName << " as it did not complete building the index successfully.";
         }
-
-        free(index);
     }
 
     cout << "--- Writing out the data ---" << endl;

@@ -751,7 +751,7 @@ int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaint
 
     q.push( t );
 
-    labelledBFSPerLM(w, doPropagate, isMaintenance, q );
+    return labelledBFSPerLM(w, doPropagate, isMaintenance, q );
 };
 
 int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,

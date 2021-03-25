@@ -2,8 +2,6 @@
 #include "../../Graph/DGraph.h"
 #include "Index.h"
 
-#include "Index.h"
-
 #include <set>
 #include <unordered_set>
 #include <unordered_map>
@@ -220,6 +218,8 @@ class BackboneIndex : public Index
         // The backbone itself
         // unique_ptr<const DGraph> backbone;
         unique_ptr<DGraph> backbone;
+        unique_ptr<EdgeSet> backboneEdgeSet;
+        unique_ptr<Index> backboneIndex;
 
         // Indexing
         void selectBackboneVertices();

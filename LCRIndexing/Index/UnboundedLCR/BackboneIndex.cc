@@ -1,4 +1,6 @@
 #include "BackboneIndex.h"
+#include "../../Index/UnboundedLCR/BFSIndex.cc"
+
 #include <vector>
 #include <algorithm>
 #include <utility>
@@ -186,34 +188,46 @@ bool BackboneIndex::bfsBackbone(
 
     unsigned int pos;
     queue<VertexID> outgoingBackboneQueue;
-    const SmallEdgeSet& outSes = this->backboneReachableOut[source];
-    pos = 0;
-    while(pos < outSes.size()) {
-        VertexID v = outSes[pos].first;
-        while(pos < outSes.size() && outSes[pos].first == v) {
-            if (isLabelSubset(outSes[pos].second, ls)) {
-                outgoingBackboneQueue.push(v);
-                break;
+    if (this->backboneReachableOut.count(source)) {
+        const SmallEdgeSet& outSes = this->backboneReachableOut.at(source);
+        pos = 0;
+        while(pos < outSes.size()) {
+            VertexID v = outSes[pos].first;
+            while(pos < outSes.size() && outSes[pos].first == v) {
+                if (isLabelSubset(outSes[pos].second, ls)) {
+                    outgoingBackboneQueue.push(v);
+                    break;
+                }
+                pos++;
             }
-            pos++;
+            while(pos < outSes.size() && outSes[pos].first == v) pos++;
         }
-        while(pos < outSes.size() && outSes[pos].first == v) pos++;
     }
 
     queue<VertexID> incomingBackboneQueue;
-    const SmallEdgeSet& inSes = this->backboneReachableIn[target];
-    pos = 0;
-    while(pos < inSes.size()) {
-        VertexID v = inSes[pos].first;
-        while(pos < inSes.size() && inSes[pos].first == v) {
-            if (isLabelSubset(inSes[pos].second, ls)) {
-                incomingBackboneQueue.push(v);
-                break;
+    if (this->backboneReachableIn.count(target)) {
+        const SmallEdgeSet& inSes = this->backboneReachableIn.at(target);
+        pos = 0;
+        while(pos < inSes.size()) {
+            VertexID v = inSes[pos].first;
+            while(pos < inSes.size() && inSes[pos].first == v) {
+                if (isLabelSubset(inSes[pos].second, ls)) {
+                    incomingBackboneQueue.push(v);
+                    break;
+                }
+                pos++;
             }
-            pos++;
+            while(pos < inSes.size() && inSes[pos].first == v) pos++;
         }
-        while(pos < inSes.size() && inSes[pos].first == v) pos++;
     }
+
+    // --
+    for (const auto& u : outgoingBackboneQueue)
+        for (const auto& v : incomingBackboneQueue)
+            if (this->backboneIndex.get()->query(source, target, ls))
+                return true;
+    return false;
+    // --
 
     dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
     dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
@@ -541,7 +555,7 @@ void BackboneIndex::oneSideConditionCover() {
         }
 
         const auto& p = degreePerNode[i];
-        const VertexID& source = p.first;
+        const VertexID source = p.first;
 
         LabelledDistancedReachabilityMap depthMap;
         LabelledDistancedReachabilityMap distanceMap;
@@ -681,20 +695,19 @@ void BackboneIndex::createBackboneEdges() {
         log(backboneReachability.toString());
 
         // Generate edges
-        EdgeSet emptyEdgeSet;
-        DGraph* dg = new DGraph(&emptyEdgeSet, this->graph->getNumberOfVertices(), 0, true);
+        this->backboneEdgeSet = std::unique_ptr<EdgeSet>(new EdgeSet());
+
+        // Set the bacbone
+        this->backbone = std::unique_ptr<DGraph>(new DGraph(this->backboneEdgeSet.get(), this->graph->getNumberOfVertices(), 0, true));
 
         for (const auto& p : backboneReachability.toEdgeMap()) {
             for (const SmallEdge& smallEdge : p.second) {
                 VertexID u = p.first;
                 VertexID v = smallEdge.first;
                 LabelSet ls = smallEdge.second;
-                dg->addMultiEdge(u,v,ls);
+                this->backbone->addMultiEdge(u,v,ls);
             }
         }
-
-        // Set the bacbone
-        backbone = std::unique_ptr<DGraph>(dg);
     } else {
         print("Unsupported backboneEdgeCreationMethod. Backtrace here to check how it happened.");
         exit(1);
@@ -740,7 +753,7 @@ void BackboneIndex::indexBackbone() {
             }
         }
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
-        // Do nothing
+        this->backboneIndex = std::unique_ptr<Index>(new BFSIndex(this->graph));
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);

@@ -1,3 +1,5 @@
+import os
+
 VERSION = '0.0.1'
 APPNAME = 'betweenness'
 
@@ -8,9 +10,18 @@ def options(opt):
   opt.load('compiler_cxx')
 
 def configure(ctx):
+  # ctx.env.CXX = "g++-4.9" # default compiler
+  # if 'CXX' in os.environ: # Pull in the compiler
+  #   ctx.env.CXX = os.environ['CXX'] # override default
+
+  # # Uncomment to detect memory leaks
+  # ctx.load('compiler_cxx')
+  # ctx.env.CFLAGS += ['-fsanitize=address']
+  # ctx.env.CXXFLAGS += ['-fsanitize=address', '-g', '-I/usr/local/include/', '-std=c++0x']
+  # ctx.env.append_value('LINKFLAGS', ['-L/usr/local/lib/', '-fsanitize=address'])
+
   ctx.load('compiler_cxx')
-  # ctx.check_cxx(lib = ['glog', 'gflags'], uselib_store = 'common')
-  ctx.env.CXXFLAGS += ['-O2', '-g', '-I/usr/local/include/', '-std=c++0x']
+  ctx.env.CXXFLAGS += ['-g', '-I/usr/local/include/', '-std=c++0x']
   ctx.env.append_value('LINKFLAGS', ['-L/usr/local/lib/'])
 
 
@@ -18,136 +29,133 @@ def build(bld):
 
   IndexList = ['BFSIndex', 'DoubleBFS', 'LandmarkedIndex', 'Zou', 'ClusteredExactIndex', 'BackboneIndex'];
 
-  # bld(features     = 'cxx cxxstlib',
-  #     source       = ['Graph/DGraph.cc'],
-  #     target       = 'DGraph',
-  #     includes     = ['.'])
+  bld(features     = 'cxx cxxstlib',
+      source       = ['Graph/DGraph.cc'],
+      includes     = ['.'],
+      target       = 'DGraph',
+      )
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['tests/DGraphTest.cc'],
-  #     target       = 'DGraphTest',
-  #     includes     = ['.'],
-  #     use = ['DGraph'])
+  bld(features     = 'cxx cprogram',
+      source       = ['tests/DGraphTest.cc'],
+      target       = 'DGraphTest',
+      includes     = ['.'],
+      use = ['DGraph'])
 
   bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/BFSIndex.cc'],
       target       = 'BFSIndex',
       )
 
-  # bld(features     = 'cxx cxxstlib',
-  #     source       = ['Index/UnboundedLCR/DoubleBFS.cc'],
-  #     target       = 'DoubleBFS',
-  #     includes     = ['.'],
-  #     use = '')
+  bld(features     = 'cxx cxxstlib',
+      source       = ['Index/UnboundedLCR/DoubleBFS.cc'],
+      target       = 'DoubleBFS',
+      use = '')
 
   bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/LandmarkedIndex.cc'],
       target       = 'LandmarkedIndex',
       )
 
-  # bld(features     = 'cxx cxxstlib',
-  #     source       = ['Index/UnboundedLCR/Zou.cc'],
-  #     target       = 'Zou',
-  #     includes     = ['.'],
-  #     use = '')
+  bld(features     = 'cxx cxxstlib',
+      source       = ['Index/UnboundedLCR/Zou.cc'],
+      target       = 'Zou',
+      # includes     = ['Index/UnboundedLCR/Index.h'],
+      use = ['DGraph'])
 
-  # bld(features     = 'cxx cxxstlib',
-  #     source       = ['Index/UnboundedLCR/BackboneIndex.cc'],
-  #     target       = 'BackboneIndex',
-  #     includes     = ['.'],
-  #     use = '')
+  bld(features     = 'cxx cxxstlib',
+      source       = ['Index/UnboundedLCR/BackboneIndex.cc'],
+      target       = 'BackboneIndex',
+      use = ['DGraph', 'BFSIndex'])
 
-  # bld(features     = 'cxx cxxstlib',
-  #     source       = ['Index/UnboundedLCR/NeighbourExchange.cc'],
-  #     target       = 'NeighbourExchange',
-  #     includes     = ['.'],
-  #     use = '')
+  bld(features     = 'cxx cxxstlib',
+      source       = ['Index/UnboundedLCR/NeighbourExchange.cc'],
+      target       = 'NeighbourExchange',
+      includes     = ['.'],
+      use = '')
 
-  # bld(features     = 'cxx cxxstlib',
-  #     source       = ['Index/UnboundedLCR/PartialIndex.cc'],
-  #     target       = 'Partial',
-  #     includes     = ['.'],
-  #     use = '')
+  bld(features     = 'cxx cxxstlib',
+      source       = ['Index/UnboundedLCR/PartialIndex.cc'],
+      target       = 'Partial',
+      includes     = ['.'],
+      use = '')
 
-  # bld(features     = 'cxx cxxstlib',
-  #     source       = ['Index/UnboundedLCR/ClusteredExactIndex.cc'],
-  #     target       = 'ClusteredExactIndex',
-  #     includes     = ['.'],
-  #     use = '')
+  bld(features     = 'cxx cxxstlib',
+      source       = ['Index/UnboundedLCR/ClusteredExactIndex.cc'],
+      target       = 'ClusteredExactIndex',
+      includes     = ['.'],
+      use = '')
 
   bld(features     = 'cxx cprogram',
       source       = ['experiments/genStats.cc'],
       target       = 'genStats',
       use = 'BFSIndex')
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['experiments/Index/UnboundedLCR/runExperiment.cc'],
-  #     target       = 'runExperiment',
-  #     includes     = ['.'],
-  #     use = IndexList)
+  bld(features     = 'cxx cprogram',
+      source       = ['experiments/Index/UnboundedLCR/runExperiment.cc'],
+      target       = 'runExperiment',
+      includes     = ['.'],
+      use = IndexList)
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['experiments/Index/UnboundedLCR/maintenanceExp.cc'],
-  #     target       = 'maintenanceExp',
-  #     includes     = ['.'],
-  #     use = IndexList)
+  bld(features     = 'cxx cprogram',
+      source       = ['experiments/Index/UnboundedLCR/maintenanceExp.cc'],
+      target       = 'maintenanceExp',
+      includes     = ['.'],
+      use = IndexList)
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['experiments/Index/UnboundedLCR/queryAllExp.cc'],
-  #     target       = 'queryAllExp',
-  #     includes     = ['.'],
-  #     use = IndexList)
+  bld(features     = 'cxx cprogram',
+      source       = ['experiments/Index/UnboundedLCR/queryAllExp.cc'],
+      target       = 'queryAllExp',
+      includes     = ['.'],
+      use = IndexList)
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['experiments/Index/UnboundedLCR/genQuery.cc'],
-  #     target       = 'genQuery',
-  #     includes     = ['.'],
-  #     use = IndexList)
+  bld(features     = 'cxx cprogram',
+      source       = ['experiments/Index/UnboundedLCR/genQuery.cc'],
+      target       = 'genQuery',
+      includes     = ['.'],
+      use = IndexList)
 
+  # TODO solve double free()
   bld(features     = 'cxx cprogram',
       source       = ['tests/Index/UnboundedLCR/LandmarkedIndexTest.cc'],
       target       = 'LandmarkedIndexTest',
+      use = ['LandmarkedIndex', 'BFSIndex', 'DGraph'])
+
+  bld(features     = 'cxx cprogram',
+      source       = ['tests/Index/UnboundedLCR/DoubleBFSTest.cc'],
+      target       = 'DoubleBFSTest',
       use = ['LandmarkedIndex'])
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['tests/Index/UnboundedLCR/DoubleBFSTest.cc'],
-  #     target       = 'DoubleBFSTest',
-  #     includes     = ['.'],
-  #     use = ['LandmarkedIndex'])
+  bld(features     = 'cxx cprogram',
+      source       = ['tests/Index/UnboundedLCR/BFSTest.cc'],
+      target       = 'BFSTest',
+      use = ['BFSIndex', 'DGraph'])
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['tests/Index/UnboundedLCR/BFSTest.cc'],
-  #     target       = 'BFSTest',
-  #     includes     = ['.'],
-  #     use = ['LandmarkedIndex'])
+  # TODO solve bad_alloc
+  bld(features     = 'cxx cprogram',
+      source       = ['tests/Index/UnboundedLCR/ZouTest.cc'],
+      target       = 'ZouTest',
+      use = ['Zou', 'DGraph'])
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['tests/Index/UnboundedLCR/ZouTest.cc'],
-  #     target       = 'ZouTest',
-  #     includes     = ['.'],
-  #     use = ['Zou'])
+  bld(features     = 'cxx cprogram',
+      source       = ['tests/Index/UnboundedLCR/BackboneIndexTest.cc'],
+      target       = 'BackboneIndexTest',
+      includes     = ['.'],
+      use = ['BackboneIndex'])
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['tests/Index/UnboundedLCR/BackboneIndexTest.cc'],
-  #     target       = 'BackboneIndexTest',
-  #     includes     = ['.'],
-  #     use = ['BackboneIndex'])
+  bld(features     = 'cxx cxxstlib',
+      source       = ['Index/UnboundedLCR/WD/LandmarkedIndexWD.cc'],
+      target       = 'LandmarkedIndexWD',
+      )
 
-  # bld(features     = 'cxx cxxstlib',
-  #     source       = ['Index/UnboundedLCR/WD/LandmarkedIndexWD.cc'],
-  #     target       = 'LandmarkedIndexWD',
-  #     includes     = ['.']
-  #     )
+  # TODO solve double free()
+  bld(features     = 'cxx cprogram',
+      source       = ['tests/Index/UnboundedLCR/WD/LandmarkedIndexWDTest.cc'],
+      target       = 'LandmarkedIndexWDTest',
+      use = ['LandmarkedIndexWD']
+      )
 
-  # bld(features     = 'cxx cprogram',
-  #     source       = ['tests/Index/UnboundedLCR/WD/LandmarkedIndexWDTest.cc'],
-  #     target       = 'LandmarkedIndexWDTest',
-  #     includes     = ['.'],
-  #     use = ['LandmarkedIndexWD']
-  #     )
-
-  # bld(features     = 'cxx cprogram',
-  #    source       = ['experiments/Index/UnboundedLCR/runWDExperiment.cc'],
-  #    target       = 'runWDExperiment',
-  #    includes     = ['.'],
-  #    use = ['LandmarkedIndex', 'LandmarkedIndexWD'] )
+  bld(features     = 'cxx cprogram',
+     source       = ['experiments/Index/UnboundedLCR/runWDExperiment.cc'],
+     target       = 'runWDExperiment',
+     includes     = ['.'],
+     use = ['LandmarkedIndex', 'LandmarkedIndexWD'] )

@@ -1,6 +1,5 @@
-#include "../../Index/UnboundedLCR/BFSIndex.cc"
-
-#include "../../Graph/DGraph.cc"
+#include "../../../Index/UnboundedLCR/BFSIndex.cc"
+#include "../../../Graph/DGraph.cc"
 
 #include <string>
 #include <fstream>
