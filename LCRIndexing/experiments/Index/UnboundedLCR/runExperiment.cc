@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
         if (i == 4) {
             float logn = log2(N);
             float loglogn = log2(log2(N));
-            unsigned int localDist = max(2, (int)logn);
+            unsigned int localDist = max(2, (int)loglogn);
             index = new BackboneIndex(graph, localDist);
         }
 
