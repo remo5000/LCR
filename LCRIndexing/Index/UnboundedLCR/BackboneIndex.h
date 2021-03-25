@@ -158,7 +158,8 @@ namespace backbonens {
 }
 
 enum class BackboneVertexSelectionMethod {
-    LOCAL_MEETING_CRITERIA
+    LOCAL_MEETING_CRITERIA,
+    ONE_SIDE_CONDITION
 };
 
 enum class BackboneEdgeCreationMethod {
@@ -190,9 +191,9 @@ class BackboneIndex : public Index
             : BackboneIndex(
                 mg,
                 localSearchDistance,
-                BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA,
+                BackboneVertexSelectionMethod::ONE_SIDE_CONDITION,
                 BackboneEdgeCreationMethod::BFS,
-                BackboneIndexingMethod::TRANSITIVE_CLOSURE,
+                BackboneIndexingMethod::BFS,
                 LocalSearchMethod::UNIDIRECTIONAL_BFS
             ) {};
 
@@ -236,6 +237,8 @@ class BackboneIndex : public Index
         // -- Indexing method specific --
         // BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA
         void localMeetingCriteriaSetCover();
+        // BackboneVertexSelectionMethod::ONE_SIDE_CONDITION
+        void oneSideConditionCover();
 
         // BackboneIndexingMethod::BFS
         bool bfsBackbone(VertexID source, VertexID target, LabelSet ls);

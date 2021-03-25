@@ -297,6 +297,7 @@ bool BackboneIndex::backboneQueryTransitiveClosure(
         while(pos < outSes.size() && outSes[pos].first == v) pos++;
     }
 
+
     vector<VertexID> incomingBackboneQueue;
     const SmallEdgeSet& inSes = this->backboneReachableIn[target];
     pos = 0;
@@ -352,7 +353,6 @@ bool BackboneIndex::query(VertexID source, VertexID target, LabelSet ls)
     queryStart = getCurrentTimeInMilliSec();
 
     bool b = this->computeQuery(source, target, ls);
-    watch(b);
 
     queryEndTime = getCurrentTimeInMilliSec();
     // cout << "BackboneIndex::query answer =" << b << endl;
@@ -489,8 +489,8 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
             }
         }
 
-        watch(biggestCover.size());
-        watch(biggestCoverVertex);
+        // watch(biggestCover.size());
+        // watch(biggestCoverVertex);
         for (const Item& item : biggestCover) {
             uncovered.erase(item.first, item.second.first, item.second.second);
         }
@@ -505,9 +505,109 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
 
 }
 
+void BackboneIndex::oneSideConditionCover() {
+    struct sort_pred
+    {
+        bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right)
+        {
+            return left.second > right.second;
+        }
+    };
+    vector< pair< VertexID, int > > degreePerNode;
+    for(int i = 0; i < this->graph->getNumberOfVertices(); i++)
+    {
+        degreePerNode.push_back(
+            make_pair(
+                i,
+                // Use product of inDeg and outDeg
+                this->graph->getOutNeighbours(i).size() *  this->graph->getInNeighbours(i).size()
+            )
+        );
+    }
+    sort(degreePerNode.begin(), degreePerNode.end(), sort_pred());
+
+    int quotum = degreePerNode.size()/20;
+    if (!quotum) quotum++;
+
+    for (int i = 0; i < degreePerNode.size(); i++) {
+
+        if( ((i+1)%quotum) == 0 && i > 0 )
+        {
+            double perc = i;
+            perc /= degreePerNode.size();
+            perc *= 100.0;
+            double timePassed = getCurrentTimeInMilliSec()-constStartTime;
+            cout << this->name << "::oneSideConditionCover " << perc << "%" << ", time(s)=" << (timePassed) << endl;
+        }
+
+        const auto& p = degreePerNode[i];
+        const VertexID& source = p.first;
+
+        LabelledDistancedReachabilityMap depthMap;
+        LabelledDistancedReachabilityMap distanceMap;
+        LabelledDistancedReachabilityMap visitedMap;
+
+        depthMap.insert(source, source, 0, 0);
+        distanceMap.insert(source, source, 0, 0);
+
+        deque<pair<VertexID, LabelSet>> q;
+        q.push_front(make_pair(source, 0));
+
+        while (!q.empty()) {
+            VertexID vertex;
+            LabelSet ls;
+            std::tie(vertex, ls) = q.front();
+            q.pop_front();
+
+            if (visitedMap.isPresent(source, vertex, ls)) continue;
+            else visitedMap.insert(source, vertex, ls, DIST_NOT_USED);
+
+            if (
+                depthMap.getDistance(source, vertex, ls) == this->localSearchDistance
+                // TODO check if == works here
+                && distanceMap.getDistance(source, vertex, ls) >= this->localSearchDistance) {
+                this->backboneVertices.insert(source);
+                break;
+            }
+
+            // Don't go beyond epsilon in depth
+            if (depthMap.getDistance(source, vertex, ls) == this->localSearchDistance)
+                continue;
+            for (const auto& se : this->graph->getOutNeighbours(vertex)) {
+                VertexID neighbor = se.first;
+                LabelSet ls2 = se.second;
+                LabelSet newLs = joinLabelSets(ls, ls2);
+
+                unsigned int neighborDepth = min(
+                    depthMap.getDistance(source, neighbor, newLs),
+                    depthMap.getDistance(source, vertex, ls) + 1
+                );
+                depthMap.insert(source, neighbor, newLs, neighborDepth);
+
+                unsigned int neighborDist = min(
+                    distanceMap.getDistance(source, neighbor, newLs),
+                    distanceMap.getDistance(source, vertex, ls) + 1
+                );
+                distanceMap.insert(
+                    source,
+                    neighbor,
+                    newLs,
+                    backboneVertices.count(neighbor)
+                    ? 0
+                    : neighborDist
+                );
+
+                q.push_back(make_pair(neighbor, newLs));
+            }
+        }
+    }
+};
+
 void BackboneIndex::selectBackboneVertices() {
     if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA) {
         this->localMeetingCriteriaSetCover();
+    } else if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION) {
+        this->oneSideConditionCover();
     } else {
         print("Unsupported backboneVertexSelectionMethod. Backtrace here to check how it happened.");
         exit(1);
@@ -522,7 +622,6 @@ void BackboneIndex::createBackboneEdges() {
         LabelledDistancedReachabilityMap backboneReachability;
 
         // Compute the backbone reachability (to compute edges)
-        print("Computing backbone");
         for (const VertexID& source : backboneVertices) {
             // Keep a local reachability for the source vertex
             LabelledDistancedReachabilityMap dfsReachability;
@@ -661,6 +760,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
         t.dist = 0;
         q.push(t);
 
+
         while(q.size()) {
             const Triplet triplet = q.front();
             VertexID vertex = triplet.x;
@@ -668,10 +768,11 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
             Distance dist = triplet.dist;
             q.pop();
 
-            // Dont add neighbours if its the final vertex in the frontier
-            if (dist == this->localSearchDistance) continue;
 
             inReachability.insert(vertex, source, ls, DIST_NOT_USED);
+
+            // Dont add neighbours if its the final vertex in the frontier
+            if (dist == this->localSearchDistance) continue;
 
             for (SmallEdge se : this->graph->getOutNeighbours(vertex)) {
                 Triplet newTriplet;
@@ -727,14 +828,19 @@ void BackboneIndex::buildIndex()
     Graph* graph = this->graph;
     int N = graph->getNumberOfVertices();
     int L = graph->getNumberOfLabels();
+    watch(localSearchDistance);
 
     constStartTime = getCurrentTimeInMilliSec();
 
+    print("Selecting backbone vertices");
     selectBackboneVertices();
+    print("Computing backbone edges");
     createBackboneEdges();
+    print("Indexing backbone");
     indexBackbone();
 
 
+    print("Caching vertex->backbone reachability");
     cacheVertexToBackboneReachability();
 
     constEndTime = getCurrentTimeInMilliSec();
