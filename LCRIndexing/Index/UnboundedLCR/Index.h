@@ -420,6 +420,8 @@ as a string or insert a LabelSet into a set of LabelSets.
             bool didComplete; // returns whether the idnex construction process completed or not
 
         public:
+            virtual ~Index() = default;
+
             virtual bool query(VertexID source, VertexID target, LabelSet ls) = 0;
             virtual unsigned long getIndexSizeInBytes() = 0;
             virtual void queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach) = 0;

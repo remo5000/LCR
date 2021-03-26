@@ -324,7 +324,7 @@ int main(int argc, char *argv[]) {
           cout << "No experiments for index: " << indexName << " as it did not complete building the index successfully.";
         }
 
-        free(index);
+        delete index;
     }
 
     cout << "--- Writing out the data ---" << endl;

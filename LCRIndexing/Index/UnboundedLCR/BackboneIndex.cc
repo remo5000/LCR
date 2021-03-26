@@ -681,8 +681,8 @@ void BackboneIndex::createBackboneEdges() {
         log(backboneReachability.toString());
 
         // Generate edges
-        EdgeSet emptyEdgeSet;
-        DGraph* dg = new DGraph(&emptyEdgeSet, this->graph->getNumberOfVertices(), 0, true);
+        EdgeSet* emptyEdgeSet = new EdgeSet();
+        DGraph* dg = new DGraph(emptyEdgeSet, this->graph->getNumberOfVertices(), 0, true);
 
         for (const auto& p : backboneReachability.toEdgeMap()) {
             for (const SmallEdge& smallEdge : p.second) {

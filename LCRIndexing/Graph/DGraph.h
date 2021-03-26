@@ -16,19 +16,13 @@ using namespace boost;
 */
 class DGraph : public Graph
 {
-    private:
-        SmallEdgeSets outE, inE;
-        double constStartTime, constEndTime;
-
-        bool allowMultipleEdges;
-
     public:
         DGraph(string fileName);
         DGraph(EdgeSet* edgeSet);
         DGraph(EdgeSet* edgeSet, int pN, int pL);
         DGraph(EdgeSet* edgeSet, int pN, int pL, bool allowMultipleEdges);
+        ~DGraph() = default;
         void construct(EdgeSet* edgeSet, int pN, int pL, bool allowMultipleEdges);
-        ~DGraph();
 
         void buildGraph(graphns::EdgeSet* edges);
         EdgeSet* loadEdgeFile(string fileName);
@@ -74,6 +68,11 @@ class DGraph : public Graph
         void tarjanStrongConnect(int v, int& index, stack<VertexID>& q, vector< int >& indexPerNode,
             vector< int >& lowlinkPerNode, vector< bool >& onStack, vector< vector<VertexID> >& SCCs);
         int computeDiameter();
+
+    private:
+        SmallEdgeSets outE, inE;
+        double constStartTime, constEndTime;
+        bool allowMultipleEdges;
 
 };
 #endif
