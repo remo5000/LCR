@@ -37,6 +37,7 @@ void DGraph::construct(EdgeSet* edgeSet, int pN, int pL, bool allowMultipleEdges
     // this->allowMultipleEdges = false;
     //cout << "DGraph |V|=" << N << ",|E|=" << M << ",|L|=" << L << endl;
     //cout << "DGraph size(byte)=" << getGraphSizeInBytes() << ", time(s)=" << getGraphConstructionTime() << endl;
+    delete edgeSet;
 }
 
 DGraph::DGraph(EdgeSet* edgeSet, int pN, int pL, bool allowMultipleEdges)
@@ -57,11 +58,6 @@ DGraph::DGraph(EdgeSet* edgeSet)
 DGraph::DGraph(string fileName)
 {
     construct( loadEdgeFile(fileName), -1, -1, false );
-};
-
-DGraph::~DGraph()
-{
-
 };
 
 EdgeSet* DGraph::loadEdgeFile(string fileName)

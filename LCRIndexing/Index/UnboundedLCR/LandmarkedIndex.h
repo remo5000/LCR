@@ -35,6 +35,7 @@ otherwise we do a BFS:
 #include "Index.h"
 #include "BFSIndex.h"
 
+#include <unordered_set>
 #include <boost/dynamic_bitset.hpp>
 
 using namespace graphns;
@@ -126,6 +127,8 @@ using namespace std;
                 bool doExtensive);
 
             bool query(VertexID source, VertexID target, LabelSet ls);
+            // For BackboneIndex to use
+            bool query(vector<VertexID>& sources, const unordered_set<VertexID>& targets, LabelSet ls);
             bool queryShell(VertexID source, VertexID target, LabelSet ls);
             bool queryShellAdapted(VertexID source, VertexID target, LabelSet ls);
             bool queryDirect(VertexID source, VertexID target, LabelSet ls);
@@ -144,8 +147,8 @@ using namespace std;
             void buildIndex(int continueCode);
 
             int labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance);
-            int labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
-                priority_queue< landmarkedns::BitEntry, vector<landmarkedns::BitEntry>, landmarkedns::PQBitEntries >& q);
+            inline int labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
+                priority_queue< landmarkedns::BitEntry, vector<landmarkedns::BitEntry>, landmarkedns::PQBitEntries >* q);
             int labelledBFSPerNonLM(VertexID w, bool doPropagate);
 
             bool tryInsert(VertexID w, VertexID v, LabelSet ls);

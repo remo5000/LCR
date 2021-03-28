@@ -481,6 +481,7 @@ using namespace boost;
             vector< long > countPerLabel;
 
         public:
+            virtual ~Graph() = default;
 
             virtual void buildGraph(graphns::EdgeSet* edges) = 0;
             virtual graphns::EdgeSet* loadEdgeFile(string fileName) = 0;

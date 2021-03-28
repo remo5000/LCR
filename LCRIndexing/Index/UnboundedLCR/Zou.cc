@@ -17,11 +17,6 @@ Zou::Zou(Graph* mg)
     cout << "Zou-index size(byte)=" << getIndexSizeInBytes() << ", time(s)=" << getIndexConstructionTimeInSec() << endl;
 };
 
-Zou::~Zou()
-{
-
-};
-
 unsigned long Zou::getIndexSizeInBytes()
 {
     return getIndexSizeInBytesM();
@@ -68,7 +63,7 @@ void Zou::buildIndex()
     }
 
     // create a subgraph for each SCC containing only the right edges
-    subGraphs = vector< Graph* >();
+    subGraphs.clear();
     vector< int > countPerSCC = vector< int >(SCCs.size(), 0);
     vToSubGraphID = vector< int >(2*N, -1);
     EdgeSet DAGedges = EdgeSet();
@@ -77,7 +72,7 @@ void Zou::buildIndex()
     {
         EdgeSet* es = new EdgeSet();
         DGraph* ng = new DGraph(es,2*SCCs[i].size(),L);
-        subGraphs.push_back( ng );
+        subGraphs.push_back(  std::unique_ptr<Graph>( ng ) );
     }
 
     for(int i = 0; i < 2*N; i++)
@@ -108,7 +103,7 @@ void Zou::buildIndex()
                 int jSID = vToSubGraphID[ ses[j].first ];
                 //cout << "- ses[j].first =" << ses[j].first << ", jID=" << iID << ", jSID=" << jSID << endl;
 
-                subGraphs[iID]->addEdge( iSID, jSID, labelSetToLabelID(ses[j].second) );
+                subGraphs[iID].get()->addEdge( iSID, jSID, labelSetToLabelID(ses[j].second) );
             }
             else
             {
@@ -122,14 +117,14 @@ void Zou::buildIndex()
     // build an index for each SCC first
     for(int i = 0; i < subGraphs.size(); i++)
     {
-        buildIndex(i, subGraphs[i]);
+        buildIndex(i, subGraphs[i].get());
     }
 
     cout << "Step 3 (SCC indices built): " << print_digits( getCurrentTimeInMilliSec()-constStartTime, 2 ) << endl;
 
     // create DAG D
     EdgeSet* es = new EdgeSet();
-    this->D = new DGraph(es,2*N,L,true); // allows multiple edges between any (v,w)
+    this->D = std::unique_ptr<Graph>(new DGraph(es,2*N,L,true)); // allows multiple edges between any (v,w)
     this->inPortals = vector< vector < VertexID > >(2*SCCs.size());
     this->outPortals = vector< vector < VertexID > >(2*SCCs.size());
 

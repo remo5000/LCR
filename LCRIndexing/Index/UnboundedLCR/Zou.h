@@ -1,5 +1,6 @@
 #include "Index.h"
 #include "../../Graph/DGraph.h"
+#include <memory>
 
 #include <boost/dynamic_bitset.hpp>
 
@@ -119,7 +120,7 @@ using namespace std;
 
         public:
             Zou(Graph* mg);
-            ~Zou();
+            ~Zou() = default;
 
             void buildIndex();
             void buildIndex(int SCCID, Graph* graph);
@@ -142,9 +143,9 @@ using namespace std;
             void queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach);
 
         private:
-            vector<Graph*> subGraphs;
+            vector<std::unique_ptr<Graph>> subGraphs;
             vector< int > vToSubGraphID, vToSCCID;
-            Graph* D;
+            std::unique_ptr<Graph> D;
 
             vector< vector < VertexID > > inPortals;
             vector< vector < VertexID > > outPortals;
