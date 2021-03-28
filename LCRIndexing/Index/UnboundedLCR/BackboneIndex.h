@@ -1,7 +1,6 @@
 #include "../../Graph/Graph.h"
 #include "../../Graph/DGraph.h"
-#include "Index.h"
-
+#include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 #include "Index.h"
 
 #include <set>
@@ -168,7 +167,8 @@ enum class BackboneEdgeCreationMethod {
 
 enum class BackboneIndexingMethod {
     BFS,
-    TRANSITIVE_CLOSURE
+    TRANSITIVE_CLOSURE,
+    LANDMARK_NO_EXTENSIONS,
 };
 
 enum class LocalSearchMethod {
@@ -193,7 +193,7 @@ class BackboneIndex : public Index
                 localSearchDistance,
                 BackboneVertexSelectionMethod::ONE_SIDE_CONDITION,
                 BackboneEdgeCreationMethod::BFS,
-                BackboneIndexingMethod::BFS,
+                BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS,
                 LocalSearchMethod::UNIDIRECTIONAL_BFS
             ) {};
 
@@ -245,6 +245,10 @@ class BackboneIndex : public Index
         // BackboneIndexingMethod::TRANSITIVE_CLOSURE
         backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
         bool backboneQueryTransitiveClosure(VertexID source, VertexID target, LabelSet ls);
+
+        // BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS
+        unique_ptr<LandmarkedIndex> backboneLi;
+        bool backboneQueryLandmarks(VertexID source, VertexID target, LabelSet ls);
 
         // LocalSearchMethod::UNIDIRECTIONAL_BFS
         bool uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);

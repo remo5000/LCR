@@ -181,91 +181,66 @@ bool BackboneIndex::bfsBackbone(
     VertexID target,
     LabelSet ls
 ) {
-
     log("-- starting backbone BFS --:");
 
     unsigned int pos;
-    queue<VertexID> outgoingBackboneQueue;
-    const SmallEdgeSet& outSes = this->backboneReachableOut[source];
-    pos = 0;
-    while(pos < outSes.size()) {
-        VertexID v = outSes[pos].first;
-        while(pos < outSes.size() && outSes[pos].first == v) {
-            if (isLabelSubset(outSes[pos].second, ls)) {
-                outgoingBackboneQueue.push(v);
-                break;
+    queue<VertexID> q;
+    if (backboneVertices.count(source)) {
+        q.push(source);
+    } else {
+        const SmallEdgeSet& outSes = this->backboneReachableOut[source];
+        pos = 0;
+        while(pos < outSes.size()) {
+            VertexID v = outSes[pos].first;
+            while(pos < outSes.size() && outSes[pos].first == v) {
+                if (isLabelSubset(outSes[pos].second, ls)) {
+                    q.push(v);
+                    break;
+                }
+                pos++;
             }
-            pos++;
+            while(pos < outSes.size() && outSes[pos].first == v) pos++;
         }
-        while(pos < outSes.size() && outSes[pos].first == v) pos++;
     }
 
-    queue<VertexID> incomingBackboneQueue;
-    const SmallEdgeSet& inSes = this->backboneReachableIn[target];
-    pos = 0;
-    while(pos < inSes.size()) {
-        VertexID v = inSes[pos].first;
-        while(pos < inSes.size() && inSes[pos].first == v) {
-            if (isLabelSubset(inSes[pos].second, ls)) {
-                incomingBackboneQueue.push(v);
-                break;
+    unordered_set<VertexID> targets;
+    if (this->backboneVertices.count(target)) {
+        targets.insert(target);
+    } else {
+        const SmallEdgeSet& inSes = this->backboneReachableIn[target];
+        pos = 0;
+        while(pos < inSes.size()) {
+            VertexID v = inSes[pos].first;
+            while(pos < inSes.size() && inSes[pos].first == v) {
+                if (isLabelSubset(inSes[pos].second, ls)) {
+                    targets.insert(v);
+                    break;
+                }
+                pos++;
             }
-            pos++;
+            while(pos < inSes.size() && inSes[pos].first == v) pos++;
         }
-        while(pos < inSes.size() && inSes[pos].first == v) pos++;
     }
 
-    dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
-    dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
+    dynamic_bitset<> marked = dynamic_bitset<>(this->backbone->getNumberOfVertices());
 
-    VertexID vertex;
+    while (q.empty() == false) {
+        VertexID x = q.front();
+        q.pop();
 
-    while(
-        outgoingBackboneQueue.size() > 0 || incomingBackboneQueue.size() > 0
-    ) {
-        if (outgoingBackboneQueue.size()) {
-            vertex = outgoingBackboneQueue.front();
-            outgoingBackboneQueue.pop();
+        if( targets.count(x) )
+            return true;
 
-            // Quick return if the vertices are locally reachable
-            if (inVisited[vertex]) return true;
-
-            outVisited[vertex] = 1;
-
-
-            const SmallEdgeSet& ses = this->backbone->getOutNeighbours(vertex);
-
-            for(const auto& p : ses) {
-                VertexID neighbor = p.first;
-                LabelSet ls2 = p.second;
-                if (!isLabelSubset(ls2, ls)) continue;
-                if (outVisited[neighbor]) continue;
-
-                outgoingBackboneQueue.push(neighbor);
-            }
+        if( marked[x] == 1 )
+        {
+            continue;
         }
+        marked[x] = 1;
 
-        // --- Inwards ---
-        if (incomingBackboneQueue.size()) {
-            if (incomingBackboneQueue.empty()) continue;
-            vertex = incomingBackboneQueue.front();
-            incomingBackboneQueue.pop();
-
-            // Quick return if the vertices are locally reachable
-            if (outVisited[vertex]) return true;
-
-            inVisited[vertex] = 1;
-
-
-            const SmallEdgeSet& ses = this->backbone->getInNeighbours(vertex);
-
-            for(const auto& p : ses) {
-                VertexID neighbor = p.first;
-                LabelSet ls2 = p.second;
-                if (!isLabelSubset(ls2, ls)) continue;
-                if (inVisited[neighbor]) continue;
-
-                incomingBackboneQueue.push(neighbor);
+        for(const auto& se : this->backbone->getOutNeighbours(x)) {
+            if( isLabelSubset(se.second, ls) == true )
+            {
+                q.push( se.first );
             }
         }
     }
@@ -321,11 +296,51 @@ bool BackboneIndex::backboneQueryTransitiveClosure(
 
 }
 
+bool BackboneIndex::backboneQueryLandmarks(VertexID source, VertexID target, LabelSet ls) {
+    log("-- starting backbone TC query --:");
+
+    unsigned int pos;
+    vector<VertexID> sources;
+    const SmallEdgeSet& outSes = this->backboneReachableOut[source];
+    pos = 0;
+    while(pos < outSes.size()) {
+        VertexID v = outSes[pos].first;
+        while(pos < outSes.size() && outSes[pos].first == v) {
+            if (isLabelSubset(outSes[pos].second, ls)) {
+                sources.push_back(v);
+                break;
+            }
+            pos++;
+        }
+        while(pos < outSes.size() && outSes[pos].first == v) pos++;
+    }
+
+
+    unordered_set<VertexID> targets;
+    const SmallEdgeSet& inSes = this->backboneReachableIn[target];
+    pos = 0;
+    while(pos < inSes.size()) {
+        VertexID v = inSes[pos].first;
+        while(pos < inSes.size() && inSes[pos].first == v) {
+            if (isLabelSubset(inSes[pos].second, ls)) {
+                targets.insert(v);
+                break;
+            }
+            pos++;
+        }
+        while(pos < inSes.size() && inSes[pos].first == v) pos++;
+    }
+
+    return this->backboneLi->query(sources, targets, ls);
+};
+
 bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls) {
     if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
         return this->bfsBackbone(source, target, ls);
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
         return this->backboneQueryTransitiveClosure(source, target, ls);
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS) {
+        return this->backboneQueryLandmarks(source, target, ls);
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);
@@ -741,6 +756,10 @@ void BackboneIndex::indexBackbone() {
         }
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
         // Do nothing
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS) {
+        int k = 1250 + sqrt(this->backboneVertices.size());
+        if (k >= this->backboneVertices.size()) k = sqrt(this->backboneVertices.size());
+        this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, k, 0));
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);
