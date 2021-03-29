@@ -43,6 +43,11 @@ BackboneIndex::BackboneIndex(
     this->indexDirection = BOTHINDEX;
     this->isBlockedMode = false; // TODO this has something to do with input
 
+    N = this->graph->getNumberOfVertices();
+
+    // Backbone-specific
+    this->backboneTransitiveClosure = LabelledDistancedReachabilityMap(N, N);
+
     // Set parameters
     this->backboneVertexSelectionMethod = backboneVertexSelectionMethod;
     this->backboneEdgeCreationMethod = backboneEdgeCreationMethod;
@@ -105,8 +110,8 @@ bool BackboneIndex::biDirectionalLocalBfs(VertexID source, VertexID target, Labe
         targetIn.push(target);
         int inRounds = 0;
         int maxInRounds = this->localSearchDistance/2 ;
-        dynamic_bitset<> outVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
-        dynamic_bitset<> inVisited = dynamic_bitset<>(this->graph->getNumberOfVertices());
+        dynamic_bitset<> outVisited = dynamic_bitset<>(N);
+        dynamic_bitset<> inVisited = dynamic_bitset<>(N);
 
         // Increment once as adding the source should not count as 1 round
         maxOutRounds++;
@@ -386,13 +391,14 @@ void BackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& can
 pair<LabelledDistancedReachabilityMap, unordered_map<VertexID, LabelledDistancedReachabilityMap>>
 generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
     // Used to return the ground set
-    LabelledDistancedReachabilityMap localMeetingReachability;
+    int N = graph->getNumberOfVertices();
+    LabelledDistancedReachabilityMap localMeetingReachability(N);
     unordered_map<VertexID, LabelledDistancedReachabilityMap> candidates;
 
     log("Starting BFS from every vertex");
     for (VertexID source = 0; source < graph->getNumberOfVertices(); source++) {
         // Used to track visited nodes from the source
-        LabelledDistancedReachabilityMap reachability;
+        LabelledDistancedReachabilityMap reachability(N);
 
         vector< tuple<VertexID, LabelSet, Distance, Path> > stack;
         Path startingPath = {source};
@@ -458,7 +464,7 @@ generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
 
 void BackboneIndex::localMeetingCriteriaSetCover() {
     print("Generating ground set");
-    LabelledDistancedReachabilityMap groundSetMap;
+    LabelledDistancedReachabilityMap groundSetMap(N);
     unordered_map<VertexID, LabelledDistancedReachabilityMap> candidatesToReachabilityMap;
     std::tie(groundSetMap, candidatesToReachabilityMap) = generateGroundSetAndCandidates(graph, this->localSearchDistance);
     log("generated ground set");
@@ -529,7 +535,7 @@ void BackboneIndex::oneSideConditionCover() {
         }
     };
     vector< pair< VertexID, int > > degreePerNode;
-    for(int i = 0; i < this->graph->getNumberOfVertices(); i++)
+    for(int i = 0; i < N; i++)
     {
         degreePerNode.push_back(
             make_pair(
@@ -558,9 +564,9 @@ void BackboneIndex::oneSideConditionCover() {
         const auto& p = degreePerNode[i];
         const VertexID& source = p.first;
 
-        LabelledDistancedReachabilityMap depthMap;
-        LabelledDistancedReachabilityMap distanceMap;
-        LabelledDistancedReachabilityMap visitedMap;
+        LabelledDistancedReachabilityMap depthMap(N);
+        LabelledDistancedReachabilityMap distanceMap(N);
+        LabelledDistancedReachabilityMap visitedMap(N);
 
         depthMap.insert(source, source, 0, 0);
         distanceMap.insert(source, source, 0, 0);
@@ -634,12 +640,12 @@ void BackboneIndex::createBackboneEdges() {
         // source -> dest -> {LS} in backbone
         // Minimal in the sense that if u -L-> w -L-> v, and u,w,v are all in backbone,
         // u-L->w is not included.
-        LabelledDistancedReachabilityMap backboneReachability;
+        LabelledDistancedReachabilityMap backboneReachability(N);
 
         // Compute the backbone reachability (to compute edges)
         for (const VertexID& source : backboneVertices) {
             // Keep a local reachability for the source vertex
-            LabelledDistancedReachabilityMap dfsReachability;
+            LabelledDistancedReachabilityMap dfsReachability(N);
 
             typedef vector<VertexID> Path;
             vector<tuple<VertexID, LabelSet, Path>> stack;
@@ -689,15 +695,12 @@ void BackboneIndex::createBackboneEdges() {
         // Clean up self-edges
         for (const VertexID& source : backboneVertices) backboneReachability.erase(source, source);
 
-        print("Computed backbone vertices. |V*|:");
-        print(backboneVertices.size());
-
         log("Backbone:");
         log(backboneReachability.toString());
 
         // Generate edges
         EdgeSet* emptyEdgeSet = new EdgeSet();
-        DGraph* dg = new DGraph(emptyEdgeSet, this->graph->getNumberOfVertices(), 0, true);
+        DGraph* dg = new DGraph(emptyEdgeSet, N, 0, true);
 
         for (const auto& p : backboneReachability.toEdgeMap()) {
             for (const SmallEdge& smallEdge : p.second) {
@@ -768,7 +771,7 @@ void BackboneIndex::indexBackbone() {
 
 void BackboneIndex::cacheVertexToBackboneReachability() {
     // Inwards
-    LabelledDistancedReachabilityMap inReachability;
+    LabelledDistancedReachabilityMap inReachability(N);
     for (VertexID source : this->backboneVertices)
     {
 
@@ -806,7 +809,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
     this->backboneReachableIn = inReachability.toEdgeMap();
 
     // Outwards
-    LabelledDistancedReachabilityMap outReachability;
+    LabelledDistancedReachabilityMap outReachability(N);
     for (VertexID target : this->backboneVertices)
     {
         queue<Triplet> q;
@@ -851,13 +854,19 @@ void BackboneIndex::buildIndex()
 
     constStartTime = getCurrentTimeInMilliSec();
 
+    print("Using localDistance of ");
+    print(this->localSearchDistance);
+
     print("Selecting backbone vertices");
     selectBackboneVertices();
+    print("Computed backbone vertices. |V*|:");
+    print(backboneVertices.size());
+
     print("Computing backbone edges");
     createBackboneEdges();
+
     print("Indexing backbone");
     indexBackbone();
-
 
     print("Caching vertex->backbone reachability");
     cacheVertexToBackboneReachability();
