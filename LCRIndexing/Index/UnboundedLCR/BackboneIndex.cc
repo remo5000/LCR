@@ -346,6 +346,8 @@ bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls)
         return this->backboneQueryTransitiveClosure(source, target, ls);
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS) {
         return this->backboneQueryLandmarks(source, target, ls);
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
+        return this->backboneQueryLandmarks(source, target, ls);
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);
@@ -763,6 +765,8 @@ void BackboneIndex::indexBackbone() {
         int k = 1250 + sqrt(this->backboneVertices.size());
         if (k >= this->backboneVertices.size()) k = sqrt(this->backboneVertices.size());
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, k, 0));
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS) {
+        this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, this->backbone->getNumberOfVertices(), 0));
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);
