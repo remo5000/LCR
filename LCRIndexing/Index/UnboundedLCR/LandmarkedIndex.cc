@@ -1199,10 +1199,23 @@ bool LandmarkedIndex::query(vector<VertexID>& sources, const unordered_set<Verte
 
     int N = graph->getNumberOfVertices();
 
+    if (this->noOfLandmarks == N) {
+        for (const auto& source : sources) {
+            for (const auto& target : targets) {
+                if( queryDirect(source, target, ls) )
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     queue< VertexID > q;
     for (const auto& source : sources) {
         q.push( source );
     }
+
     dynamic_bitset<> visited = dynamic_bitset<>(N);
 
     int roundNo = 0;
@@ -1230,31 +1243,13 @@ bool LandmarkedIndex::query(vector<VertexID>& sources, const unordered_set<Verte
 
         if( vToLandmark[v1] != -1 )
         {
-            count++;
-            if( count%frequency == 0 )
-            {
-                /*noOfQueries++;
-                if( noOfQueries % freq == 0 )
+            for (const auto& target : targets) {
+                if( queryDirect(v1, target, ls) )
                 {
-                    if( extensiveQueryDirect(v1, target, ls, visited) )
-                    {
-                        //cout << "noOfQueries=" << noOfQueries << endl;
-                        return true;
-                    }
+                    return true;
                 }
-                else
-                {*/
-                for (const auto& target : targets) {
-                    if( queryDirect(v1, target, ls) )
-                    {
-                        //cout << "noOfQueries=" << noOfQueries << endl;
-                        return true;
-                    }
-                }
-                //}
-
-                continue;
             }
+            continue;
         }
 
         // explore the out-edges
