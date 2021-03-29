@@ -861,6 +861,8 @@ void BackboneIndex::buildIndex()
     selectBackboneVertices();
     print("Computed backbone vertices. |V*|:");
     print(backboneVertices.size());
+    print("|V*|/|V| :");
+    print((double)backboneVertices.size() / (double)N);
 
     print("Computing backbone edges");
     createBackboneEdges();
