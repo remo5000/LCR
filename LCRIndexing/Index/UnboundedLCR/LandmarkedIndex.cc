@@ -1199,6 +1199,18 @@ bool LandmarkedIndex::query(vector<VertexID>& sources, const unordered_set<Verte
 
     int N = graph->getNumberOfVertices();
 
+    if (this->noOfLandmarks == N) {
+        for (const auto& source : sources) {
+            for (const auto& target : targets) {
+                if( queryDirect(source, target, ls) )
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     queue< VertexID > q;
     for (const auto& source : sources) {
         q.push( source );
