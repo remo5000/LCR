@@ -98,12 +98,15 @@ mv robots.edge ../
 # StringHS
 wget http://version10.string-db.org/download/protein.actions.v10/9606.protein.actions.v10.txt.gz
 gzip -d 9606.protein.actions.v10.txt.gz
-python3 stringdb.py 9606.protein.actions.v10.txt.gz stringHs.edge
+python3 stringdb.py 9606.protein.actions.v10.txt stringHs.edge
 mv stringHs.edge ../
+
+rm 9606.protein.actions.v10.txt
 
 # StringFC
 wget http://version10.string-db.org/download/protein.actions.v10/9685.protein.actions.v10.txt.gz
 gzip -d 9685.protein.actions.v10.txt.gz
-python3 stringdb.py 9685.protein.actions.v10.txt.gz stringFc.edge
+python3 stringdb.py 9685.protein.actions.v10.txt stringFc.edge
 mv stringFc.edge ../
 
+rm 9685.protein.actions.v10.txt
