@@ -289,7 +289,7 @@ class BackboneIndex : public Index
                 localSearchDistance,
                 BackboneVertexSelectionMethod::ONE_SIDE_CONDITION,
                 BackboneEdgeCreationMethod::BFS,
-                BackboneIndexingMethod::LANDMARK_FULL,
+                BackboneIndexingMethod::BFS,
                 LocalSearchMethod::UNIDIRECTIONAL_BFS
             ) {};
 
