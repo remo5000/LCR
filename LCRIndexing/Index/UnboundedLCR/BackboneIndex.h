@@ -380,7 +380,8 @@ class BackboneIndex : public Index
         void cacheVertexToBackboneReachability();
         TuplesList backboneReachableOut;
         TuplesList backboneReachableIn;
-        inline vector<VertexID> BackboneIndex::getBackboneReachableFrom(VertexID source, LabelSet ls);
-        inline vector<VertexID> BackboneIndex::getBackboneReachableTo(VertexID target, LabelSet ls);
+        inline vector<VertexID> getBackboneReachableFrom(VertexID source, LabelSet ls);
+        inline vector<VertexID> getBackboneReachableTo(VertexID target, LabelSet ls);
+};
 
 #endif
