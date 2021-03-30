@@ -765,7 +765,7 @@ void BackboneIndex::indexBackbone() {
         int k = 1250 + sqrt(this->backboneVertices.size());
         if (k >= this->backboneVertices.size()) k = sqrt(this->backboneVertices.size());
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, k, 0));
-    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS) {
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, this->backbone->getNumberOfVertices(), 0));
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");

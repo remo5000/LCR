@@ -264,6 +264,7 @@ enum class BackboneIndexingMethod {
     BFS,
     TRANSITIVE_CLOSURE,
     LANDMARK_NO_EXTENSIONS,
+    LANDMARK_FULL,
 };
 
 enum class LocalSearchMethod {
@@ -288,7 +289,7 @@ class BackboneIndex : public Index
                 localSearchDistance,
                 BackboneVertexSelectionMethod::ONE_SIDE_CONDITION,
                 BackboneEdgeCreationMethod::BFS,
-                BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS,
+                BackboneIndexingMethod::LANDMARK_FULL,
                 LocalSearchMethod::UNIDIRECTIONAL_BFS
             ) {};
 
