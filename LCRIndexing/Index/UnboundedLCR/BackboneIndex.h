@@ -20,14 +20,14 @@ using namespace graphns;
 
 #ifndef BACKBONEINDEX_H
 #define BACKBONEINDEX_H
+typedef unsigned int Distance;
+typedef pair<LabelSet, Distance> LabelSetAndDistance;
+typedef vector<pair<LabelSet, Distance>> LabelSetAndDistanceList;
+typedef pair<VertexID, LabelSetAndDistanceList> DTuple;
+typedef vector<DTuple> DTuples;
+typedef vector<DTuples> DTuplesList;
 
 namespace backbonens {
-    typedef unsigned int Distance;
-    typedef pair<LabelSet, Distance> LabelSetAndDistance;
-    typedef vector<pair<LabelSet, Distance>> LabelSetAndDistanceList;
-    typedef pair<VertexID, LabelSetAndDistanceList> DTuple;
-    typedef vector<DTuple> DTuples;
-    typedef vector<DTuples> DTuplesList;
 
     struct comp_distance_tuples
     {
@@ -163,6 +163,8 @@ namespace backbonens {
                 s << "]\n";
                 return s.str();
             }
+
+            // TODO deprecate and change the 1 usage in Backbone.cc
             inline map<VertexID, SmallEdgeSet> toEdgeMap() const {
                 map<VertexID, SmallEdgeSet> result;
                 for(VertexID source = 0; source < tuplesList.size(); source++) {
@@ -179,9 +181,29 @@ namespace backbonens {
                 }
                 return result;
             }
+
+            inline TuplesList toTuplesList() const {
+                TuplesList result(this->tuplesList.size());
+                for(VertexID source = 0; source < tuplesList.size(); source++) {
+                    const DTuples& dtls = tuplesList[source];
+                    for (const DTuple& dt : dtls) {
+                        VertexID destination = dt.first;
+                        vector< LabelSet > labelSets;
+
+                        for (const LabelSetAndDistance& lsd : dt.second) {
+                            LabelSet ls = lsd.first;
+                            labelSets.push_back(ls);
+                        }
+
+                        result[source].push_back(make_pair(destination, labelSets));
+                    }
+                }
+                return result;
+            }
+
             typedef pair<VertexID, std::pair<VertexID, LabelSet>> Item;
             // TODO change to triples
-            inline set<Item> toTuples() const {
+            inline set<Item> toSetCoverItems() const {
                 set<Item> result;
                 for(VertexID source = 0; source < tuplesList.size(); source++) {
                     const DTuples& dtls = tuplesList[source];
@@ -296,7 +318,6 @@ class BackboneIndex : public Index
         // To implement Index
         bool query(VertexID source, VertexID target, LabelSet ls);
         void queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach);
-
         // Backbone
         const unordered_set<VertexID>& getBackBoneVertices() const;
         const DGraph& getBackBone() const;
@@ -357,7 +378,9 @@ class BackboneIndex : public Index
         // -- Misc --
         // Speedup reachable backbone vertices discovery
         void cacheVertexToBackboneReachability();
-        map<VertexID, SmallEdgeSet> backboneReachableOut;
-        map<VertexID, SmallEdgeSet> backboneReachableIn;
-};
+        TuplesList backboneReachableOut;
+        TuplesList backboneReachableIn;
+        inline vector<VertexID> BackboneIndex::getBackboneReachableFrom(VertexID source, LabelSet ls);
+        inline vector<VertexID> BackboneIndex::getBackboneReachableTo(VertexID target, LabelSet ls);
+
 #endif

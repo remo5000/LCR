@@ -47,6 +47,8 @@ BackboneIndex::BackboneIndex(
 
     // Backbone-specific
     this->backboneTransitiveClosure = LabelledDistancedReachabilityMap(N, N);
+    this->backboneReachableOut.resize(N);
+    this->backboneReachableIn.resize(N);
 
     // Set parameters
     this->backboneVertexSelectionMethod = backboneVertexSelectionMethod;
@@ -71,6 +73,12 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
     if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
         size += this->backboneTransitiveClosure.getSizeInBytes();
     }
+
+    tIn = backboneReachableOut;
+    size += getIndexSizeInBytesM();
+    tIn = backboneReachableIn;
+    size += getIndexSizeInBytesM();
+    tIn = TuplesList();
 
     size += this->graph->getGraphSizeInBytes();
     return size;
@@ -181,6 +189,32 @@ bool BackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls) {
     }
 }
 
+inline vector<VertexID> BackboneIndex::getBackboneReachableFrom(VertexID source, LabelSet ls) {
+    vector<VertexID> result;
+    for(const Tuple& tuple : this->backboneReachableOut[source]) {
+        const VertexID& v = tuple.first;
+        const vector< LabelSet >& labelSets = tuple.second;
+        if (labelSetInLabelSets(ls, labelSets)) {
+            result.push_back(v);
+            continue;
+        }
+    }
+    return result;
+}
+
+inline vector<VertexID> BackboneIndex::getBackboneReachableTo(VertexID target, LabelSet ls) {
+    vector<VertexID> result;
+    for(const Tuple& tuple : this->backboneReachableIn[target]) {
+        const VertexID& v = tuple.first;
+        const vector< LabelSet >& labelSets = tuple.second;
+        if (labelSetInLabelSets(ls, labelSets)) {
+            result.push_back(v);
+            continue;
+        }
+    }
+    return result;
+}
+
 bool BackboneIndex::bfsBackbone(
     VertexID source,
     VertexID target,
@@ -193,38 +227,17 @@ bool BackboneIndex::bfsBackbone(
     if (backboneVertices.count(source)) {
         q.push(source);
     } else {
-        const SmallEdgeSet& outSes = this->backboneReachableOut[source];
-        pos = 0;
-        while(pos < outSes.size()) {
-            VertexID v = outSes[pos].first;
-            while(pos < outSes.size() && outSes[pos].first == v) {
-                if (isLabelSubset(outSes[pos].second, ls)) {
-                    q.push(v);
-                    break;
-                }
-                pos++;
-            }
-            while(pos < outSes.size() && outSes[pos].first == v) pos++;
-        }
+        auto reachable = getBackboneReachableFrom(source, ls);
+        for (auto x : reachable) q.push(x);
     }
+
 
     unordered_set<VertexID> targets;
     if (this->backboneVertices.count(target)) {
         targets.insert(target);
     } else {
-        const SmallEdgeSet& inSes = this->backboneReachableIn[target];
-        pos = 0;
-        while(pos < inSes.size()) {
-            VertexID v = inSes[pos].first;
-            while(pos < inSes.size() && inSes[pos].first == v) {
-                if (isLabelSubset(inSes[pos].second, ls)) {
-                    targets.insert(v);
-                    break;
-                }
-                pos++;
-            }
-            while(pos < inSes.size() && inSes[pos].first == v) pos++;
-        }
+        auto reachable = getBackboneReachableTo(target, ls);
+        for (auto x : reachable) q.push(x);
     }
 
     dynamic_bitset<> marked = dynamic_bitset<>(this->backbone->getNumberOfVertices());
@@ -262,36 +275,8 @@ bool BackboneIndex::backboneQueryTransitiveClosure(
     log("-- starting backbone TC query --:");
 
     unsigned int pos;
-    vector<VertexID> outgoingBackboneQueue;
-    const SmallEdgeSet& outSes = this->backboneReachableOut[source];
-    pos = 0;
-    while(pos < outSes.size()) {
-        VertexID v = outSes[pos].first;
-        while(pos < outSes.size() && outSes[pos].first == v) {
-            if (isLabelSubset(outSes[pos].second, ls)) {
-                outgoingBackboneQueue.push_back(v);
-                break;
-            }
-            pos++;
-        }
-        while(pos < outSes.size() && outSes[pos].first == v) pos++;
-    }
-
-
-    vector<VertexID> incomingBackboneQueue;
-    const SmallEdgeSet& inSes = this->backboneReachableIn[target];
-    pos = 0;
-    while(pos < inSes.size()) {
-        VertexID v = inSes[pos].first;
-        while(pos < inSes.size() && inSes[pos].first == v) {
-            if (isLabelSubset(inSes[pos].second, ls)) {
-                incomingBackboneQueue.push_back(v);
-                break;
-            }
-            pos++;
-        }
-        while(pos < inSes.size() && inSes[pos].first == v) pos++;
-    }
+    vector<VertexID> outgoingBackboneQueue = getBackboneReachableFrom(source, ls);
+    vector<VertexID> incomingBackboneQueue = getBackboneReachableTo(target, ls);;
 
     for (const auto& u : outgoingBackboneQueue)
         for (const auto& v : incomingBackboneQueue)
@@ -305,38 +290,13 @@ bool BackboneIndex::backboneQueryLandmarks(VertexID source, VertexID target, Lab
     log("-- starting backbone TC query --:");
 
     unsigned int pos;
-    vector<VertexID> sources;
-    const SmallEdgeSet& outSes = this->backboneReachableOut[source];
-    pos = 0;
-    while(pos < outSes.size()) {
-        VertexID v = outSes[pos].first;
-        while(pos < outSes.size() && outSes[pos].first == v) {
-            if (isLabelSubset(outSes[pos].second, ls)) {
-                sources.push_back(v);
-                break;
-            }
-            pos++;
-        }
-        while(pos < outSes.size() && outSes[pos].first == v) pos++;
-    }
 
+    vector<VertexID> sources = getBackboneReachableFrom(source, ls);
+    vector<VertexID> targets = getBackboneReachableTo(target, ls);;
 
-    unordered_set<VertexID> targets;
-    const SmallEdgeSet& inSes = this->backboneReachableIn[target];
-    pos = 0;
-    while(pos < inSes.size()) {
-        VertexID v = inSes[pos].first;
-        while(pos < inSes.size() && inSes[pos].first == v) {
-            if (isLabelSubset(inSes[pos].second, ls)) {
-                targets.insert(v);
-                break;
-            }
-            pos++;
-        }
-        while(pos < inSes.size() && inSes[pos].first == v) pos++;
-    }
+    unordered_set<VertexID> targetsSet = unordered_set<VertexID>(targets.begin(), targets.end());
 
-    return this->backboneLi->query(sources, targets, ls);
+    return this->backboneLi->query(sources, targetsSet, ls);
 };
 
 bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls) {
@@ -478,7 +438,7 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
     unordered_map<VertexID, set<Item>> candidates;
     for (const auto& p : candidatesToReachabilityMap) {
         VertexID candidate = p.first;
-        candidates[candidate] = p.second.toTuples();
+        candidates[candidate] = p.second.toSetCoverItems();
     }
     log("generated candidates. Candidates size:");
     watch(candidates.size());
@@ -810,7 +770,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
         }
 
     }
-    this->backboneReachableIn = inReachability.toEdgeMap();
+    this->backboneReachableIn = inReachability.toTuplesList();
 
     // Outwards
     LabelledDistancedReachabilityMap outReachability(N);
@@ -845,7 +805,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
             }
         }
     }
-    this->backboneReachableOut = outReachability.toEdgeMap();
+    this->backboneReachableOut = outReachability.toTuplesList();
 };
 
 
