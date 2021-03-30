@@ -16,9 +16,17 @@ def configure(ctx):
   # ctx.env.append_value('LSAN_OPTIONS', ['verbosity=1:log_threads=1'])
 
   ctx.check_tool('compiler_cxx')
-  ctx.check_cxx(lib = ['glog', 'gflags'], uselib_store = 'common')
-  # ctx.env.CXXFLAGS += ['-O2'] # Uncomment for faster but less debuggable code
+
+  # Unused libraries
+  # ctx.check_cxx(lib = ['glog', 'gflags'], uselib_store = 'common')
+
+  # Deubug flags
   ctx.env.CXXFLAGS += ['-g', '-Wno-return-type', '-I/usr/local/include/', '-std=c++11']
+
+  # # Experiment flags (Uncomment for faster but less debuggable code)
+  # ctx.env.CXXFLAGS += ['-O2']
+  # ctx.env.CXXFLAGS += ['-Wno-return-type', '-I/usr/local/include/', '-std=c++11']
+
   ctx.env.append_value('LINKFLAGS', ['-L/usr/local/lib/'])
 
 
