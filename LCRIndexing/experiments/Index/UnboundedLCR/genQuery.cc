@@ -153,17 +153,19 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
     // each query should require at least <MIN_DIFFICULTY> or at most <MAX_DIFFICULTY> steps in a
     // labeled BFS search. The queries in the total query set should have varying
     // difficulties within this range.
-    int MAX_DIFFICULTY = 0;
-    int MIN_DIFFICULTY = 0;
+    int MIN_DIFFICULTY;
+    int MAX_DIFFICULTY;
     if( N >= 500000 )
     {
         MAX_DIFFICULTY = 50 + N/50;
-        MIN_DIFFICULTY = 50 + min((int) log2(N), N);
+        // MIN_DIFFICULTY = 50 + min((int) log2(N), N);
+        MIN_DIFFICULTY = 1;
     }
     else
     {
         MAX_DIFFICULTY = max((int) N/10 , 4);
-        MIN_DIFFICULTY = min((int) log2(N), N);
+        // MIN_DIFFICULTY = min((int) log2(N), N);
+        MIN_DIFFICULTY = 1;
     }
 
     if( MAX_DIFFICULTY <= (MIN_DIFFICULTY-2) )
@@ -196,13 +198,18 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
         int roundNo = 1;
         while( qss[i].size() < nq || qss[i+1].size() < nq )
         {
-            int minDiff = max(min(MAX_DIFFICULTY, diffDistribution(generator2)) - roundNo/10 , MIN_DIFFICULTY); // a random minimal difficulty
+            // a random minimal difficulty
+            int minDiff = max(
+                min(
+                    MAX_DIFFICULTY,
+                    diffDistribution(generator2)) - roundNo/10 ,
+                MIN_DIFFICULTY);
             VertexID s = vertexDistribution(generator); // a random start point
-            VertexID t = vertexDistribution(generator); // another random point
+            // VertexID t = vertexDistribution(generator); // another random point
             int quotum = min(nq, max((nq/100) + (roundNo / 100), 1));
 
-            minDiff = max(1, minDiff - (roundNo/100) ); // minDiff can scale down
-            // if no queries are generated
+            // minDiff can scale down if no queries are generated
+            minDiff = max(1, minDiff - (roundNo/100) );
 
             cout << "genQuery with minDiff=" << minDiff << ",s=" << s << ",quotum=" << quotum << endl;
 
