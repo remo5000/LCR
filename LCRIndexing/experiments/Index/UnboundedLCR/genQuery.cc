@@ -9,6 +9,7 @@
 #include <curses.h>
 #include <time.h>
 #include <chrono>
+#include <unordered_set>
 #include <thread>
 
 using namespace std;
@@ -213,24 +214,25 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
 
             cout << "genQuery with minDiff=" << minDiff << ",s=" << s << ",quotum=" << quotum << endl;
 
+            unordered_set<VertexID> visited;
+
             // loop over all nodes that have minimal difficulty
             int c = 0;
-            int tried = 0;
-            for(; t < N; t++)
+            for (
+                int tried = 0;
+                tried <= max((N/500),100);
+                tried++)
             {
 
-                // Ensure s -> t not self edge
-                if( s == t )
+                VertexID t = vertexDistribution(generator); // another random point
+
+                // Ensure s -> t not self edge, and that we havent tried s->t before
+                if( s == t || visited.count(t))
                 {
+                    tried--;
                     continue;
                 }
-
-                tried++;
-                // if( c < 2 && tried > min((N/500),100) )
-                if( tried > N/4 )
-                {
-                    break;
-                }
+                visited.insert(t);
 
                 // try 10 random labelsets from s to t
                 int k = 0;
@@ -245,7 +247,7 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
                     int actualDist = max(ind->getVisitedSetSize(), 0);
                     Query q = make_pair( make_pair(s,t), ls);
 
-                    //cout << "genQuery: ,s=" << s << ",t=" << t << ",minDiff=" << minDiff << ",actualDist=" << actualDist << endl;
+                    cout << "genQuery: ,s=" << s << ",t=" << t << ",minDiff=" << minDiff << ",actualDist=" << actualDist << endl;
 
                     if( actualDist < minDiff )
                     {
