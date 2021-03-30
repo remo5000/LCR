@@ -191,7 +191,6 @@ as a string or insert a LabelSet into a set of LabelSets.
         */
         inline bool labelSetInLabelSets(LabelSet ls, LabelSets lss)
         {
-            bool b1 = false;
             for(int i = 0; i < lss.size(); i++)
             {
                 LabelSet ls1 = lss[i];
@@ -202,7 +201,7 @@ as a string or insert a LabelSet into a set of LabelSets.
                 }
             }
 
-            return b1;
+            return false;
         }
 
         /**
