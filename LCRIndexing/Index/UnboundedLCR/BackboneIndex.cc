@@ -58,6 +58,21 @@ BackboneIndex::BackboneIndex(
     this->didComplete = false;
     this->buildIndex();
     this->didComplete = true;
+
+    // Update name
+    this->name = "Backbone(";
+    if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
+        this->name += "BFS";
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
+        this->name += "TRANSITIVE_CLOSURE";
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS) {
+        this->name += "LANDMARK_NO_EXTENSIONS";
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
+        this->name += "LANDMARK_FULL";
+    } else {
+        this->name += "UNKNOWN";
+    }
+    this->name += ")";
 }
 
 unsigned long BackboneIndex::getIndexSizeInBytes()
