@@ -16,10 +16,14 @@
 #include <sys/time.h>
 
 #include "../../Index/UnboundedLCR/Index.h"
+
 #include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
-#include "../../Index/UnboundedLCR/Zou.cc"
+
+// TODO fix all the .cc imports after migrating to waf 2.0.20+
 #include "../../Index/UnboundedLCR/BackboneIndex.cc"
+// #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
+
+#include "../../Index/UnboundedLCR/Zou.cc"
 
 #include "../../Graph/DGraph.cc"
 
