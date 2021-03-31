@@ -61,12 +61,24 @@ BackboneIndex::BackboneIndex(
 
     // Update name
     this->name = "Backbone(";
+    if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA) {
+        this->name += "LOCAL_MEETING_CRITERIA";
+    } else if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER) {
+        this->name += "ONE_SIDE_CONDITION_DEGREE_ORDER";
+    } else if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER) {
+        this->name += "ONE_SIDE_CONDITION_RANDOM_ORDER";
+    } else {
+        this->name += "UNKNOWN";
+    }
+    this->name += ", ";
     if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
         this->name += "BFS";
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
         this->name += "TRANSITIVE_CLOSURE";
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS) {
         this->name += "LANDMARK_NO_EXTENSIONS";
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS) {
+        this->name += "LANDMARK_ALL_EXTENSIONS";
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
         this->name += "LANDMARK_FULL";
     } else {
@@ -86,7 +98,8 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
     if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
         size += this->backboneTransitiveClosure.getSizeInBytes();
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS 
-            || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
+            || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL
+            || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS) {
         size += this->backboneLi->getIndexSizeInBytes();
     }
 
@@ -382,9 +395,10 @@ bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls)
         return this->bfsBackbone(source, target, ls);
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
         return this->backboneQueryTransitiveClosure(source, target, ls);
-    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS) {
-        return this->backboneQueryLandmarks(source, target, ls);
-    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
+    } else if (
+            this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS
+            || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS
+            || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
         return this->backboneQueryLandmarks(source, target, ls);
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
@@ -873,6 +887,10 @@ void BackboneIndex::indexBackbone() {
         int k = 1250 + sqrt(this->backboneVertices.size());
         if (k >= this->backboneVertices.size()) k = sqrt(this->backboneVertices.size());
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, k, 0));
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS) {
+        int k = 1250 + sqrt(this->backboneVertices.size());
+        if (k >= this->backboneVertices.size()) k = sqrt(this->backboneVertices.size());
+        this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), true, true, this->backbone->getNumberOfVertices(), 0));
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, this->backbone->getNumberOfVertices(), 0));
     } else {

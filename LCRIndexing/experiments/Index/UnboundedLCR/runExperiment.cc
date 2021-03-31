@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
-    noOfMethods = 5;
+    noOfMethods = 8;
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
@@ -282,27 +282,60 @@ int main(int argc, char *argv[]) {
             index = new LandmarkedIndex(graph, false, false, k, b);
 	      }
 
-        // Full-LI
-        if( i == 3 )
-	      {
-            int k = N;
-            int b = 0;
-            index = new LandmarkedIndex(graph, false, false, k, b);
-	      }
-
-        // Backbone;
+        float logn = log2(N);
+        float loglogn = log2(log2(N));
+        unsigned int localDist = max(2, (int)loglogn);
+        // Backbone(LMC, BFS)
         if (i == 4) {
-            float logn = log2(N);
-            float loglogn = log2(log2(N));
-            unsigned int localDist = max(2, (int)loglogn);
-            index = new BackboneIndex(graph, localDist);
+            index = new BackboneIndex(
+                    graph, 
+                    localDist,
+                    BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA,
+                    BackboneEdgeCreationMethod::BFS,
+                    BackboneIndexingMethod::BFS,
+                    LocalSearchMethod::UNIDIRECTIONAL_BFS
+            );
+        }
+        // Backbone(1SCD, BFS)
+        if (i == 5) {
+            index = new BackboneIndex(
+                    graph, 
+                    localDist,
+                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
+                    BackboneEdgeCreationMethod::BFS,
+                    BackboneIndexingMethod::BFS,
+                    LocalSearchMethod::UNIDIRECTIONAL_BFS
+            );
+        }
+        // Backbone(1SCR, BFS)
+        if (i == 6) {
+            index = new BackboneIndex(
+                    graph, 
+                    localDist,
+                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER,
+                    BackboneEdgeCreationMethod::BFS,
+                    BackboneIndexingMethod::BFS,
+                    LocalSearchMethod::UNIDIRECTIONAL_BFS
+            );
         }
 
-        // Zou
-        if( i == 5 )
-        {
-            index = new Zou(graph);
+        // Backbone(1SCD, LIEXT)
+        if (i == 7) {
+            index = new BackboneIndex(
+                    graph, 
+                    localDist,
+                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
+                    BackboneEdgeCreationMethod::BFS,
+                    BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS,
+                    LocalSearchMethod::UNIDIRECTIONAL_BFS
+            );
         }
+
+        // // Zou
+        // if( i == 5 )
+        // {
+        //     index = new Zou(graph);
+        // }
 
 
         if( index->didCompleteBuilding() == true )

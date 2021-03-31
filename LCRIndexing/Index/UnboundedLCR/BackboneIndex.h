@@ -264,6 +264,7 @@ enum class BackboneIndexingMethod {
     BFS,
     TRANSITIVE_CLOSURE,
     LANDMARK_NO_EXTENSIONS,
+    LANDMARK_ALL_EXTENSIONS,
     LANDMARK_FULL,
 };
 
