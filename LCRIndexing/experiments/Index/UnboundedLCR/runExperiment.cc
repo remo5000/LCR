@@ -494,19 +494,17 @@ int main(int argc, char *argv[]) {
 
     // Compute speed-ups compared BFS, the first method
     // The other methods should be faster
-    for(int i = 1; i < methodNames.size(); i++)
-    {
-        for(int j = 0; j < noOfQuerySets; j++)
-        {
-            myfile << methodNames[i] << "-su-true-" << j << ",";
-            myfile << methodNames[i] << "-su-false-" << j;
+    for (int i = 0; i < methodNames.size(); i++) {
+      for (int j = 0; j < noOfQuerySets; j++) {
+        myfile << methodNames[i] << "-su-true-" << j << ",";
+        myfile << methodNames[i] << "-su-false-" << j;
 
-            if( j < noOfQuerySets-1 )
-                myfile << ",";
-        }
+        if (j < noOfQuerySets - 1)
+          myfile << ",";
+      }
 
-        if( i < noOfMethods-1 )
-            myfile << ",";
+      if (i < noOfMethods - 1)
+        myfile << ",";
     }
 
     myfile << endl;
