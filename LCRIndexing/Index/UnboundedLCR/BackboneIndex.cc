@@ -586,7 +586,8 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
 
 }
 
-void BackboneIndex::oneSideConditionCover() {
+
+inline vector<VertexID> BackboneIndex::getVerticesInDegreeOrder() {
     struct sort_pred
     {
         bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right)
@@ -607,23 +608,46 @@ void BackboneIndex::oneSideConditionCover() {
     }
     sort(degreePerNode.begin(), degreePerNode.end(), sort_pred());
 
-    int quotum = degreePerNode.size()/20;
+    vector<VertexID> res;
+    for (const auto& p : degreePerNode) res.push_back(p.first);
+    return res;
+}
+
+inline vector<VertexID> BackboneIndex::getVerticesInRandomOrder() {
+    vector<VertexID> res;
+    for(VertexID i = 0; i < N; i++) res.push_back(i);
+    std::random_shuffle ( res.begin(), res.end() );
+    return res;
+}
+
+void BackboneIndex::oneSideConditionCover() {
+
+    vector<VertexID> vertices;
+    if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER) {
+        vertices = this->getVerticesInDegreeOrder();
+    } else if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER) {
+        vertices = this->getVerticesInRandomOrder();
+    } else {
+        print("Unsupported backboneVertexSelectionMethod. Backtrace here to check how it happened.");
+        exit(1);
+    }
+
+    int quotum = vertices.size()/20;
     if (!quotum) quotum++;
     auto constStartTime = getCurrentTimeInMilliSec();
 
-    for (int i = 0; i < degreePerNode.size(); i++) {
+    for (int i = 0; i < vertices.size(); i++) {
 
         if( ((i+1)%quotum) == 0 && i > 0 )
         {
             double perc = i;
-            perc /= degreePerNode.size();
+            perc /= vertices.size();
             perc *= 100.0;
             double timePassed = getCurrentTimeInMilliSec()-constStartTime;
             cout << this->name << "::oneSideConditionCover " << perc << "%" << ", time(s)=" << (timePassed) << endl;
         }
 
-        const auto& p = degreePerNode[i];
-        const VertexID& source = p.first;
+        const VertexID& source = vertices[i];
 
         LabelledDistancedReachabilityMap depthMap(N);
         LabelledDistancedReachabilityMap distanceMap(N);
@@ -688,7 +712,9 @@ void BackboneIndex::oneSideConditionCover() {
 void BackboneIndex::selectBackboneVertices() {
     if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA) {
         this->localMeetingCriteriaSetCover();
-    } else if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION) {
+    } else if (
+            this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER
+            || this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER) {
         this->oneSideConditionCover();
     } else {
         print("Unsupported backboneVertexSelectionMethod. Backtrace here to check how it happened.");

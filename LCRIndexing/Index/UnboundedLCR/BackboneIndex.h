@@ -252,7 +252,8 @@ namespace backbonens {
 
 enum class BackboneVertexSelectionMethod {
     LOCAL_MEETING_CRITERIA,
-    ONE_SIDE_CONDITION
+    ONE_SIDE_CONDITION_DEGREE_ORDER,
+    ONE_SIDE_CONDITION_RANDOM_ORDER
 };
 
 enum class BackboneEdgeCreationMethod {
@@ -286,7 +287,7 @@ class BackboneIndex : public Index
             : BackboneIndex(
                 mg,
                 localSearchDistance,
-                BackboneVertexSelectionMethod::ONE_SIDE_CONDITION,
+                BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
                 BackboneEdgeCreationMethod::BFS,
                 BackboneIndexingMethod::BFS,
                 LocalSearchMethod::UNIDIRECTIONAL_BFS
@@ -338,8 +339,12 @@ class BackboneIndex : public Index
             backbonens::LabelledDistancedReachabilityMap,
             unordered_map<VertexID, backbonens::LabelledDistancedReachabilityMap>> generateGroundSetAndCandidates();
 
-        // BackboneVertexSelectionMethod::ONE_SIDE_CONDITION
+        // BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_*
         void oneSideConditionCover();
+        // BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER
+        inline vector<VertexID> getVerticesInRandomOrder();
+        // BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER
+        inline vector<VertexID> getVerticesInDegreeOrder();
 
         // BackboneIndexingMethod::BFS
         bool bfsBackbone(VertexID source, VertexID target, LabelSet ls);
