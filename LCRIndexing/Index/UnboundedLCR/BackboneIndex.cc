@@ -537,10 +537,14 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
 
         VertexID biggestCoverVertex;
         set<Item> biggestCover;
-        for (const auto& p : candidates) {
-            VertexID vertex = p.first;
-            const set<Item>& coveredByVertex = p.second;
 
+        vector<VertexID> toDelete;
+
+        for (auto& p : candidates) {
+            VertexID vertex = p.first;
+            set<Item>& coveredByVertex = p.second;
+
+            // Count intersection
             set<Item> newCoveredItems;
             for (const Item& item : coveredByVertex) {
                 if (uncovered.count(item)) {
@@ -548,14 +552,25 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
                 }
             }
 
+            // Delete useless candidates
+            if (newCoveredItems.size() == 0) {
+                toDelete.push_back(vertex);
+                continue;
+            }
+
+            // Update the candidate's cover to a subset that is required
+            coveredByVertex = newCoveredItems;
+
+            // Update the best cover
             if (newCoveredItems.size() > biggestCover.size()) {
                 biggestCover = newCoveredItems; // TODO evaluate if we should use `move` here
                 biggestCoverVertex = vertex;
             }
         }
 
-        // watch(biggestCover.size());
-        // watch(biggestCoverVertex);
+        // Prune empty candidates
+        for (VertexID v : toDelete) candidates.erase(v);
+
         for (const Item& item : biggestCover) {
             uncovered.erase(item);
         }
