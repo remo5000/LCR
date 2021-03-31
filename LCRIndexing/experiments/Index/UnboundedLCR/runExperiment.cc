@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
-    noOfMethods = 8;
+    noOfMethods = 7;
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
@@ -265,7 +265,7 @@ int main(int argc, char *argv[]) {
             index = new BFSIndex(graph);
 
         // LI+ (both extensions)
-        if( i == 1 )
+        if( i == 2 )
 	      {
             int k = 1250 + sqrt(N);
             if (k >= N) k = sqrt(N);
@@ -274,7 +274,7 @@ int main(int argc, char *argv[]) {
 	      }
 
         // LI (no extensions)
-        if( i == 2 )
+        if( i == 1 )
 	      {
             int k = 1250 + sqrt(N);
             if (k >= N) k = sqrt(N);
@@ -286,7 +286,7 @@ int main(int argc, char *argv[]) {
         float loglogn = log2(log2(N));
         unsigned int localDist = max(2, (int)loglogn);
         // Backbone(LMC, BFS)
-        if (i == 4) {
+        if (i == 3) {
             index = new BackboneIndex(
                     graph, 
                     localDist,
@@ -297,7 +297,7 @@ int main(int argc, char *argv[]) {
             );
         }
         // Backbone(1SCD, BFS)
-        if (i == 5) {
+        if (i == 4) {
             index = new BackboneIndex(
                     graph, 
                     localDist,
@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
             );
         }
         // Backbone(1SCR, BFS)
-        if (i == 6) {
+        if (i == 5) {
             index = new BackboneIndex(
                     graph, 
                     localDist,
@@ -320,7 +320,7 @@ int main(int argc, char *argv[]) {
         }
 
         // Backbone(1SCD, LIEXT)
-        if (i == 7) {
+        if (i == 6) {
             index = new BackboneIndex(
                     graph, 
                     localDist,
