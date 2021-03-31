@@ -12,6 +12,7 @@
 #include <sstream>
 #include <iomanip>
 #include <limits>
+#include <thread>
 #include <unistd.h>
 #include <sys/time.h>
 
@@ -66,6 +67,8 @@ void loadQueryFile(string queryFileName, set<Query>& tmpSet)
             iss >> from >> to >> label;
             istringstream (from) >> f;
             istringstream (to) >> t;
+
+
             istringstream (label) >> lID;
             l2 = lID;
 
@@ -301,11 +304,29 @@ int main(int argc, char *argv[]) {
         // Zou
         if( i == 5 )
         {
-            index = new Zou(graph);
+            std::packaged_task<Zou*()> task([graph]() { return new Zou(graph); });
+            auto future = task.get_future();
+            std::thread thr(std::move(task));
+
+            // Give zou 5x the amount of time as other indices
+            double highestIndexTime = max_element(indexTimes.begin(), indexTimes.end());
+            std::chrono::milliseconds ZOU_LIMIT (1000 * 5 * highestIndexTime);
+
+            if (future.wait_for(ZOU_LIMIT) != std::future_status::timeout)
+            {
+                thr.join();
+                index = future.get(); // this will propagate exception from f() if any
+            }
+            else
+            {
+                thr.detach(); // we leave the thread still running
+                // throw std::runtime_error("Timeout");
+                index = nullptr; // TODO use unique ptr or keep a flag outisde this loop
+            }
         }
 
 
-        if( index->didCompleteBuilding() == true )
+        if( index == nullptr || index->didCompleteBuilding() == true )
         {
           string indexName = index->getIndexTypeAsString();
           cout << "runTestsPerIndex index=" << indexName;
@@ -494,7 +515,7 @@ int main(int argc, char *argv[]) {
 
     // Compute speed-ups compared BFS, the first method
     // The other methods should be faster
-    for(int i = 1; i < methodNames.size(); i++)
+    for(int i = 0; i < methodNames.size(); i++)
     {
         for(int j = 0; j < noOfQuerySets; j++)
         {
