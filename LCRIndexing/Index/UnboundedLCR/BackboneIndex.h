@@ -353,7 +353,7 @@ class BackboneIndex : public Index
         backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
         bool backboneQueryTransitiveClosure(VertexID source, VertexID target, LabelSet ls);
 
-        // BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS
+        // BackboneIndexingMethod::LANDMARK_*
         unique_ptr<LandmarkedIndex> backboneLi;
         bool backboneQueryLandmarks(VertexID source, VertexID target, LabelSet ls);
 

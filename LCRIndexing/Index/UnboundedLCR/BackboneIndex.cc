@@ -85,6 +85,29 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
 
     if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
         size += this->backboneTransitiveClosure.getSizeInBytes();
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS 
+            || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
+        size += this->backboneLi->getIndexSizeInBytes();
+    }
+
+    size += sizeof(this->backboneReachableOut);
+    for (const auto& p : this->backboneReachableOut) {
+        size += sizeof(p.first);
+        size += sizeof(p.second);
+        for (const SmallEdge& se : p.second) {
+            size += sizeof(se.first);
+            size += sizeof(se.second);
+        }
+    }
+
+    size += sizeof(this->backboneReachableIn);
+    for (const auto& p : this->backboneReachableIn) {
+        size += sizeof(p.first);
+        size += sizeof(p.second);
+        for (const SmallEdge& se : p.second) {
+            size += sizeof(se.first);
+            size += sizeof(se.second);
+        }
     }
 
     size += this->graph->getGraphSizeInBytes();
