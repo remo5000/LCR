@@ -180,8 +180,7 @@ namespace backbonens {
                 return result;
             }
             typedef pair<VertexID, std::pair<VertexID, LabelSet>> Item;
-            // TODO change to triples
-            inline set<Item> toTuples() const {
+            inline set<Item> toSetCoverItems() const {
                 set<Item> result;
                 for(VertexID source = 0; source < tuplesList.size(); source++) {
                     const DTuples& dtls = tuplesList[source];
@@ -335,6 +334,10 @@ class BackboneIndex : public Index
         // -- Indexing method specific --
         // BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA
         void localMeetingCriteriaSetCover();
+        pair<
+            backbonens::LabelledDistancedReachabilityMap,
+            unordered_map<VertexID, backbonens::LabelledDistancedReachabilityMap>> generateGroundSetAndCandidates();
+
         // BackboneVertexSelectionMethod::ONE_SIDE_CONDITION
         void oneSideConditionCover();
 

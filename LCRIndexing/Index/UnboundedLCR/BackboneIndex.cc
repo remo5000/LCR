@@ -406,14 +406,22 @@ void BackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& can
 // and generate candidate vertices for the backbone set in the process.
 // This step is easier to not separate due to the fact that we would do almost-repeated computation otherwise.
 pair<LabelledDistancedReachabilityMap, unordered_map<VertexID, LabelledDistancedReachabilityMap>>
-generateGroundSetAndCandidates(Graph* graph, unsigned int localSearchDistance) {
+BackboneIndex::generateGroundSetAndCandidates() {
     // Used to return the ground set
     int N = graph->getNumberOfVertices();
     LabelledDistancedReachabilityMap localMeetingReachability(N);
     unordered_map<VertexID, LabelledDistancedReachabilityMap> candidates;
 
+    auto constStartTime = getCurrentTimeInMilliSec();
     log("Starting BFS from every vertex");
     for (VertexID source = 0; source < graph->getNumberOfVertices(); source++) {
+        if (source % (max(N/20, 1)) == 0) {
+            double perc = source;
+            perc /= graph->getNumberOfVertices();
+            perc *= 100;
+            double timePassed = getCurrentTimeInMilliSec()-constStartTime;
+            cout << this->name << "::generateGroundSetAndCandidates " << perc << "%" << ", time(s)=" << (timePassed) << endl;
+        }
         // Used to track visited nodes from the source
         LabelledDistancedReachabilityMap reachability(N);
 
@@ -483,7 +491,7 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
     print("Generating ground set");
     LabelledDistancedReachabilityMap groundSetMap(N);
     unordered_map<VertexID, LabelledDistancedReachabilityMap> candidatesToReachabilityMap;
-    std::tie(groundSetMap, candidatesToReachabilityMap) = generateGroundSetAndCandidates(graph, this->localSearchDistance);
+    std::tie(groundSetMap, candidatesToReachabilityMap) = this->generateGroundSetAndCandidates();
     log("generated ground set");
 
 
@@ -493,17 +501,36 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
     unordered_map<VertexID, set<Item>> candidates;
     for (const auto& p : candidatesToReachabilityMap) {
         VertexID candidate = p.first;
-        candidates[candidate] = p.second.toTuples();
+        candidates[candidate] = p.second.toSetCoverItems();
     }
     log("generated candidates. Candidates size:");
     watch(candidates.size());
 
     // Compute the uncovered vertices
-    LabelledDistancedReachabilityMap& uncovered = groundSetMap;
+    set<Item> uncovered = groundSetMap.toSetCoverItems();
 
-    // Compute the backbone vertices
     print("Starting set cover");
+
+    // For printing
+    unsigned int originalSize = uncovered.size();
+    unsigned int counts = 0;
+    auto constStartTime = getCurrentTimeInMilliSec();
+
     while (uncovered.size() > 0) {
+        if (counts++ % 10 == 0) {
+            double timePassed = getCurrentTimeInMilliSec()-constStartTime;
+            double perc = uncovered.size();
+            perc /= originalSize;
+            perc *= 100;
+            perc = 100 - perc;
+            cout << this->name 
+                << "::localMeetingCriteriaSetCover " 
+                << perc << "%" 
+                << ", |Uncovered|=" << (uncovered.size()) 
+                << ", time(s)=" << (timePassed) 
+                << endl;
+        }
+
         // log("Uncovered:");
         // if (DEBUG) cout << uncovered.toString();
         // log("----:");
@@ -516,7 +543,7 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
 
             set<Item> newCoveredItems;
             for (const Item& item : coveredByVertex) {
-                if (uncovered.isPresent(item.first, item.second.first, item.second.second)) {
+                if (uncovered.count(item)) {
                     newCoveredItems.insert(item);
                 }
             }
@@ -530,10 +557,11 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
         // watch(biggestCover.size());
         // watch(biggestCoverVertex);
         for (const Item& item : biggestCover) {
-            uncovered.erase(item.first, item.second.first, item.second.second);
+            uncovered.erase(item);
         }
         // Add the biggest vertex to the backbone vertices
         backboneVertices.insert(biggestCoverVertex);
+        candidates.erase(biggestCoverVertex);
     }
 
     log("backboneVertices:");
@@ -566,6 +594,7 @@ void BackboneIndex::oneSideConditionCover() {
 
     int quotum = degreePerNode.size()/20;
     if (!quotum) quotum++;
+    auto constStartTime = getCurrentTimeInMilliSec();
 
     for (int i = 0; i < degreePerNode.size(); i++) {
 
