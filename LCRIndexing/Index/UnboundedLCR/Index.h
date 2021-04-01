@@ -142,14 +142,24 @@ as a string or insert a LabelSet into a set of LabelSets.
             }
         };
 
-        typedef struct
+        class Quadret {
+            public:
+                LabelSet ls;
+                VertexID x;
+                VertexID y; // the predecessor of x, i.e. there exists an edge (y,x)
+                int dist;
+        };
+
+        //Overload the < operator.
+        bool operator< (const Quadret &lhs, const Quadret &rhs)
         {
-            LabelSet ls;
-            VertexID x;
-            VertexID y; // the predecessor of x, i.e. there exists an edge (y,x)
-            int dist;
+            return lhs.dist > rhs.dist;
         }
-        Quadret;
+        //Overload the > operator.
+        bool operator> (const Quadret &lhs, const Quadret &rhs)
+        {
+            return lhs.dist < rhs.dist;
+        }
 
         typedef vector< Quadret > Quadrets;
 

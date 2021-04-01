@@ -83,10 +83,6 @@ LandmarkedIndex::LandmarkedIndex(Graph* mg)
     construct(mg, (int) 8*sqrt(mg->getNumberOfVertices()), 1, 0, true, (int) sqrt(mg->getNumberOfVertices()), 0, false);
 };
 
-LandmarkedIndex::~LandmarkedIndex()
-{
-    deconstruct();
-}
 
 unsigned long LandmarkedIndex::getIndexSizeInBytes()
 {
@@ -742,7 +738,7 @@ int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaint
     */
 
     // start with a queue containing pair (w,0)
-    priority_queue< BitEntry, vector<BitEntry>, PQBitEntries >* q = new priority_queue< BitEntry, vector<BitEntry>, PQBitEntries >();
+    priority_queue<BitEntry> q;
 
     BitEntry t;
 
@@ -754,15 +750,13 @@ int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaint
 
     t.id = -1;
 
-    q->push( t );
+    q.push( t );
 
-    labelledBFSPerLM(w, doPropagate, isMaintenance, q );
-
-    delete q;
+    labelledBFSPerLM(w, doPropagate, isMaintenance, (q) );
 };
 
-inline int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
-    priority_queue< BitEntry, vector<BitEntry>, PQBitEntries >* q)
+int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
+    priority_queue<BitEntry>& q)
 {
     int roundNo = 0;
     int N = graph->getNumberOfVertices();
@@ -772,14 +766,14 @@ inline int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool 
     int minReachLength = min(50 + (int) sqrt(N)/2, N); // minReachLength is the minimal number of vertices
     // that needs to be covered by a SequenceEntry
 
-    while( q->empty() == false )
+    while( !q.empty()  )
     {
         roundNo++;
-        BitEntry tr = q->top();
+        BitEntry tr = q.top();
         VertexID v1 = tr.x;
         VertexID ls1 = tr.ls;
         int id1 = tr.id;
-        q->pop();
+        q.pop();
 
         //cout << "v1=" << v1 << ",ls1=" << ls1 << endl;
 
@@ -882,11 +876,12 @@ inline int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool 
 
             int dist = tr.dist;
             // // Commented out for indexing Backbone -- does not impact query time
-            // if( ls3 != ls1 || ls3 != ls2 )
-            // {
-            //     dist += 1; // labels are added one by one
-            //     id2 = -1;
-            // }
+            // TODO comment out again
+            if( ls3 != ls1 || ls3 != ls2 )
+            {
+                dist += 1; // labels are added one by one
+                id2 = -1;
+            }
 
             BitEntry tr2;
             tr2.x = v2;
@@ -894,7 +889,7 @@ inline int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool 
             tr2.dist = dist;
             tr2.id = id2;
 
-            q->push( tr2 );
+            q.push( tr2 );
         }
     }
 
@@ -1024,7 +1019,7 @@ int LandmarkedIndex::labelledBFSPerNonLM(VertexID w, bool doPropagate)
     t.ls = 0;
     t.dist = 0;
 
-    priority_queue< Quadret, vector<Quadret>, priorityQueueQuadrets > q;
+    priority_queue<Quadret> q;
     q.push( t );
 
     int entriesLeft = budgetOthers;
@@ -1890,7 +1885,8 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
 
             if( isLandmark )
             {
-                priority_queue< BitEntry, vector<BitEntry>, PQBitEntries >* q = new priority_queue< BitEntry, vector<BitEntry>, PQBitEntries >();
+                priority_queue<BitEntry> q;
+
                 dynamic_bitset<> hasBeenPushed = dynamic_bitset<>(N);
                 for(int y = 0; y < N; y++)
                 {
@@ -1924,7 +1920,7 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
                             t.dist = getNumberOfLabelsInLabelSet( t.ls );
                             t.id = -1;
 
-                            q->push(t);
+                            q.push(t);
                         }
                     }
 
@@ -1933,12 +1929,11 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
                     t.ls = 0;
                     t.dist = 0;
                     t.id = 1;
-                    q->push(t);
+                    q.push(t);
 
                     //cout << "q.size()=" << q.size() << endl;
 
                     labelledBFSPerLM(x, true, false, q);
-		    delete q;
                 }
 
                 hasBeenIndexed[ x ] = 1;
