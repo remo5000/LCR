@@ -1,3 +1,4 @@
+#pragma optimize( "", off )
 #include "LandmarkedIndex.h"
 #include "BFSIndex.h"
 
@@ -2049,3 +2050,4 @@ void LandmarkedIndex::setNoOfLandmarks(int pnoOfLandmarks)
 
     cout << this->name << " number of landmarks successfully changed to noOfLandmarks=" << this->noOfLandmarks  << endl;
 };
+#pragma optimize( "", on )
