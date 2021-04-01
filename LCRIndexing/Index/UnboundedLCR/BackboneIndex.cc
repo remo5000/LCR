@@ -716,7 +716,7 @@ void BackboneIndex::oneSideConditionCover() {
             }
 
             // Don't go beyond epsilon in depth
-            if (depthMap.getDistance(source, vertex, ls) == this->localSearchDistance)
+            if (depthMap.getDistance(source, vertex, ls) >= this->localSearchDistance)
                 continue;
             for (const auto& se : this->graph->getOutNeighbours(vertex)) {
                 VertexID neighbor = se.first;
