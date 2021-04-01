@@ -25,30 +25,13 @@ namespace backbonens {
     typedef unsigned int Distance;
     typedef pair<LabelSet, Distance> LabelSetAndDistance;
     typedef vector<pair<LabelSet, Distance>> LabelSetAndDistanceList;
-    typedef pair<VertexID, LabelSetAndDistanceList> DTuple;
-    typedef vector<DTuple> DTuples;
+    typedef unordered_map<VertexID, LabelSetAndDistanceList> DTuples;
     typedef vector<DTuples> DTuplesList;
-
-    struct comp_distance_tuples
-    {
-        bool operator()( const DTuple& lhs,  const int& rhs ) const
-        {
-            return lhs.first < rhs;
-        }
-
-        bool operator()( const int& lhs, const DTuple& rhs ) const
-        {
-            return lhs<rhs.first;
-        }
-    };
 
     class LabelledDistancedReachabilityMap {
         public:
             LabelledDistancedReachabilityMap(VertexID N, VertexID M) {
                 this->tuplesList.resize(N);
-                for (auto& dtls : tuplesList)
-                    for (VertexID i = 0; i < M; i++)
-                        dtls.push_back(make_pair(i, LabelSetAndDistanceList()));
             };
             LabelledDistancedReachabilityMap(VertexID N) {
                 this->tuplesList.resize(N);
@@ -63,13 +46,7 @@ namespace backbonens {
                 int pos;
                 DTuples& tuples = tuplesList.at(source);
 
-                if (!isPresent(destination, tuples, pos)) {
-                    DTuple newTuple = {destination, {}};
-                    tuples.insert(tuples.begin()+pos, newTuple);
-                }
-
-                DTuple& tuple = tuples[pos];
-                LabelSetAndDistanceList& lsdl = tuple.second;
+                LabelSetAndDistanceList& lsdl = tuples[destination];
 
                 if(!findLabelSetAndDistanceInList(ls, lsdl, pos)) {
                     lsdl.push_back(make_pair(ls, distance));
@@ -79,65 +56,56 @@ namespace backbonens {
             inline bool isPresent(VertexID source, VertexID destination, LabelSet ls) {
                 ensureTuplesListHasSource(source);
                 assert(source < tuplesList.size());
-                const DTuples& tuples = tuplesList[source];
+                DTuples& tuples = tuplesList[source];
 
-                auto it = std::lower_bound(tuples.begin(), tuples.end(), destination, comp_distance_tuples());
-                auto pos =  it - tuples.begin();
-
-                if( pos < 0 || pos >= tuples.size())
-                {
+                const auto it = tuples.find(destination);
+                if (it == tuples.end())
                     return false;
-                }
-
-                const DTuple& dt = tuples[pos];
-                if(dt.first != destination)
-                {
-                    return false;
-                }
-
-                const LabelSetAndDistanceList& lsdl = dt.second;
 
                 int pos2 = -1;
-                return findLabelSetAndDistanceInList(ls, lsdl, pos2);
+                return findLabelSetAndDistanceInList(ls, it->second, pos2);
             }
             inline void erase(VertexID source, VertexID destination, LabelSet ls) {
                 ensureTuplesListHasSource(source);
                 int pos;
                 DTuples& tuples = tuplesList[source];
-                if (!isPresent(destination, tuples, pos)) {
-                    return;
-                }
-                DTuple& tuple = tuples[pos];
-                LabelSetAndDistanceList& lsdl = tuple.second;
 
-                // While source-ls->destination, erase those entries.
+                auto it = tuples.find(destination);
+                if (it == tuples.end())
+                    return;
+
+                LabelSetAndDistanceList& lsdl = it->second;
                 while(findLabelSetAndDistanceInList(ls, lsdl, pos)) {
                     lsdl.erase(lsdl.begin() + pos);
                     _size--;
                 }
+
             }
             inline void erase(VertexID source, VertexID destination) {
                 ensureTuplesListHasSource(source);
                 int pos;
                 DTuples& tuples = tuplesList[source];
-                if (!isPresent(destination, tuples, pos)) {
+                if (!tuples.count(destination)) {
                     return;
                 }
-                _size -= tuples[pos].second.size();
-                tuples.erase(tuples.begin() + pos);
+                _size -= tuples.find(destination)->second.size();
+                tuples.erase(destination);
             }
             inline unsigned int getDistance(VertexID source, VertexID destination, LabelSet ls) {
                 ensureTuplesListHasSource(source);
                 int pos;
                 DTuples& tuples = tuplesList[source];
-                if (isPresent(destination, tuples, pos)) {
-                    DTuple& tuple = tuples[pos];
-                    LabelSetAndDistanceList& lsdl = tuple.second;
 
-                    if(findLabelSetAndDistanceInList(ls, lsdl, pos)) {
-                        return lsdl[pos].second;
-                    }
+                const auto it = tuples.find(destination);
+                if (it == tuples.end())
+                    return std::numeric_limits<unsigned int>::max();
+
+                const LabelSetAndDistanceList& lsdl = it->second;
+
+                if(findLabelSetAndDistanceInList(ls, lsdl, pos)) {
+                    return lsdl[pos].second;
                 }
+
                 return std::numeric_limits<unsigned int>::max();
             }
             inline unsigned int size() {
@@ -148,7 +116,7 @@ namespace backbonens {
                 s << "[ LabelledDistancedReachabilityMap (" << this->size() << " item(s)\n";
                 for(VertexID source = 0; source < tuplesList.size(); source++) {
                     const DTuples& dtls = tuplesList[source];
-                    for (const DTuple& dt : dtls) {
+                    for (const auto& dt : dtls) {
                         VertexID destination = dt.first;
                         for (const LabelSetAndDistance& lsd : dt.second) {
                             LabelSet ls = lsd.first;
@@ -167,7 +135,7 @@ namespace backbonens {
                 map<VertexID, SmallEdgeSet> result;
                 for(VertexID source = 0; source < tuplesList.size(); source++) {
                     const DTuples& dtls = tuplesList[source];
-                    for (const DTuple& dt : dtls) {
+                    for (const auto& dt : dtls) {
                         VertexID destination = dt.first;
                         for (const LabelSetAndDistance& lsd : dt.second) {
                             LabelSet ls = lsd.first;
@@ -184,7 +152,7 @@ namespace backbonens {
                 set<Item> result;
                 for(VertexID source = 0; source < tuplesList.size(); source++) {
                     const DTuples& dtls = tuplesList[source];
-                    for (const DTuple& dt : dtls) {
+                    for (const auto& dt : dtls) {
                         VertexID destination = dt.first;
                         for (const LabelSetAndDistance& lsd : dt.second) {
                             LabelSet ls = lsd.first;
@@ -201,7 +169,7 @@ namespace backbonens {
                 for(VertexID source = 0; source < tuplesList.size(); source++) {
                     const DTuples& dtls = tuplesList[source];
                     size += sizeof(dtls);
-                    for (const DTuple& dt : dtls) {
+                    for (const auto& dt : dtls) {
                         VertexID destination = dt.first;
                         // Don't add pair directly, as sizeof impl can vary.
                         size += sizeof(VertexID);
@@ -211,14 +179,11 @@ namespace backbonens {
                 return size;
             }
         private:
-            // source -> dest -> ls -> dist
-            // map<VertexID, map<VertexID, map<LabelSet, unsigned int> > > m;
+            // source -> dest -> (ls, dist)
             DTuplesList tuplesList;
 
             inline bool isPresent(VertexID destination, const DTuples& tuples, int& pos) {
-                auto it = std::lower_bound(tuples.begin(), tuples.end(), destination, comp_distance_tuples());
-                pos =  it - tuples.begin();
-                return pos >= 0 && pos < tuples.size() && tuples[pos].first == destination;
+                return tuples.count(destination);
             }
 
             inline bool findLabelSetAndDistanceInList(LabelSet ls, const LabelSetAndDistanceList& lsdl, int& pos)
