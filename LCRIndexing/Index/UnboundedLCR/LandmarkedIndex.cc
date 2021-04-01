@@ -586,7 +586,14 @@ void LandmarkedIndex::buildIndex(int continueCode)
             // build index for landmark
             hasBeenIndexed[ i ] = 0;
 
-            a = labelledBFSPerLM( i , this->propagateCode == 0 , false );
+
+            BitEntry tt;
+            tt.x = i;
+            tt.ls = 0;
+            tt.dist = 0;
+            tt.id = -1;
+
+            a = labelledBFSPerLM( i , this->propagateCode == 0 , 0, tt);
 
             hasBeenIndexed[ i ] = 1;
             size += getIndexSizeInBytesM( i );
@@ -732,31 +739,286 @@ void LandmarkedIndex::buildIndex(int continueCode)
 
 int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance)
 {
-    /* labelledBFSPerLM uses a heap  with the Triplet-struct s.t.
-    whenever w hits a node v with a path with
-    labelset LS it has not been visited before with a subset of LS
-    */
+    // TODO figure out why there are memory issues when this function is unesd instead of the one below.
+    return 1;
 
-    // start with a queue containing pair (w,0)
-    priority_queue<BitEntry> q;
+    // /* labelledBFSPerLM uses a heap  with the Triplet-struct s.t.
+    // whenever w hits a node v with a path with
+    // labelset LS it has not been visited before with a subset of LS
+    // */
 
-    BitEntry t;
+    // // start with a queue containing pair (w,0)
+    // // priority_queue<BitEntry> q;
 
-    t.x = w;
 
-    t.ls = 0;
+    // BitEntry t;
 
-    t.dist = 0;
+    // t.x = w;
 
-    t.id = -1;
+    // t.ls = 0;
 
-    q.push( t );
+    // t.dist = 0;
 
-    labelledBFSPerLM(w, doPropagate, isMaintenance, (q) );
+    // t.id = -1;
+
+    // // q.push( t );
+
+    // VertexID ww = w;
+    // labelledBFSPerLM(ww, doPropagate, isMaintenance, t );
 };
 
-int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
-    priority_queue<BitEntry>& q)
+int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance, BitEntry source)
+{
+    int roundNo = 0;
+    int N = graph->getNumberOfVertices();
+    int L = graph->getNumberOfLabels();
+
+    int MAXDIST = L/4 + 1; // MAXDIST is the maximal number of labels for each SequenceEntry in ls (L=8 -> 3)
+    int minReachLength = min(50 + (int) sqrt(N)/2, N); // minReachLength is the minimal number of vertices
+    // that needs to be covered by a SequenceEntry
+
+    priority_queue<BitEntry> q;
+    q.push(source);
+
+    while( !q.empty()  )
+    {
+        roundNo++;
+        BitEntry tr = q.top();
+        VertexID v1 = tr.x;
+        VertexID ls1 = tr.ls;
+        int id1 = tr.id;
+        q.pop();
+
+        //cout << "v1=" << v1 << ",ls1=" << ls1 << endl;
+
+        if( this->doExtensive == true )
+        {
+            if( v1 != w && tr.dist > 0 && tr.dist <= MAXDIST)
+            {
+                if( id1 == -1 ) // tr.ls might have been created already
+                {
+                    id1 = findSeqEntryId(tr.ls, w);
+                }
+                if( id1 == -1 ) // tr.ls needs to be added, it has not been created yet
+                {
+                    id1 = insertSeqEntry(w, tr.ls);
+                }
+
+                if( hasBeenIndexed[v1] == 0 ) // v1 is always a landmark in this case
+                {
+                    seqEntries[ vToLandmark[w] ][ id1 ].V[ v1 ] = 1;
+                }
+                else
+                {
+                    int idx = findSeqEntryId(ls1, v1);
+                    if( idx != -1 )
+                    {
+                        seqEntries[ vToLandmark[w] ][ id1 ].V |= seqEntries[ vToLandmark[v1] ][ idx ].V;
+                    }
+                }
+            }
+        }
+
+        // we try to insert the entry (v1,ls1) to cIn[w]
+        // b is false if and only if inserting (v1,ls1) would create
+        // a conflict in cIn[w], that is adding a superset of an existing entry
+        if( w != v1 )
+        {
+            bool b = tryInsert(w, v1, ls1);
+            if( b == false )
+            {
+                if( isMaintenance == true && hasBeenIndexed[v1] == 1 && vToLandmark[v1] != -1 )
+                {
+
+                }
+                else
+                {
+                    continue;
+                }
+            }
+        }
+
+        if( doPropagate == true )
+        {
+            if( hasBeenIndexed[v1] == 1 && vToLandmark[v1] != -1 )
+            {
+                // v1 has been indexed and is a landmark
+                // we can copy all entries from v1 and do not need to get further here
+                VertexID x;
+
+                if( doIndexOthers == false )
+                {
+                    x = vToLandmark[v1];
+                }
+                else
+                {
+                    x = v1;
+                }
+
+                for(int i = 0; i < tIn[x].size(); i++)
+                {
+                    VertexID y = tIn[x][i].first;
+                    if( y == w )
+                        continue;
+
+                    for(int j = 0; j < tIn[x][i].second.size(); j++)
+                    {
+                        tryInsert(w, y, joinLabelSets(tIn[x][i].second[j],ls1) );
+                    }
+                }
+
+                continue;
+            }
+        }
+
+        // we push the neighbours of v1 to the stack
+        // and union the labels
+        SmallEdgeSet ses;
+        graph->getOutNeighbours(v1, ses);
+
+        for(int i = 0; i < ses.size(); i++)
+        {
+            VertexID v2 = ses[i].first;
+            LabelSet ls2 = ses[i].second;
+            LabelSet ls3 = joinLabelSets(ls1, ls2);
+            int id2 = id1;
+
+            if( v2 == w )
+            {
+                continue;
+            }
+
+            int dist = tr.dist;
+            // // Commented out for indexing Backbone -- does not impact query time
+            // TODO comment out again
+            if( ls3 != ls1 || ls3 != ls2 )
+            {
+                dist += 1; // labels are added one by one
+                id2 = -1;
+            }
+
+            BitEntry tr2;
+            tr2.x = v2;
+            tr2.ls = ls3;
+            tr2.dist = dist;
+            tr2.id = id2;
+
+            q.push( tr2 );
+        }
+    }
+
+    if( this->doExtensive == false )
+    {
+        return roundNo;
+    }
+
+    for(int j = 0; j < seqEntries[ vToLandmark[w] ].size(); j++)
+    {
+        seqEntries[ vToLandmark[w] ][j].count = seqEntries[ vToLandmark[w] ][j].V.count();
+    }
+
+    /*
+        First we need to merge the entries
+    */
+    int i = 0;
+    while( i < 2 ) // It could be done in a single iteration if the order of the labelsets were from small to large
+    {
+        for(int j = 0; j < seqEntries[ vToLandmark[w] ].size(); j++)
+        {
+            LabelSet ls1 = seqEntries[ vToLandmark[w] ][j].ls;
+
+            for(int k = 0; k < seqEntries[ vToLandmark[w] ].size(); k++)
+            {
+                LabelSet ls2 = seqEntries[ vToLandmark[w] ][k].ls;
+
+                if( j != k && isLabelSubset(ls1, ls2) == true )
+                {
+                    seqEntries[ vToLandmark[w] ][k].V |= seqEntries[ vToLandmark[w] ][j].V;
+                }
+            }
+        }
+        i++;
+    }
+
+    for(int j = 0; j < seqEntries[ vToLandmark[w] ].size(); j++)
+    {
+        seqEntries[ vToLandmark[w] ][j].count = seqEntries[ vToLandmark[w] ][j].V.count();
+    }
+
+    /*
+        Remove those entries that not add minPathLength more than any of their subsets
+    */
+    for(int j = 0; j < seqEntries[ vToLandmark[w] ].size(); j++)
+    {
+        LabelSet ls1 = seqEntries[ vToLandmark[w] ][j].ls;
+        int c1 = (double) seqEntries[ vToLandmark[w] ][j].count;
+
+        for(int k = 0; k < seqEntries[ vToLandmark[w] ].size(); k++)
+        {
+            LabelSet ls2 = seqEntries[ vToLandmark[w] ][k].ls;
+            int c2 = (double) seqEntries[ vToLandmark[w] ][k].count;
+
+            if( j != k && isLabelSubset(ls1, ls2) == true )
+            {
+                if( (c2-c1) <= minReachLength )
+                {
+                    seqEntries[ vToLandmark[w] ].erase( seqEntries[ vToLandmark[w] ].begin() + k );
+                    k--;
+                }
+            }
+        }
+    }
+
+    /* We wish to only retain those SequenceEntry with at most MAXDIST labels
+    * and at least minPathLength bits set.
+    */
+    vector< pair< LabelSet, int > > Lv = vector< pair< LabelSet, int > >();
+
+    struct sort_pred
+    {
+        bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right)
+        {
+            return left.second > right.second;
+        }
+    };
+
+    for(int i = 0; i < seqEntries[ vToLandmark[w] ].size(); i++)
+    {
+        LabelSet ls = seqEntries[ vToLandmark[w] ][i].ls;
+        int c = seqEntries[ vToLandmark[w] ][i].count;
+        if( c < minReachLength )
+        {
+            seqEntries[ vToLandmark[w] ].erase( seqEntries[ vToLandmark[w] ].begin() + i );
+            i--;
+            continue;
+        }
+        Lv.push_back( make_pair(ls, c) );
+    }
+
+    // sort on the count
+    sort(Lv.begin(), Lv.end(), sort_pred() );
+    double avg = 0.0;
+    for(int i = 0; i < Lv.size(); i++)
+    {
+        int ID = findSeqEntryId(Lv[i].first, w);
+
+        // swap the two
+        SequenceEntry r = seqEntries[ vToLandmark[w] ][ i ];
+        seqEntries[ vToLandmark[w] ][ i ] = seqEntries[ vToLandmark[w] ][ ID ];
+        seqEntries[ vToLandmark[w] ][ ID ] = r;
+
+        //avg += seqEntries[ vToLandmark[w] ][i].count;
+
+        //cout << "*w=" << w << ",ls=" << seqEntries[ vToLandmark[w] ][ i ].ls << ",c=" << seqEntries[ vToLandmark[w] ][ i ].count << endl;
+    }
+
+    //avg /= seqEntries[ vToLandmark[w] ].size();
+    //cout << "*w=" << w << " #seqEntries=" << seqEntries[ vToLandmark[w] ].size() << " ,avg=" << avg << endl;
+
+    return roundNo;
+};
+
+int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance, priority_queue<BitEntry>& q)
 {
     int roundNo = 0;
     int N = graph->getNumberOfVertices();
@@ -1885,8 +2147,8 @@ void LandmarkedIndex::removeEdge(VertexID v, VertexID w, LabelID lID)
 
             if( isLandmark )
             {
-                priority_queue<BitEntry> q;
 
+                priority_queue<BitEntry> q;
                 dynamic_bitset<> hasBeenPushed = dynamic_bitset<>(N);
                 for(int y = 0; y < N; y++)
                 {

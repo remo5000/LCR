@@ -163,6 +163,8 @@ using namespace std;
                 bool doPropagate,
                 bool isMaintenance,
                 priority_queue<landmarkedns::BitEntry>& q);
+            int labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
+                                                  landmarkedns::BitEntry source);
             int labelledBFSPerNonLM(VertexID w, bool doPropagate);
 
             bool tryInsert(VertexID w, VertexID v, LabelSet ls);
