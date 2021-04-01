@@ -675,6 +675,9 @@ void BackboneIndex::oneSideConditionCover() {
     if (!quotum) quotum++;
     auto constStartTime = getCurrentTimeInMilliSec();
 
+    LabelledDistancedReachabilityMap distanceMap(N);
+    LabelledDistancedReachabilityMap visitedMap(N);
+
     for (int i = 0; i < vertices.size(); i++) {
 
         if( ((i+1)%quotum) == 0 && i > 0 )
@@ -688,63 +691,115 @@ void BackboneIndex::oneSideConditionCover() {
 
         const VertexID& source = vertices[i];
 
-        LabelledDistancedReachabilityMap depthMap(N);
-        LabelledDistancedReachabilityMap distanceMap(N);
-        LabelledDistancedReachabilityMap visitedMap(N);
 
-        depthMap.insert(source, source, 0, 0);
+        // LabelledDistancedReachabilityMap depthMap(N);
+        // LabelledDistancedReachabilityMap distanceMap;
+        // LabelledDistancedReachabilityMap visitedMap;
+
+        // depthMap.insert(source, source, 0, 0);
         distanceMap.insert(source, source, 0, 0);
 
         deque<pair<VertexID, LabelSet>> q;
         q.push_front(make_pair(source, 0));
 
-        while (!q.empty()) {
-            VertexID vertex;
-            LabelSet ls;
-            std::tie(vertex, ls) = q.front();
-            q.pop_front();
+        // Pop all of q epsilon times
+        for (int round = 0; round < this->localSearchDistance+1; round++) {
+            bool reachedLocalSearchDistance = round == this->localSearchDistance;
+            // Pop all of q
+            for (int popRound = 0; popRound < q.size(); popRound++) {
+                VertexID vertex;
+                LabelSet ls;
+                std::tie(vertex, ls) = q.front();
+                q.pop_front();
 
-            if (visitedMap.isPresent(source, vertex, ls)) continue;
-            else visitedMap.insert(source, vertex, ls, DIST_NOT_USED);
+                if (visitedMap.isPresent(source, vertex, ls)) continue;
+                else visitedMap.insert(source, vertex, ls, DIST_NOT_USED);
 
-            if (
-                depthMap.getDistance(source, vertex, ls) == this->localSearchDistance
-                // TODO check if == works here
-                && distanceMap.getDistance(source, vertex, ls) >= this->localSearchDistance) {
-                this->backboneVertices.insert(source);
-                break;
-            }
+                if (reachedLocalSearchDistance && distanceMap.getDistance(source, vertex, ls) >= this->localSearchDistance) {
+                    this->backboneVertices.insert(source);
+                    break; // last round, so the outer for-loop wont continue
+                }
 
-            // Don't go beyond epsilon in depth
-            if (depthMap.getDistance(source, vertex, ls) >= this->localSearchDistance)
-                continue;
-            for (const auto& se : this->graph->getOutNeighbours(vertex)) {
-                VertexID neighbor = se.first;
-                LabelSet ls2 = se.second;
-                LabelSet newLs = joinLabelSets(ls, ls2);
+                if (reachedLocalSearchDistance)
+                    continue;
+                for (const auto& se : this->graph->getOutNeighbours(vertex)) {
+                    VertexID neighbor = se.first;
+                    LabelSet ls2 = se.second;
+                    LabelSet newLs = joinLabelSets(ls, ls2);
 
-                unsigned int neighborDepth = min(
-                    depthMap.getDistance(source, neighbor, newLs),
-                    depthMap.getDistance(source, vertex, ls) + 1
-                );
-                depthMap.insert(source, neighbor, newLs, neighborDepth);
+                    if (backboneVertices.count(neighbor)) {
+                        distanceMap.insert(
+                            source,
+                            neighbor,
+                            newLs,
+                            0
+                        );
+                    } else {
+                        unsigned int neighborDist = min(
+                            distanceMap.getDistance(source, neighbor, newLs),
+                            distanceMap.getDistance(source, vertex, ls) + 1
+                        );
+                        distanceMap.insert(
+                            source,
+                            neighbor,
+                            newLs,
+                            neighborDist
+                        );
+                    }
 
-                unsigned int neighborDist = min(
-                    distanceMap.getDistance(source, neighbor, newLs),
-                    distanceMap.getDistance(source, vertex, ls) + 1
-                );
-                distanceMap.insert(
-                    source,
-                    neighbor,
-                    newLs,
-                    backboneVertices.count(neighbor)
-                    ? 0
-                    : neighborDist
-                );
-
-                q.push_back(make_pair(neighbor, newLs));
+                    q.push_back(make_pair(neighbor, newLs));
+                }
             }
         }
+
+
+        // while (!q.empty()) {
+        //     VertexID vertex;
+        //     LabelSet ls;
+        //     std::tie(vertex, ls) = q.front();
+        //     q.pop_front();
+
+        //     if (visitedMap.isPresent(source, vertex, ls)) continue;
+        //     else visitedMap.insert(source, vertex, ls, DIST_NOT_USED);
+
+        //     if (
+        //         depthMap.getDistance(source, vertex, ls) == this->localSearchDistance
+        //         // TODO check if == works here
+        //         && distanceMap.getDistance(source, vertex, ls) >= this->localSearchDistance) {
+        //         this->backboneVertices.insert(source);
+        //         break;
+        //     }
+
+        //     // Don't go beyond epsilon in depth
+        //     if (depthMap.getDistance(source, vertex, ls) >= this->localSearchDistance)
+        //         continue;
+        //     for (const auto& se : this->graph->getOutNeighbours(vertex)) {
+        //         VertexID neighbor = se.first;
+        //         LabelSet ls2 = se.second;
+        //         LabelSet newLs = joinLabelSets(ls, ls2);
+
+        //         unsigned int neighborDepth = min(
+        //             depthMap.getDistance(source, neighbor, newLs),
+        //             depthMap.getDistance(source, vertex, ls) + 1
+        //         );
+        //         depthMap.insert(source, neighbor, newLs, neighborDepth);
+
+        //         unsigned int neighborDist = min(
+        //             distanceMap.getDistance(source, neighbor, newLs),
+        //             distanceMap.getDistance(source, vertex, ls) + 1
+        //         );
+        //         distanceMap.insert(
+        //             source,
+        //             neighbor,
+        //             newLs,
+        //             backboneVertices.count(neighbor)
+        //             ? 0
+        //             : neighborDist
+        //         );
+
+        //         q.push_back(make_pair(neighbor, newLs));
+        //     }
+        // }
     }
 };
 
