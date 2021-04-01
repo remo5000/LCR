@@ -101,6 +101,8 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS) {
         size += this->backboneLi->getIndexSizeInBytes();
+        size -= this->backbone->getGraphSizeInBytes();
+        size -= this->graph->getGraphSizeInBytes();
     }
 
     size += sizeof(this->backboneReachableOut);
