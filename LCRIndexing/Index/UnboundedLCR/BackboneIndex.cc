@@ -885,12 +885,16 @@ void BackboneIndex::indexBackbone() {
         // Do nothing
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS) {
         int k = 1250 + sqrt(this->backboneVertices.size());
-        if (k >= this->backboneVertices.size()) k = sqrt(this->backboneVertices.size());
-        this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, k, 0));
+        if (k >= this->backboneVertices.size())
+            k = sqrt(this->backboneVertices.size());
+        int b = 20;
+        this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, k, b));
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS) {
         int k = 1250 + sqrt(this->backboneVertices.size());
-        if (k >= this->backboneVertices.size()) k = sqrt(this->backboneVertices.size());
-        this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), true, true, this->backbone->getNumberOfVertices(), 0));
+        if (k >= this->backboneVertices.size())
+            k = sqrt(this->backboneVertices.size());
+        int b = 20;
+        this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), true, true, k, b));
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, this->backbone->getNumberOfVertices(), 0));
     } else {
