@@ -264,15 +264,6 @@ int main(int argc, char *argv[]) {
         if( i == 0 )
             index = new BFSIndex(graph);
 
-        // LI+ (both extensions)
-        if( i == 2 )
-	      {
-            int k = 1250 + sqrt(N);
-            if (k >= N) k = sqrt(N);
-            int b = 20;
-            index = new LandmarkedIndex(graph, true, true, k, b);
-	      }
-
         // LI (no extensions)
         if( i == 1 )
 	      {
@@ -282,24 +273,33 @@ int main(int argc, char *argv[]) {
             index = new LandmarkedIndex(graph, false, false, k, b);
 	      }
 
+        // LI+ (both extensions)
+        if( i == 2 )
+	      {
+            int k = 1250 + sqrt(N);
+            if (k >= N) k = sqrt(N);
+            int b = 20;
+            index = new LandmarkedIndex(graph, true, true, k, b);
+	      }
+
         float logn = log2(N);
         float loglogn = log2(log2(N));
         unsigned int localDist = max(2, (int)loglogn);
-        // Backbone(LMC, BFS)
+        // // Backbone(LMC, BFS)
+        // if (i == 3) {
+        //     index = new BackboneIndex(
+        //             graph,
+        //             localDist,
+        //             BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA,
+        //             BackboneEdgeCreationMethod::BFS,
+        //             BackboneIndexingMethod::BFS,
+        //             LocalSearchMethod::UNIDIRECTIONAL_BFS
+        //     );
+        // }
+        // Backbone(1SCD, BFS)
         if (i == 3) {
             index = new BackboneIndex(
-                    graph, 
-                    localDist,
-                    BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA,
-                    BackboneEdgeCreationMethod::BFS,
-                    BackboneIndexingMethod::BFS,
-                    LocalSearchMethod::UNIDIRECTIONAL_BFS
-            );
-        }
-        // Backbone(1SCD, BFS)
-        if (i == 4) {
-            index = new BackboneIndex(
-                    graph, 
+                    graph,
                     localDist,
                     BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
                     BackboneEdgeCreationMethod::BFS,
@@ -308,13 +308,25 @@ int main(int argc, char *argv[]) {
             );
         }
         // Backbone(1SCR, BFS)
-        if (i == 5) {
+        if (i == 4) {
             index = new BackboneIndex(
-                    graph, 
+                    graph,
                     localDist,
                     BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER,
                     BackboneEdgeCreationMethod::BFS,
                     BackboneIndexingMethod::BFS,
+                    LocalSearchMethod::UNIDIRECTIONAL_BFS
+            );
+        }
+
+        // Backbone(1SCD, LINOEXT)
+        if (i == 5) {
+            index = new BackboneIndex(
+                    graph,
+                    localDist,
+                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
+                    BackboneEdgeCreationMethod::BFS,
+                    BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS,
                     LocalSearchMethod::UNIDIRECTIONAL_BFS
             );
         }
