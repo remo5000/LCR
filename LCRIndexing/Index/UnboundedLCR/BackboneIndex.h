@@ -28,6 +28,146 @@ namespace backbonens {
     typedef unordered_map<VertexID, LabelSetAndDistanceList> DTuples;
     typedef vector<DTuples> DTuplesList;
 
+    class LabelledReachMap {
+        public:
+            explicit LabelledReachMap(int numberOfLabels) { this->numberOfLabels = numberOfLabels;
+            };
+            inline bool insert(VertexID destination, LabelSet ls) {
+                int pos = 0;
+                bool b = indexns::findTupleInTuples(destination, tuples, pos);
+
+                if( b == false )
+                {
+                    // entry was not found and should be inserted
+                    indexns::LabelSets lss = indexns::LabelSets();
+                    lss.reserve( this->numberOfLabels * 2 );
+                    indexns::Tuple newTuple = make_pair(destination, lss );
+                    tuples.insert( tuples.begin() + pos, newTuple );
+                }
+
+                b = indexns::tryInsertLabelSet(ls, tuples[pos].second);
+                return b;
+            }
+            inline bool isPresent(VertexID destination, LabelSet ls) {
+                int pos = 0;
+                if (indexns::findTupleInTuples(destination, tuples, pos)) {
+                    const LabelSets& lss = tuples[pos].second;
+                    for (int i = 0; i < lss.size(); i++) {
+                        const LabelSet& ls2 = lss[i];
+                        if( isLabelSubset(ls2,ls)  ) return true;
+                    }
+                }
+                return false;
+            }
+            inline void erase(VertexID destination) {
+                int pos;
+                if(!indexns::findTupleInTuples(destination, tuples, pos))
+                    return;
+                if( pos < 0 || pos >= tuples.size() )
+                    return;
+                tuples.erase(tuples.begin() + pos);
+            }
+            inline const Tuples& toTuples() {
+                return tuples;
+            }
+            inline void addToGraphWithSource(VertexID source, DGraph* graph) {
+                for (const Tuple& tuple : tuples) {
+                    VertexID destination = tuple.first;
+                    for (const LabelSet& ls : tuple.second) {
+                        graph->addMultiEdge(source, destination, ls);
+                    }
+                }
+            }
+            inline SmallEdgeSet toSmallEdgeSet() const {
+                SmallEdgeSet ses;
+		for (const Tuple& tuple : tuples) {
+			for (const LabelSet& ls : tuple.second) {
+				ses.push_back(make_pair(tuple.first, ls));
+			}
+		}
+		return ses;
+            }
+        private:
+            Tuples tuples;
+            int numberOfLabels;
+    };
+
+    // TODO either use or deprecate
+    class LabelledReachabilityMap {
+        public:
+            explicit LabelledReachabilityMap(int numberOfLabels, int N) {
+                this->numberOfLabels = numberOfLabels;
+                this->tIn = indexns::TuplesList(N);
+            };
+            inline bool insert(VertexID source, VertexID destination, LabelSet ls) {
+                int pos = 0;
+                bool b = indexns::findTupleInTuples(destination, tIn[source], pos);
+
+                if( b == false )
+                {
+                    // entry was not found and should be inserted
+                    indexns::LabelSets lss = indexns::LabelSets();
+                    lss.reserve( this->numberOfLabels * 2 );
+                    indexns::Tuple newTuple = make_pair(destination, lss );
+                    tIn[source].insert( tIn[source].begin() + pos, newTuple );
+                }
+
+                b = indexns::tryInsertLabelSet(ls, tIn[source][pos].second);
+                return b;
+            }
+            inline bool isPresent(VertexID source, VertexID destination, LabelSet ls) {
+                int pos = 0;
+                if (indexns::findTupleInTuples(destination, tIn[source], pos)) {
+                    const LabelSets& lss = tIn[source][pos].second;
+                    for (int i = 0; i < lss.size(); i++) {
+                        const LabelSet& ls2 = lss[i];
+                        if( isLabelSubset(ls2,ls)  ) return true;
+                    }
+                }
+                return false;
+            }
+            inline void erase(VertexID source, VertexID destination) {
+                int pos;
+                if(!indexns::findTupleInTuples(destination, tIn[source], pos))
+                    return;
+                if( pos < 0 || pos >= tIn[source].size() )
+                    return;
+
+                Tuples& tuples = tIn[source];
+                tuples.erase(tuples.begin() + pos);
+            }
+            inline vector<tuple<VertexID, VertexID, LabelSet>> toMultiEdges() {
+                vector<tuple<VertexID, VertexID, LabelSet>> res;
+                for (VertexID u = 0; u < tIn.size(); u++) {
+                    for (int j = 0; j <  tIn[u].size(); j++) {
+                        const VertexID& v = tIn[u][j].first;
+                        const LabelSets& lss = tIn[u][j].second;
+                        for (const LabelSet& ls : lss) {
+                            res.push_back(make_tuple(u,v,ls));
+                        }
+                    }
+                }
+                return res;
+            }
+            inline map<VertexID, SmallEdgeSet> toEdgeMap() const {
+                map<VertexID, SmallEdgeSet> res;
+                for (VertexID u = 0; u < tIn.size(); u++) {
+                    for (int j = 0; j <  tIn[u].size(); j++) {
+                        const VertexID& v = tIn[u][j].first;
+                        const LabelSets& lss = tIn[u][j].second;
+                        for (const LabelSet& ls : lss) {
+                            res[u].push_back(make_pair(v,ls));
+                        }
+                    }
+                }
+                return res;
+            }
+        private:
+            TuplesList tIn;
+            int numberOfLabels;
+    };
+
+    // TODO add subset/superset matching to speed up
     class LabelledDistancedReachabilityMap {
         public:
             LabelledDistancedReachabilityMap(VertexID N, VertexID M) {
