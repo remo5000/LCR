@@ -233,40 +233,75 @@ bool BackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls) {
 
 inline vector<VertexID> BackboneIndex::accessBackboneOut(VertexID source, LabelSet ls) {
     vector<VertexID> outgoingBackboneQueue;
-    const SmallEdgeSet& outSes = this->backboneReachableOut[source];
-    unsigned int pos = 0;
-    while(pos < outSes.size()) {
-        VertexID v = outSes[pos].first;
-        while(pos < outSes.size() && outSes[pos].first == v) {
-            if (isLabelSubset(outSes[pos].second, ls)) {
-                outgoingBackboneQueue.push_back(v);
-                break;
-            }
-            pos++;
-        }
-        while(pos < outSes.size() && outSes[pos].first == v) pos++;
+    for (const Tuple& tuple : this->backboneReachableOut[source]) {
+	    const VertexID& v = tuple.first;
+
+	    bool found = false;
+	    for (const LabelSet& ls2 : tuple.second) {
+		    if (isLabelSubset(ls2, ls)) {
+			    found = true;
+			    break;
+		    }
+	    }
+
+	    if (found) {
+		    outgoingBackboneQueue.push_back(v);
+	    }
     }
     return outgoingBackboneQueue;
+	
+    // vector<VertexID> outgoingBackboneQueue;
+    // const SmallEdgeSet& outSes = this->backboneReachableOut[source];
+    // unsigned int pos = 0;
+    // while(pos < outSes.size()) {
+    //     VertexID v = outSes[pos].first;
+    //     while(pos < outSes.size() && outSes[pos].first == v) {
+    //         if (isLabelSubset(outSes[pos].second, ls)) {
+    //             outgoingBackboneQueue.push_back(v);
+    //             break;
+    //         }
+    //         pos++;
+    //     }
+    //     while(pos < outSes.size() && outSes[pos].first == v) pos++;
+    // }
+    // return outgoingBackboneQueue;
 }
 
 inline vector<VertexID> BackboneIndex::accessBackboneIn(VertexID target, LabelSet ls) {
-    vector<VertexID> incomingBackboneQueue;
+    vector<VertexID> outgoingBackboneQueue;
+    for (const Tuple& tuple : this->backboneReachableIn[target]) {
+	    const VertexID& v = tuple.first;
 
-    const SmallEdgeSet& inSes = this->backboneReachableIn[target];
-    unsigned int pos = 0;
-    while(pos < inSes.size()) {
-        VertexID v = inSes[pos].first;
-        while(pos < inSes.size() && inSes[pos].first == v) {
-            if (isLabelSubset(inSes[pos].second, ls)) {
-                incomingBackboneQueue.push_back(v);
-                break;
-            }
-            pos++;
-        }
-        while(pos < inSes.size() && inSes[pos].first == v) pos++;
+	    bool found = false;
+	    for (const LabelSet& ls2 : tuple.second) {
+		    if (isLabelSubset(ls2, ls)) {
+			    found = true;
+			    break;
+		    }
+	    }
+
+	    if (found) {
+		    outgoingBackboneQueue.push_back(v);
+	    }
     }
+    return outgoingBackboneQueue;
+    // vector<VertexID> incomingBackboneQueue;
 
-    return incomingBackboneQueue;
+    // const SmallEdgeSet& inSes = this->backboneReachableIn[target];
+    // unsigned int pos = 0;
+    // while(pos < inSes.size()) {
+    //     VertexID v = inSes[pos].first;
+    //     while(pos < inSes.size() && inSes[pos].first == v) {
+    //         if (isLabelSubset(inSes[pos].second, ls)) {
+    //             incomingBackboneQueue.push_back(v);
+    //             break;
+    //         }
+    //         pos++;
+    //     }
+    //     while(pos < inSes.size() && inSes[pos].first == v) pos++;
+    // }
+
+    // return incomingBackboneQueue;
 }
 
 
@@ -279,7 +314,9 @@ inline queue<VertexID> BackboneIndex::accessBackboneOutQueue(VertexID source, La
 
 inline unordered_set<VertexID> BackboneIndex::accessBackboneInSet(VertexID target, LabelSet ls) {
     unordered_set<VertexID> targets;
-    for (const auto& x : accessBackboneIn(target, ls))
+    const auto in = accessBackboneIn(target, ls);
+    targets.reserve(in.size());
+    for (const auto& x : in)
 	targets.insert(x);
     return targets;
 }
@@ -294,7 +331,7 @@ bool BackboneIndex::bfsBackbone(
 
     unsigned int pos;
     queue<VertexID> q = accessBackboneOutQueue(source, ls);
-    unordered_set<VertexID> targets = accessBackboneInSet(source, ls);
+    unordered_set<VertexID> targets = accessBackboneInSet(target, ls);
 
     dynamic_bitset<> marked = dynamic_bitset<>(this->backbone->getNumberOfVertices());
 
@@ -814,18 +851,39 @@ void BackboneIndex::indexBackbone() {
 };
 
 void BackboneIndex::cacheVertexToBackboneReachability() {
-    // for (VertexID source = 0; i < this->graph->getNumberOfVertices(); i++) {
+    
+    this->backboneReachableOut = TuplesList(N);
+    // for (VertexID source = 0; source < this->graph->getNumberOfVertices(); source++) {
+    //     // Only cache non backbone -> backbone reachability.
     //     if (backboneVertices.count(source)) continue;
+
+    //     Tuples tuples;
 
     //     queue<SmallEdge> q;
     //     q.push(make_pair(source, 0));
 
-    //     SmallEdgeSet visited;
-    //     for (int round = 0; round < this->localSearchDistance+1; round++) {
+    //     for (int round = 0; round < this->localSearchDistance+1 && q.size(); round++) {
     //         bool reachedLocalSearchDistance = round == this->localSearchDistance;
-    //         for (int popRound = 0; popRound < q.size(); popRound++) {
-    //     	visited.push_back(q.front());
+
+    //         // TODO test not using a new var
+    //         int qsize = q.size();
+    //         for (int popRound = 0; popRound < qsize; popRound++) {
+    //     	VertexID vertex;
+    //     	LabelSet ls;
+    //     	std::tie(vertex, ls) = q.front();
     //     	q.pop();
+
+    //     	int pos = 0;
+    //     	if(!indexns::findTupleInTuples(vertex, tuples, pos))
+    //     	{
+    //     	    // entry was not found and should be inserted
+    //     	    indexns::LabelSets lss = indexns::LabelSets();
+    //     	    lss.reserve( this->graph->getNumberOfLabels() * 2 );
+    //     	    indexns::Tuple newTuple = make_pair(vertex, lss );
+    //     	    tuples.insert( tuples.begin() + pos, newTuple );
+    //     	}
+    //             if (!tryInsertLabelSet(ls, tuples[pos].second))
+    //     	    continue;
 
     //     	if (reachedLocalSearchDistance) continue;
     //             for (SmallEdge se : this->graph->getOutNeighbours(vertex)) {
@@ -835,115 +893,335 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
     //             }
     //         }
     //     }
+
+    //     Tuples& indexTuples = this->backboneReachableOut[source];
+    //     for (Tuple& tuple : tuples) {
+    //         if (!backboneVertices.count(tuple.first)) continue;
+
+    //         // TODO test move
+    //         indexTuples.push_back(tuple);
+    //     }
+
+    //     // for (const auto& se : visited) {
+    //     //     const VertexID v = se.first;
+    //     //     const LabelSet& ls = se.second;
+    //     //     if (!backboneVertices.count(v))
+    //     // 	continue;
+    //     //     Tuples& tuples = this->backboneReachableOut[source];
+
+    //     //     int pos = 0;
+    //     //     if(!indexns::findTupleInTuples(v, tuples, pos))
+    //     //     {
+    //     // 	// entry was not found and should be inserted
+    //     // 	indexns::LabelSets lss = indexns::LabelSets();
+    //     // 	lss.reserve( this->graph->getNumberOfLabels() * 2 );
+    //     // 	indexns::Tuple newTuple = make_pair(v, lss );
+    //     // 	tuples.insert( tuples.begin() + pos, newTuple );
+    //     //     }
+
+    //     //     indexns::tryInsertLabelSet(ls, tuples[pos].second);
+    //     // }
+    // }
+
+    this->backboneReachableIn = TuplesList(N);
+    for (VertexID source = 0; source < N; source++) {
+	for (int out = 0; out < 2; out++) {
+	    if (out) {
+		// Outward
+		queue<Triplet> q;
+		Triplet t;
+		t.x = source;
+		t.ls = 0;
+		t.dist = 0;
+		q.push(t);
+
+		unordered_map<VertexID, LabelSets> outReachability;
+
+		while(q.size()) {
+		    const Triplet triplet = q.front();
+		    VertexID vertex = triplet.x;
+		    LabelSet ls = triplet.ls;
+		    Distance dist = triplet.dist;
+		    q.pop();
+
+		    auto it = outReachability.find(vertex);
+		    if (it == outReachability.end()) {
+
+			// outReachability.reserve(outReachability.size()*2);
+
+			indexns::LabelSets lss = indexns::LabelSets();
+			lss.reserve( this->graph->getNumberOfLabels() * 2 );
+			lss.push_back(ls);
+
+			outReachability.emplace(vertex, std::move(lss));
+		    } else {
+			if (!tryInsertLabelSet(ls, it->second)) continue;
+		    }
+
+
+		    if (dist == this->localSearchDistance) continue;
+
+		    for (SmallEdge se : this->graph->getOutNeighbours(vertex)) {
+			Triplet newTriplet;
+			newTriplet.x = se.first;
+			newTriplet.ls = joinLabelSets(ls, se.second);
+			newTriplet.dist = dist+1;
+			q.push(newTriplet);
+		    }
+		}
+
+		for (const auto& p : outReachability) {
+		    const VertexID& vertex = p.first;
+		    if (!backboneVertices.count(vertex)) continue;
+
+		    const LabelSets& lss = p.second;
+
+		    int pos = 0;
+		    Tuples& tuples = this->backboneReachableOut[source];
+		    tuples.emplace_back(vertex, std::move(lss) );
+		}
+	    } else {
+		// Inward
+		queue<Triplet> q;
+		Triplet t;
+		t.x = source;
+		t.ls = 0;
+		t.dist = 0;
+		q.push(t);
+
+		unordered_map<VertexID, LabelSets> inReachability;
+
+		while(q.size()) {
+		    const Triplet triplet = q.front();
+		    VertexID vertex = triplet.x;
+		    LabelSet ls = triplet.ls;
+		    Distance dist = triplet.dist;
+		    q.pop();
+
+		    auto it = inReachability.find(vertex);
+		    if (it == inReachability.end()) {
+
+			// inReachability.reserve(inReachability.size()*2);
+
+			indexns::LabelSets lss = indexns::LabelSets();
+			lss.reserve( this->graph->getNumberOfLabels() * 2 );
+			lss.push_back(ls);
+
+			inReachability.emplace(vertex, std::move(lss));
+		    } else {
+			if (!tryInsertLabelSet(ls, it->second)) continue;
+		    }
+
+		    if (dist == this->localSearchDistance) continue;
+
+		    for (SmallEdge se : this->graph->getInNeighbours(vertex)) {
+			Triplet newTriplet;
+			newTriplet.x = se.first;
+			newTriplet.ls = joinLabelSets(ls, se.second);
+			newTriplet.dist = dist+1;
+			q.push(newTriplet);
+		    }
+		}
+
+		for (const auto& p : inReachability) {
+		    const VertexID& vertex = p.first;
+		    if (!backboneVertices.count(vertex)) continue;
+
+		    const LabelSets& lss = p.second;
+
+		    int pos = 0;
+		    Tuples& tuples = this->backboneReachableIn[source];
+		    tuples.emplace_back(vertex, std::move(lss) );
+		}
+	    }
+	}
+    }
+
+
+
+
+    // for (VertexID source = 0; source < this->graph->getNumberOfVertices(); source++) {
+    //     // Only cache non backbone <- backbone reachability.
+    //     if (backboneVertices.count(source)) continue;
+
+    //     Tuples tuples;
+
+    //     queue<SmallEdge> q;
+    //     q.push(make_pair(source, 0));
+
+    //     for (int round = 0; round < this->localSearchDistance+1; round++) {
+    //         bool reachedLocalSearchDistance = round == this->localSearchDistance;
+
+    //         // TODO test not using a new var
+    //         int qsize = q.size();
+    //         for (int popRound = 0; popRound < q.size(); popRound++) {
+    //     	VertexID vertex;
+    //     	LabelSet ls;
+    //     	std::tie(vertex, ls) = q.front();
+    //     	q.pop();
+
+    //     	int pos = 0;
+    //     	if(!indexns::findTupleInTuples(vertex, tuples, pos))
+    //     	{
+    //     	    // entry was not found and should be inserted
+    //     	    indexns::LabelSets lss = indexns::LabelSets();
+    //     	    lss.reserve( this->graph->getNumberOfLabels() * 2 );
+    //     	    indexns::Tuple newTuple = make_pair(vertex, lss );
+    //     	    tuples.insert( tuples.begin() + pos, newTuple );
+    //     	}
+    //             if (!tryInsertLabelSet(ls, tuples[pos].second))
+    //     	    continue;
+
+    //     	if (reachedLocalSearchDistance) continue;
+    //             for (SmallEdge se : this->graph->getInNeighbours(vertex)) {
+    //                 VertexID neighbor = se.first;
+    //                 LabelSet newLs = joinLabelSets(ls, se.second);
+    //                 q.push(make_pair(neighbor, newLs));
+    //             }
+    //         }
+    //     }
+
+    //     Tuples& indexTuples = this->backboneReachableIn[source];
+    //     for (Tuple& tuple : tuples) {
+    //         if (!backboneVertices.count(tuple.first)) continue;
+
+    //         // TODO test move
+    //         indexTuples.push_back(tuple);
+    //     }
+
+    //     // for (const auto& se : visited) {
+    //     //     const VertexID v = se.first;
+    //     //     const LabelSet& ls = se.second;
+    //     //     if (!backboneVertices.count(v))
+    //     // 	continue;
+    //     //     Tuples& tuples = this->backboneReachableIn[source];
+
+    //     //     int pos = 0;
+    //     //     if(!indexns::findTupleInTuples(v, tuples, pos))
+    //     //     {
+    //     // 	// entry was not found and should be inserted
+    //     // 	indexns::LabelSets lss = indexns::LabelSets();
+    //     // 	lss.reserve( this->graph->getNumberOfLabels() * 2 );
+    //     // 	indexns::Tuple newTuple = make_pair(v, lss );
+    //     // 	tuples.insert( tuples.begin() + pos, newTuple );
+    //     //     }
+
+    //     //     indexns::tryInsertLabelSet(ls, tuples[pos].second);
+    //     // }
     // }
 
 
     // Inwards
-    for (VertexID source : this->backboneVertices)
-    {
-        unordered_map<VertexID, vector<LabelSet>> inReachability;
+    // for (VertexID source : this->backboneVertices)
+    // {
+    //     unordered_map<VertexID, vector<LabelSet>> inReachability;
 
-        queue<SmallEdge> q;
-        q.push(make_pair(source, 0));
+    //     queue<SmallEdge> q;
+    //     q.push(make_pair(source, 0));
 
-        for (int round = 0; round < this->localSearchDistance+1; round++) {
-            bool reachedLocalSearchDistance = round == this->localSearchDistance;
-            for (int popRound = 0; popRound < q.size(); popRound++) {
-                VertexID vertex;
-                LabelSet ls;
-                tie(vertex, ls) = q.front();
-                q.pop();
+    //     for (int round = 0; round < this->localSearchDistance+1; round++) {
+    //         bool reachedLocalSearchDistance = round == this->localSearchDistance;
+    //         for (int popRound = 0; popRound < q.size(); popRound++) {
+    //             VertexID vertex;
+    //             LabelSet ls;
+    //             tie(vertex, ls) = q.front();
+    //             q.pop();
 
-        	// if (vertex != source && backboneVertices.count(vertex))
-        	// 	continue;
+    //     	// if (vertex != source && backboneVertices.count(vertex))
+    //     	// 	continue;
 
-                if (!tryInsertLabelSet(ls, inReachability[vertex]))
-                    continue;
+    //             if (!tryInsertLabelSet(ls, inReachability[vertex]))
+    //                 continue;
 
 
-                if (reachedLocalSearchDistance) continue;
-                for (SmallEdge se : this->graph->getOutNeighbours(vertex)) {
-                    VertexID neighbor = se.first;
-                    LabelSet newLs = joinLabelSets(ls, se.second);
-                    q.push(make_pair(neighbor, newLs));
-                }
-            }
-        }
+    //             if (reachedLocalSearchDistance) continue;
+    //             for (SmallEdge se : this->graph->getOutNeighbours(vertex)) {
+    //                 VertexID neighbor = se.first;
+    //                 LabelSet newLs = joinLabelSets(ls, se.second);
+    //                 q.push(make_pair(neighbor, newLs));
+    //             }
+    //         }
+    //     }
 
-        for (const auto& p : inReachability) {
-            const VertexID& vertex = p.first;
-            for (const LabelSet& ls : p.second) {
-                this->backboneReachableIn[vertex].push_back(make_pair(source, ls));
-            }
-        }
+    //     for (const auto& p : inReachability) {
+    //         const VertexID& vertex = p.first;
+    //         const LabelSets& lss = p.second;
 
-    }
+    //         int pos = 0;
+    //         Tuples& tuples = this->backboneReachableIn[vertex];
+    //         // tuples.push_back(make_pair(source, lss ));
+    //         tuples.emplace_back(source, std::move(lss) );
+    //     }
+    // }
 
     // Outwards
-    for (VertexID target : this->backboneVertices)
-    {
+    // for (VertexID target : this->backboneVertices)
+    // {
 
-        unordered_map<VertexID, vector<LabelSet>> outReachability;
-        queue<SmallEdge> q;
-        q.push(make_pair(target, 0));
-        for (int round = 0; round < this->localSearchDistance+1; round++) {
-            bool reachedLocalSearchDistance = round == this->localSearchDistance;
-            for (int popRound = 0; popRound < q.size(); popRound++) {
-                VertexID vertex;
-                LabelSet ls;
-                tie(vertex, ls) = q.front();
-                q.pop();
+    //     unordered_map<VertexID, vector<LabelSet>> outReachability;
+    //     queue<SmallEdge> q;
+    //     q.push(make_pair(target, 0));
+    //     for (int round = 0; round < this->localSearchDistance+1; round++) {
+    //         bool reachedLocalSearchDistance = round == this->localSearchDistance;
+    //         for (int popRound = 0; popRound < q.size(); popRound++) {
+    //             VertexID vertex;
+    //             LabelSet ls;
+    //             tie(vertex, ls) = q.front();
+    //             q.pop();
 
-        	// if (vertex != source && backboneVertices.count(vertex))
-        	// 	continue;
+    //     	// if (vertex != source && backboneVertices.count(vertex))
+    //     	// 	continue;
 
-                if (!tryInsertLabelSet(ls, outReachability[vertex]))
-                    continue;
+    //             if (!tryInsertLabelSet(ls, outReachability[vertex]))
+    //                 continue;
 
-                if (reachedLocalSearchDistance) continue;
-                for (SmallEdge se : this->graph->getInNeighbours(vertex)) {
-                    VertexID neighbor = se.first;
-                    LabelSet newLs = joinLabelSets(ls, se.second);
-                    q.push(make_pair(neighbor, newLs));
-                }
-            }
-        }
+    //             if (reachedLocalSearchDistance) continue;
+    //             for (SmallEdge se : this->graph->getInNeighbours(vertex)) {
+    //                 VertexID neighbor = se.first;
+    //                 LabelSet newLs = joinLabelSets(ls, se.second);
+    //                 q.push(make_pair(neighbor, newLs));
+    //             }
+    //         }
+    //     }
 
-        // queue<Triplet> q;
-        // Triplet t;
-        // t.x = target;
-        // t.ls = 0;
-        // t.dist = 0;
-        // q.push(t);
+    //     // queue<Triplet> q;
+    //     // Triplet t;
+    //     // t.x = target;
+    //     // t.ls = 0;
+    //     // t.dist = 0;
+    //     // q.push(t);
 
 
-        // while(q.size()) {
-        //     const Triplet triplet = q.front();
-        //     VertexID vertex = triplet.x;
-        //     LabelSet ls = triplet.ls;
-        //     Distance dist = triplet.dist;
-        //     q.pop();
+    //     // while(q.size()) {
+    //     //     const Triplet triplet = q.front();
+    //     //     VertexID vertex = triplet.x;
+    //     //     LabelSet ls = triplet.ls;
+    //     //     Distance dist = triplet.dist;
+    //     //     q.pop();
 
-        //     if (!tryInsertLabelSet(ls, outReachability[vertex])) continue;
+    //     //     if (!tryInsertLabelSet(ls, outReachability[vertex])) continue;
 
-        //     if (dist == this->localSearchDistance) continue;
+    //     //     if (dist == this->localSearchDistance) continue;
 
-        //     for (SmallEdge se : this->graph->getInNeighbours(vertex)) {
-        //         Triplet newTriplet;
-        //         newTriplet.x = se.first;
-        //         newTriplet.ls = joinLabelSets(ls, se.second);
-        //         newTriplet.dist = dist+1;
-        //         q.push(newTriplet);
-        //     }
-        // }
+    //     //     for (SmallEdge se : this->graph->getInNeighbours(vertex)) {
+    //     //         Triplet newTriplet;
+    //     //         newTriplet.x = se.first;
+    //     //         newTriplet.ls = joinLabelSets(ls, se.second);
+    //     //         newTriplet.dist = dist+1;
+    //     //         q.push(newTriplet);
+    //     //     }
+    //     // }
 
-        for (const auto& p : outReachability) {
-            const VertexID& vertex = p.first;
-            for (const LabelSet& ls : p.second) {
-        	this->backboneReachableOut[vertex].push_back(make_pair(target, ls));
-            }
-        }
-    }
+    //     for (auto& p : outReachability) {
+    //         const VertexID& vertex = p.first;
+    //         LabelSets& lss = p.second;
+
+    //         int pos = 0;
+    //         Tuples& tuples = this->backboneReachableOut[vertex];
+    //         tuples.push_back(make_pair(target, lss ));
+    //         tuples.emplace_back(target, std::move(lss) );
+    //     }
+    // }
 };
 
 
