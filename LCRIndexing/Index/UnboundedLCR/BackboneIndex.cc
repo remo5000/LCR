@@ -661,6 +661,7 @@ inline vector<VertexID> BackboneIndex::getVerticesInRandomOrder() {
 
 void BackboneIndex::oneSideConditionCover() {
 
+    print("    Ordering vertices...");
     vector<VertexID> vertices;
     if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER) {
         vertices = this->getVerticesInDegreeOrder();
