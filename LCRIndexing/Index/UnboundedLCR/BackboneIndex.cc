@@ -106,21 +106,22 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
         size -= this->graph->getGraphSizeInBytes();
     }
 
-    for (const auto& p : this->backboneReachableOut) {
-        size += sizeof(p.first);
-        for (const SmallEdge& se : p.second) {
-            size += sizeof(se.first);
-            size += sizeof(se.second);
-        }
-    }
+    // TODO add size again
+    // for (const auto& p : this->backboneReachableOut) {
+    //     size += sizeof(p.first);
+    //     for (const SmallEdge& se : p.second) {
+    //         size += sizeof(se.first);
+    //         size += sizeof(se.second);
+    //     }
+    // }
 
-    for (const auto& p : this->backboneReachableIn) {
-        size += sizeof(p.first);
-        for (const SmallEdge& se : p.second) {
-            size += sizeof(se.first);
-            size += sizeof(se.second);
-        }
-    }
+    // for (const auto& p : this->backboneReachableIn) {
+    //     size += sizeof(p.first);
+    //     for (const SmallEdge& se : p.second) {
+    //         size += sizeof(se.first);
+    //         size += sizeof(se.second);
+    //     }
+    // }
 
     return size;
 };
