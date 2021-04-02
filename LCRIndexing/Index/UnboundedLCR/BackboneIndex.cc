@@ -92,6 +92,7 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
     int N = graph->getNumberOfVertices();
     unsigned long size = getIndexSizeInBytesM();
 
+    size += this->graph->getGraphSizeInBytes();
     size += this->backboneVertices.size()*sizeof(VertexID);
     size += this->backbone->getGraphSizeInBytes();
 
@@ -105,27 +106,22 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
         size -= this->graph->getGraphSizeInBytes();
     }
 
-    size += sizeof(this->backboneReachableOut);
     for (const auto& p : this->backboneReachableOut) {
         size += sizeof(p.first);
-        size += sizeof(p.second);
         for (const SmallEdge& se : p.second) {
             size += sizeof(se.first);
             size += sizeof(se.second);
         }
     }
 
-    size += sizeof(this->backboneReachableIn);
     for (const auto& p : this->backboneReachableIn) {
         size += sizeof(p.first);
-        size += sizeof(p.second);
         for (const SmallEdge& se : p.second) {
             size += sizeof(se.first);
             size += sizeof(se.second);
         }
     }
 
-    size += this->graph->getGraphSizeInBytes();
     return size;
 };
 
