@@ -24,8 +24,8 @@ def configure(ctx):
   # ctx.env.CXXFLAGS += ['-g', '-Wno-return-type', '-I/usr/local/include/', '-std=c++11']
   # ctx.env.CXXFLAGS += ['-Wno-return-type', '-I/usr/local/include/', '-std=c++11']
 
-  # # Experiment flags (Uncomment for faster but less debuggable code)
-  ctx.env.CXXFLAGS += ['-Wno-return-type', '-I/usr/local/include/', '-std=c++11']
+  # Experiment flags (Uncomment for faster but less debuggable code)
+  ctx.env.CXXFLAGS += ['-O3', '-Wno-return-type', '-std=c++17']
 
   ctx.env.append_value('LINKFLAGS', ['-L/usr/local/lib/'])
 
