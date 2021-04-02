@@ -471,7 +471,11 @@ class BackboneIndex : public Index
         // -- Misc --
         // Speedup reachable backbone vertices discovery
         void cacheVertexToBackboneReachability();
+	inline queue<VertexID> accessBackboneOutQueue(VertexID source, LabelSet ls);
+	inline vector<VertexID> accessBackboneOut(VertexID source, LabelSet ls);
         map<VertexID, SmallEdgeSet> backboneReachableOut;
+	inline unordered_set<VertexID> accessBackboneInSet(VertexID target, LabelSet ls);
+	inline vector<VertexID> accessBackboneIn(VertexID target, LabelSet ls);
         map<VertexID, SmallEdgeSet> backboneReachableIn;
 };
 #endif
