@@ -855,48 +855,52 @@ void BackboneIndex::indexBackbone() {
 };
 
 void BackboneIndex::cacheVertexToBackboneReachability() {
+
     // Inwards
-    LabelledDistancedReachabilityMap inReachability(N);
     for (VertexID source : this->backboneVertices)
     {
+        unordered_map<VertexID, vector<LabelSet>> inReachability;
 
-        queue<Triplet> q;
-        Triplet t;
-        t.x = source;
-        t.ls = 0;
-        t.dist = 0;
-        q.push(t);
+        queue<SmallEdge> q;
+        q.push(make_pair(source, 0));
 
+        for (int round = 0; round < this->localSearchDistance+1; round++) {
+            bool reachedLocalSearchDistance = round == this->localSearchDistance;
+            for (int popRound = 0; popRound < q.size(); popRound++) {
+                VertexID vertex;
+                LabelSet ls;
+                tie(vertex, ls) = q.front();
+                q.pop();
 
-        while(q.size()) {
-            const Triplet triplet = q.front();
-            VertexID vertex = triplet.x;
-            LabelSet ls = triplet.ls;
-            Distance dist = triplet.dist;
-            q.pop();
+                if (!tryInsertLabelSet(ls, inReachability[vertex]))
+                    continue;
 
+		// if (vertex != source && backboneVertices.count(vertex))
+		// 	continue;
 
-            inReachability.insert(vertex, source, ls, DIST_NOT_USED);
+                if (reachedLocalSearchDistance) continue;
+                for (SmallEdge se : this->graph->getOutNeighbours(vertex)) {
+                    VertexID neighbor = se.first;
+                    LabelSet newLs = joinLabelSets(ls, se.second);
+                    q.push(make_pair(neighbor, newLs));
+                }
+            }
+        }
 
-            // Dont add neighbours if its the final vertex in the frontier
-            if (dist == this->localSearchDistance) continue;
-
-            for (SmallEdge se : this->graph->getOutNeighbours(vertex)) {
-                Triplet newTriplet;
-                newTriplet.x = se.first;
-                newTriplet.ls = joinLabelSets(ls, se.second);
-                newTriplet.dist = dist+1;
-                q.push(newTriplet);
+        for (const auto& p : inReachability) {
+            const VertexID& vertex = p.first;
+            for (const LabelSet& ls : p.second) {
+                this->backboneReachableIn[vertex].push_back(make_pair(source, ls));
             }
         }
 
     }
-    this->backboneReachableIn = inReachability.toEdgeMap();
 
     // Outwards
-    LabelledDistancedReachabilityMap outReachability(N);
     for (VertexID target : this->backboneVertices)
     {
+        unordered_map<VertexID, vector<LabelSet>> outReachability;
+
         queue<Triplet> q;
         Triplet t;
         t.x = target;
@@ -912,9 +916,11 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
             Distance dist = triplet.dist;
             q.pop();
 
-            outReachability.insert(vertex, target, ls, DIST_NOT_USED);
+	    if (!tryInsertLabelSet(ls, outReachability[vertex])) continue;
 
-            // Dont add neighbours if its the final vertex in the frontier
+	//     if (vertex != target && backboneVertices.count(vertex))
+	// 	    continue;
+
             if (dist == this->localSearchDistance) continue;
 
             for (SmallEdge se : this->graph->getInNeighbours(vertex)) {
@@ -925,8 +931,14 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
                 q.push(newTriplet);
             }
         }
+
+	for (const auto& p : outReachability) {
+	    const VertexID& vertex = p.first;
+	    for (const LabelSet& ls : p.second) {
+		this->backboneReachableOut[vertex].push_back(make_pair(target, ls));
+	    }
+	}
     }
-    this->backboneReachableOut = outReachability.toEdgeMap();
 };
 
 
