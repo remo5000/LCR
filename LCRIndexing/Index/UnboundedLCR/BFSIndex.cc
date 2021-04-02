@@ -24,11 +24,6 @@ BFSIndex::BFSIndex(Graph* mg)
     this->didComplete = true;
 }
 
-BFSIndex::~BFSIndex()
-{
-
-}
-
 unsigned long BFSIndex::getIndexSizeInBytes()
 {
     return getIndexSizeInBytesM();
@@ -66,8 +61,7 @@ bool BFSIndex::queryShell(VertexID source, VertexID target, LabelSet ls,set< Ver
         marked[x] = 1;
         visitedSetSize++;
 
-        SmallEdgeSet ses;
-        graph->getOutNeighbours(x, ses);
+        SmallEdgeSet ses = graph->getOutNeighbours(x);
         for(int i = 0; i < ses.size(); i++)
         {
             if( isLabelSubset(ses[i].second, ls) == true )

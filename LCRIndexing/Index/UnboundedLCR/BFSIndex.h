@@ -18,7 +18,7 @@ class BFSIndex : public Index
     public:
 
         BFSIndex(Graph* mg);
-        ~BFSIndex();
+        ~BFSIndex() = default;
 
         bool query(VertexID source, VertexID target, LabelSet ls);
         void buildIndex();
