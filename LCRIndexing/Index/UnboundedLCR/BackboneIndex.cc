@@ -788,11 +788,12 @@ void BackboneIndex::createBackboneEdges() {
 };
 
 void BackboneIndex::indexBackbone() {
+    // TODO use the backbone graph for this && rework.
     if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
         print("Computing Backbone TC");
         for (const VertexID& source : backboneVertices) {
             // Keep a local reachability for the source vertex
-            LabelledDistancedReachabilityMap dfsReachability;
+            Tuples dfsReachability;
 
             vector<tuple<VertexID, LabelSet>> stack;
             stack.emplace_back(source, 0);
@@ -802,12 +803,20 @@ void BackboneIndex::indexBackbone() {
                 std::tie(vertex, ls) = stack.back();
                 stack.pop_back();
 
-                dfsReachability.insert(source, vertex, ls, DIST_NOT_USED);
+                // Insert -ls->vertex to dfsReachability
+                int pos;
+                if (indexns::findTupleInTuples(vertex, dfsReachability, pos)) {
+                    continue;
+                } else {
+                    indexns::LabelSets lss = indexns::LabelSets();
+                    lss.reserve( this->graph->getNumberOfLabels() * 2 );
+                    indexns::Tuple newTuple = make_pair(vertex, lss );
+                    dfsReachability.insert( dfsReachability.begin() + pos, newTuple );
+                }
 
                 // Track reachability between backbone vertices (this is a subset of reachability)
                 if (backboneVertices.count(vertex))
                     backboneTransitiveClosure.insert(source, vertex, ls, DIST_NOT_USED);
-
 
 
                 const SmallEdgeSet& ses = this->graph->getOutNeighbours(vertex);
@@ -818,8 +827,6 @@ void BackboneIndex::indexBackbone() {
 
                     // Get the new LS
                     LabelSet newLs = joinLabelSets(ls, ls2);
-
-                    if (dfsReachability.isPresent(source, neighbor, newLs)) continue;
 
                     stack.push_back(make_tuple(neighbor, newLs));
                 }
