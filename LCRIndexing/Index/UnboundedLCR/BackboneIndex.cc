@@ -129,7 +129,7 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
     return size;
 };
 
-bool BackboneIndex::uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls) {
+inline bool BackboneIndex::uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls) {
         queue<VertexID> sourceOut;
         sourceOut.push(source);
         for (int round = 0; round < this->localSearchDistance+1; round++) {
@@ -223,7 +223,7 @@ bool BackboneIndex::biDirectionalLocalBfs(VertexID source, VertexID target, Labe
         return false;
 };
 
-bool BackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls) {
+inline bool BackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls) {
     if (this->localSearchMethod == LocalSearchMethod::UNIDIRECTIONAL_BFS) {
         return this->uniDirectionalLocalBfs(source, target, ls);
     } else if (this->localSearchMethod == LocalSearchMethod::BIDIRECTIONAL_BFS) {
@@ -331,7 +331,7 @@ inline unordered_set<VertexID> BackboneIndex::accessBackboneInSet(VertexID targe
     return targets;
 }
 
-void BackboneIndex::markTargetsForBackboneBfs(VertexID target, LabelSet ls) {
+inline void BackboneIndex::markTargetsForBackboneBfs(VertexID target, LabelSet ls) {
     bfsBackboneTargets = dynamic_bitset<>(this->backbone->getNumberOfVertices());
     for (const Tuple& tuple : this->backboneReachableIn[target]) {
 	    const VertexID& v = tuple.first;
@@ -350,7 +350,7 @@ void BackboneIndex::markTargetsForBackboneBfs(VertexID target, LabelSet ls) {
     }
 }
 
-bool BackboneIndex::bfsBackbone(
+inline bool BackboneIndex::bfsBackbone(
     VertexID source,
     VertexID target,
     LabelSet ls
@@ -409,7 +409,7 @@ bool BackboneIndex::backboneQueryTransitiveClosure(
 
 }
 
-bool BackboneIndex::backboneQueryLandmarks(VertexID source, VertexID target, LabelSet ls) {
+inline bool BackboneIndex::backboneQueryLandmarks(VertexID source, VertexID target, LabelSet ls) {
     log("-- starting backbone TC query --:");
 
     vector<VertexID> sources = accessBackboneOut(source, ls);
@@ -417,7 +417,7 @@ bool BackboneIndex::backboneQueryLandmarks(VertexID source, VertexID target, Lab
     return this->backboneLi->query(sources, targets, bfsBackboneTargets, ls);
 };
 
-bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls) {
+inline bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls) {
     if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
         return this->bfsBackbone(source, target, ls);
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
@@ -433,7 +433,7 @@ bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls)
     }
 }
 
-bool BackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
+inline bool BackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
     log("Starting query");
 
     // watch(source);

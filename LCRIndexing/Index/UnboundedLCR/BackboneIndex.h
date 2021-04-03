@@ -433,9 +433,9 @@ class BackboneIndex : public Index
         void buildIndex();
 
         // General querying
-        bool bfsLocally(VertexID source, VertexID target, LabelSet ls);
-        bool queryBackbone(VertexID source, VertexID target, LabelSet ls);
-        bool computeQuery(VertexID source, VertexID target, LabelSet ls);
+        inline bool bfsLocally(VertexID source, VertexID target, LabelSet ls);
+        inline bool queryBackbone(VertexID source, VertexID target, LabelSet ls);
+        inline bool computeQuery(VertexID source, VertexID target, LabelSet ls);
 
 
 
@@ -455,8 +455,8 @@ class BackboneIndex : public Index
 
         // BackboneIndexingMethod::BFS
 	dynamic_bitset<> bfsBackboneTargets;
-	void markTargetsForBackboneBfs(VertexID target, LabelSet ls);
-        bool bfsBackbone(VertexID source, VertexID target, LabelSet ls);
+	inline void markTargetsForBackboneBfs(VertexID target, LabelSet ls);
+        inline bool bfsBackbone(VertexID source, VertexID target, LabelSet ls);
 
         // BackboneIndexingMethod::TRANSITIVE_CLOSURE
         backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
@@ -464,10 +464,10 @@ class BackboneIndex : public Index
 
         // BackboneIndexingMethod::LANDMARK_*
         unique_ptr<LandmarkedIndex> backboneLi;
-        bool backboneQueryLandmarks(VertexID source, VertexID target, LabelSet ls);
+        inline bool backboneQueryLandmarks(VertexID source, VertexID target, LabelSet ls);
 
         // LocalSearchMethod::UNIDIRECTIONAL_BFS
-        bool uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);
+        inline bool uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);
         // LocalSearchMethod::BIDIRECTIONAL_BFS
         bool biDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);
 
