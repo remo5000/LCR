@@ -41,12 +41,14 @@ BackboneIndex::BackboneIndex(
     this->indexType = IndexType::Backbone;
 
     this->indexDirection = BOTHINDEX;
-    this->isBlockedMode = false; // TODO this has something to do with input
+    this->isBlockedMode = false; 
 
     N = this->graph->getNumberOfVertices();
 
     // Backbone-specific
     this->backboneTransitiveClosure = LabelledDistancedReachabilityMap(N, N);
+
+    this->bfsBackboneTargets = dynamic_bitset<>(N);
 
     // Set parameters
     this->backboneVertexSelectionMethod = backboneVertexSelectionMethod;
@@ -286,42 +288,67 @@ inline vector<VertexID> BackboneIndex::accessBackboneIn(VertexID target, LabelSe
 	    }
     }
     return outgoingBackboneQueue;
-    // vector<VertexID> incomingBackboneQueue;
-
-    // const SmallEdgeSet& inSes = this->backboneReachableIn[target];
-    // unsigned int pos = 0;
-    // while(pos < inSes.size()) {
-    //     VertexID v = inSes[pos].first;
-    //     while(pos < inSes.size() && inSes[pos].first == v) {
-    //         if (isLabelSubset(inSes[pos].second, ls)) {
-    //             incomingBackboneQueue.push_back(v);
-    //             break;
-    //         }
-    //         pos++;
-    //     }
-    //     while(pos < inSes.size() && inSes[pos].first == v) pos++;
-    // }
-
-    // return incomingBackboneQueue;
 }
 
 
 inline queue<VertexID> BackboneIndex::accessBackboneOutQueue(VertexID source, LabelSet ls) {
-    queue<VertexID> q;
-    for (const auto& x : accessBackboneOut(source, ls))
-	q.push(x);
-    return q;
+    queue<VertexID> outgoingBackboneQueue;
+    for (const Tuple& tuple : this->backboneReachableOut[source]) {
+	    const VertexID& v = tuple.first;
+
+	    bool found = false;
+	    for (const LabelSet& ls2 : tuple.second) {
+		    if (isLabelSubset(ls2, ls)) {
+			    found = true;
+			    break;
+		    }
+	    }
+
+	    if (found) {
+		    outgoingBackboneQueue.push(v);
+	    }
+    }
+    return outgoingBackboneQueue;
 }
 
 inline unordered_set<VertexID> BackboneIndex::accessBackboneInSet(VertexID target, LabelSet ls) {
     unordered_set<VertexID> targets;
-    const auto in = accessBackboneIn(target, ls);
-    targets.reserve(in.size());
-    for (const auto& x : in)
-	targets.insert(x);
+    for (const Tuple& tuple : this->backboneReachableIn[target]) {
+	    const VertexID& v = tuple.first;
+
+	    bool found = false;
+	    for (const LabelSet& ls2 : tuple.second) {
+		    if (isLabelSubset(ls2, ls)) {
+			    found = true;
+			    break;
+		    }
+	    }
+
+	    if (found) {
+		targets.insert(v);
+	    }
+    }
     return targets;
 }
 
+void BackboneIndex::markTargetsForBackboneBfs(VertexID target, LabelSet ls) {
+    bfsBackboneTargets = dynamic_bitset<>(this->backbone->getNumberOfVertices());
+    for (const Tuple& tuple : this->backboneReachableIn[target]) {
+	    const VertexID& v = tuple.first;
+
+	    bool found = false;
+	    for (const LabelSet& ls2 : tuple.second) {
+		    if (isLabelSubset(ls2, ls)) {
+			    found = true;
+			    break;
+		    }
+	    }
+
+	    if (found) {
+		bfsBackboneTargets[v] = 1;
+	    }
+    }
+}
 
 bool BackboneIndex::bfsBackbone(
     VertexID source,
@@ -332,7 +359,8 @@ bool BackboneIndex::bfsBackbone(
 
     unsigned int pos;
     queue<VertexID> q = accessBackboneOutQueue(source, ls);
-    unordered_set<VertexID> targets = accessBackboneInSet(target, ls);
+
+    dynamic_bitset<>& targets = this->bfsBackboneTargets;
 
     dynamic_bitset<> marked = dynamic_bitset<>(this->backbone->getNumberOfVertices());
 
@@ -340,8 +368,9 @@ bool BackboneIndex::bfsBackbone(
         VertexID x = q.front();
         q.pop();
 
-        if( targets.count(x) )
-            return true;
+        if( targets[x] == 1) {
+	    return true;
+	}
 
         if( marked[x] == 1 )
         {
@@ -407,9 +436,10 @@ bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls)
 
 bool BackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) {
     log("Starting query");
-    watch(source);
-    watch(target);
-    watch(labelSetToLetters(ls));
+
+    // watch(source);
+    // watch(target);
+    // watch(labelSetToLetters(ls));
 
     // Quick checks
     if (source == target) return true;
@@ -417,6 +447,8 @@ bool BackboneIndex::computeQuery(VertexID source, VertexID target, LabelSet ls) 
 
     if (this->bfsLocally(source, target, ls)) return true;
 
+    // TODO make this more portable
+    markTargetsForBackboneBfs(target, ls);
     return this->queryBackbone(source, target, ls);
 }
 

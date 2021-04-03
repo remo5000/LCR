@@ -454,6 +454,8 @@ class BackboneIndex : public Index
         inline vector<VertexID> getVerticesInDegreeOrder();
 
         // BackboneIndexingMethod::BFS
+	dynamic_bitset<> bfsBackboneTargets;
+	void markTargetsForBackboneBfs(VertexID target, LabelSet ls);
         bool bfsBackbone(VertexID source, VertexID target, LabelSet ls);
 
         // BackboneIndexingMethod::TRANSITIVE_CLOSURE
