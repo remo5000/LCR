@@ -284,7 +284,11 @@ int main(int argc, char *argv[]) {
 
         float logn = log2(N);
         float loglogn = log2(log2(N));
+        // unsigned int localDist = max(2, (int)loglogn);
+	// We switch to 2 as it is the only viable option for 
+	// dense, large graphs.
         unsigned int localDist = max(2, (int)loglogn);
+
         // // Backbone(LMC, BFS)
         // if (i == 3) {
         //     index = new BackboneIndex(
