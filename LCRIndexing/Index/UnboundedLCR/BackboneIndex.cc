@@ -694,29 +694,59 @@ void BackboneIndex::oneSideConditionCover() {
         queue<pair<VertexID, LabelSet>> q;
         q.push(make_pair(source, 0));
 
-        for (int round = 0; round < this->localSearchDistance; round++) {
-            for (int popRound = 0; popRound < q.size(); popRound++) {
-                VertexID vertex;
-                LabelSet ls;
-                std::tie(vertex, ls) = q.front();
-                q.pop();
+        for (int round = 0; round < this->localSearchDistance+1; round++) {
 
-                // Check ls
-                if (!tryInsertLabelSet(ls, m[vertex])) continue;
+	    bool reachedLocalSearchDistance = round == this->localSearchDistance;
 
-                for (const auto& se : this->graph->getOutNeighbours(vertex)) {
-                    const VertexID& neighbor = se.first;
-                    LabelSet ls2 = se.second;
+	    if (reachedLocalSearchDistance) {
+		// At the last frontier, we only care about checking 
+		// the vertices (as they are of depth localSearchDistance
+		while (q.empty() == false) {
+		    VertexID vertex;
+		    LabelSet ls;
+		    std::tie(vertex, ls) = q.front();
+		    q.pop();
 
-                    // Check if backbone
-                    if (backboneVertices.count(neighbor)) continue;
+		    auto it = m.find(vertex);
+		    // If we havent seen this vertex, add to backbone.
+		    if (it == m.end()) {
+			backboneVertices.insert(source);
+			break;
+		    } 
+		    // If we havent seen this vertex w.r.t this labelset, add to backbone.
+		    if (tryInsertLabelSet(ls, it->second))  {
+			backboneVertices.insert(source);
+			break;
+		    }
+		}
+	    } else {
+		// Before the last frontier, we simply add vertices to the queue
+		// and process themn in order, the popRound forlooop ensures that 
+		// we expand the frontier by one level.
+		for (int popRound = 0; popRound < q.size(); popRound++) {
+		    VertexID vertex;
+		    LabelSet ls;
+		    std::tie(vertex, ls) = q.front();
+		    q.pop();
 
-                    q.push(make_pair(neighbor, joinLabelSets(ls, ls2)));
-                }
-            }
+		    // Check ls
+		    // TODO try reserving here.
+		    if (!tryInsertLabelSet(ls, m[vertex])) continue;
+
+		    for (const auto& se : this->graph->getOutNeighbours(vertex)) {
+			const VertexID& neighbor = se.first;
+			LabelSet ls2 = se.second;
+
+			// Check if backbone
+			if (backboneVertices.count(neighbor)) continue;
+
+			q.push(make_pair(neighbor, joinLabelSets(ls, ls2)));
+		    }
+		    cout << "   qsize: " << q.size() << endl << flush;
+		}
+	    }
+
         }
-        if (q.size())
-            backboneVertices.insert(source);
     }
 };
 
