@@ -1436,19 +1436,29 @@ bool LandmarkedIndex::tryInsert(VertexID w, VertexID v, LabelSet ls)
 }
 
 
-bool LandmarkedIndex::query(vector<VertexID>& sources, const unordered_set<VertexID>& targets, LabelSet ls)
+bool LandmarkedIndex::query(
+	vector<VertexID>& sources, 
+	const unordered_set<VertexID>& targets, 
+	const dynamic_bitset<>& isInTargets, 
+	LabelSet ls)
 {
     auto isLandmark = [this] (VertexID a, VertexID b) -> bool
     {
-        if (vToLandmark[a] != -1 && vToLandmark[b] != -1)
-            return a <= b;
-        if (vToLandmark[a] == -1 && vToLandmark[b] == -1)
-            return a <= b;
-        if (vToLandmark[a] != -1 && vToLandmark[b] == -1)
-            return 1;
-        if (vToLandmark[a] == -1 && vToLandmark[b] != -1)
-            return 0;
-        else exit(1);
+	bool bb = vToLandmark[b];
+	if (vToLandmark[a] == bb) {
+	    return a <= b;
+	} else {
+	    return bb < 0;
+	}
+        // if (vToLandmark[a] != -1 && vToLandmark[b] != -1)
+        //     return a <= b;
+        // if (vToLandmark[a] == -1 && vToLandmark[b] == -1)
+        //     return a <= b;
+        // if (vToLandmark[a] != -1 && vToLandmark[b] == -1)
+        //     return 1;
+        // if (vToLandmark[a] == -1 && vToLandmark[b] != -1)
+        //     return 0;
+        // else exit(1);
     };
     std::sort(sources.begin(), sources.end(), isLandmark);
 
@@ -1457,6 +1467,7 @@ bool LandmarkedIndex::query(vector<VertexID>& sources, const unordered_set<Verte
     if (this->noOfLandmarks == N) {
         for (const auto& source : sources) {
             for (const auto& target : targets) {
+		// TODO speedup
                 if( queryDirect(source, target, ls) )
                 {
                     return true;
@@ -1491,7 +1502,7 @@ bool LandmarkedIndex::query(vector<VertexID>& sources, const unordered_set<Verte
 
         //cout << "v1=" << v1 << endl;
 
-        if(targets.count(v1))
+        if(isInTargets[v1])
         {
             return true;
         }
@@ -1508,14 +1519,12 @@ bool LandmarkedIndex::query(vector<VertexID>& sources, const unordered_set<Verte
         }
 
         // explore the out-edges
-        SmallEdgeSet ses = graph->getOutNeighbours(v1);
-        for(int j = 0; j < ses.size(); j++)
-        {
-            if( isLabelSubset(ses[j].second, ls) == true )
+	for (const SmallEdge& se : graph->getOutNeighbours(v1)) {
+            if( isLabelSubset(se.second, ls) == true )
             {
-                q.push(ses[j].first);
+                q.push(se.first);
             }
-        }
+	}
     }
 
     return false;

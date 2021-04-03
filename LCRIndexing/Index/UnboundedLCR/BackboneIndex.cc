@@ -414,8 +414,7 @@ bool BackboneIndex::backboneQueryLandmarks(VertexID source, VertexID target, Lab
 
     vector<VertexID> sources = accessBackboneOut(source, ls);
     unordered_set<VertexID> targets = accessBackboneInSet(target, ls);
-
-    return this->backboneLi->query(sources, targets, ls);
+    return this->backboneLi->query(sources, targets, bfsBackboneTargets, ls);
 };
 
 bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls) {

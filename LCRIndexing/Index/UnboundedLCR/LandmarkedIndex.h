@@ -139,7 +139,11 @@ using namespace std;
 
             bool query(VertexID source, VertexID target, LabelSet ls);
             // For BackboneIndex to use
-            bool query(vector<VertexID>& sources, const unordered_set<VertexID>& targets, LabelSet ls);
+            bool query(
+		    vector<VertexID>& sources, 
+		    const unordered_set<VertexID>& targets, 
+		    const dynamic_bitset<>& isInTargets, 
+		    LabelSet ls);
             bool queryShell(VertexID source, VertexID target, LabelSet ls);
             bool queryShellAdapted(VertexID source, VertexID target, LabelSet ls);
             bool queryDirect(VertexID source, VertexID target, LabelSet ls);
