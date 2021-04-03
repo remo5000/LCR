@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
     loadQueryFile(edge_file + "0.true", tmpSet); // load the two query files
     int noOfQueries = tmpSet.size();
 
-    int noOfMethods = 6; // the total number of methods
+    int noOfMethods = 7; // the total number of methods
     if( argc == 5 )
     {
         noOfMethods = atoi(argv[4]);
@@ -250,7 +250,6 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
-    noOfMethods = 7;
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
