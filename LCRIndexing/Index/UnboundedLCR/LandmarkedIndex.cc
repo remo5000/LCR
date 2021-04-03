@@ -889,8 +889,6 @@ int LandmarkedIndex::labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaint
             }
 
             int dist = tr.dist;
-            // // Commented out for indexing Backbone -- does not impact query time
-            // TODO comment out again
             if( ls3 != ls1 || ls3 != ls2 )
             {
                 dist += 1; // labels are added one by one
