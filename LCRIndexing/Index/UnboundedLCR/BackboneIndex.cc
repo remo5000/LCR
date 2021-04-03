@@ -676,6 +676,14 @@ void BackboneIndex::oneSideConditionCover() {
     if (!quotum) quotum++;
     auto constStartTime = getCurrentTimeInMilliSec();
 
+
+    // Use unordered_map because 
+    // dense graphs have big neighborhoods.
+    // Even for small graphs, will be ~= 3^k <= 1000 most of the time.
+    unordered_map<VertexID, vector<LabelSet>> m;
+    // TODO not sure how good of an impact this has.
+    size_t maxUsedSize = 4096;
+
     for (int i = 0; i < vertices.size(); i++) {
 
         if( (i%quotum) == 0)
@@ -689,13 +697,11 @@ void BackboneIndex::oneSideConditionCover() {
 
         const VertexID& source = vertices[i];
 
-        // Use unordered_map because 
-	// dense graphs have big neighborhoods.
-	// Even for small graphs, will be ~= 3^k <= 1000 most of the time.
-        unordered_map<VertexID, vector<LabelSet>> m;
-
         queue<pair<VertexID, LabelSet>> q;
         q.push(make_pair(source, 0));
+
+	m.clear();
+	m.reserve(maxUsedSize);
 
         for (int round = 0; round < this->localSearchDistance+1; round++) {
 
@@ -747,6 +753,7 @@ void BackboneIndex::oneSideConditionCover() {
 			q.push(make_pair(neighbor, joinLabelSets(ls, ls2)));
 		    }
 		}
+		maxUsedSize = max(maxUsedSize, q.size());
 	    }
 
         }
