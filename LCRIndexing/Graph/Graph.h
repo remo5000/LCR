@@ -403,7 +403,7 @@ using namespace boost;
         /*
         Takes the union of two labelsets
         */
-        inline LabelSet joinLabelSets(LabelSet& ls1, LabelSet& ls2)
+        inline LabelSet joinLabelSets(const LabelSet& ls1, const LabelSet& ls2)
         {
             return ls1 | ls2;
         }
