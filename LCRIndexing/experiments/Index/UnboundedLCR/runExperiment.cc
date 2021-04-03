@@ -286,7 +286,7 @@ int main(int argc, char *argv[]) {
         // unsigned int localDist = max(2, (int)loglogn);
 	// We switch to 2 as it is the only viable option for 
 	// dense, large graphs.
-        unsigned int localDist = max(2, (int)loglogn);
+        unsigned int localDist = 2;
 
         // // Backbone(LMC, BFS)
         // if (i == 3) {
