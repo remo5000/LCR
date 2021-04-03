@@ -1448,7 +1448,7 @@ bool LandmarkedIndex::query(
 	if (vToLandmark[a] == bb) {
 	    return a <= b;
 	} else {
-	    return bb < 0;
+	    return b < 0;
 	}
         // if (vToLandmark[a] != -1 && vToLandmark[b] != -1)
         //     return a <= b;
