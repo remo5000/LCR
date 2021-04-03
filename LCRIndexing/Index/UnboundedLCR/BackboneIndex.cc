@@ -142,7 +142,7 @@ bool BackboneIndex::uniDirectionalLocalBfs(VertexID source, VertexID target, Lab
                     LabelSet ls2 = p.second;
 
                     if (!isLabelSubset(ls2, ls)) continue;
-                    if (this->backboneVertices.count(neighbor)) continue;
+                    if (this->isBackboneVertex[neighbor]) continue;
 
                     sourceOut.push(neighbor);
                 }
@@ -186,7 +186,7 @@ bool BackboneIndex::biDirectionalLocalBfs(VertexID source, VertexID target, Labe
                         LabelSet ls2 = p.second;
 
                         if (!isLabelSubset(ls2, ls)) continue;
-                        if (this->backboneVertices.count(neighbor)) continue;
+                        if (this->isBackboneVertex[neighbor]) continue;
 
                         sourceOut.push(neighbor);
                     }
@@ -209,7 +209,7 @@ bool BackboneIndex::biDirectionalLocalBfs(VertexID source, VertexID target, Labe
                         LabelSet ls2 = p.second;
 
                         if (!isLabelSubset(ls2, ls)) continue;
-                        if (this->backboneVertices.count(neighbor)) continue;
+                        if (this->isBackboneVertex[neighbor]) continue;
 
                         targetIn.push(neighbor);
                     }
@@ -669,6 +669,9 @@ void BackboneIndex::oneSideConditionCover() {
         exit(1);
     }
 
+    // Set bitset for fast checking
+    this->isBackboneVertex = dynamic_bitset<>(N);
+
     int quotum = vertices.size()/20;
     if (!quotum) quotum++;
     auto constStartTime = getCurrentTimeInMilliSec();
@@ -711,11 +714,13 @@ void BackboneIndex::oneSideConditionCover() {
 		    // If we havent seen this vertex, add to backbone.
 		    if (it == m.end()) {
 			backboneVertices.insert(source);
+			isBackboneVertex[source] = 1;
 			break;
 		    } 
 		    // If we havent seen this vertex w.r.t this labelset, add to backbone.
 		    if (tryInsertLabelSet(ls, it->second))  {
 			backboneVertices.insert(source);
+			isBackboneVertex[source] = 1;
 			break;
 		    }
 		}
@@ -730,7 +735,6 @@ void BackboneIndex::oneSideConditionCover() {
 		    q.pop();
 
 		    // Check ls
-		    // TODO try reserving here.
 		    if (!tryInsertLabelSet(ls, m[vertex])) continue;
 
 		    for (const auto& se : this->graph->getOutNeighbours(vertex)) {
@@ -738,11 +742,10 @@ void BackboneIndex::oneSideConditionCover() {
 			LabelSet ls2 = se.second;
 
 			// Check if backbone
-			if (backboneVertices.count(neighbor)) continue;
+			if (isBackboneVertex[neighbor]) continue;
 
 			q.push(make_pair(neighbor, joinLabelSets(ls, ls2)));
 		    }
-		    cout << "   qsize: " << q.size() << endl << flush;
 		}
 	    }
 
@@ -790,7 +793,7 @@ void BackboneIndex::createBackboneEdges() {
                 else
                     graphReachability.insert(vertex, ls);
 
-                if (vertex != source && backboneVertices.count(vertex)) {
+                if (vertex != source && isBackboneVertex[vertex]) {
                     backboneReachability.insert(vertex, ls);
                     continue;
                 }
@@ -842,7 +845,7 @@ void BackboneIndex::indexBackbone() {
                 }
 
                 // Track reachability between backbone vertices (this is a subset of reachability)
-                if (backboneVertices.count(vertex))
+                if (isBackboneVertex[vertex])
                     backboneTransitiveClosure.insert(source, vertex, ls, DIST_NOT_USED);
 
 
@@ -947,7 +950,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 
 		for (const auto& p : outReachability) {
 		    const VertexID& vertex = p.first;
-		    if (!backboneVertices.count(vertex)) continue;
+		    if (!isBackboneVertex[vertex]) continue;
 
 		    const LabelSets& lss = p.second;
 
@@ -1000,7 +1003,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 
 		for (const auto& p : inReachability) {
 		    const VertexID& vertex = p.first;
-		    if (!backboneVertices.count(vertex)) continue;
+		    if (!isBackboneVertex[vertex]) continue;
 
 		    const LabelSets& lss = p.second;
 

@@ -421,6 +421,7 @@ class BackboneIndex : public Index
         unsigned int localSearchDistance;
         // The backbone vertices
         unordered_set<VertexID> backboneVertices;
+	dynamic_bitset<> isBackboneVertex;
         // The backbone itself
         // unique_ptr<const DGraph> backbone;
         unique_ptr<DGraph> backbone;
