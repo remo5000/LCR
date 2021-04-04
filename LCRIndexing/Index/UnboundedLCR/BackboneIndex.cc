@@ -649,6 +649,7 @@ void BackboneIndex::localMeetingCriteriaSetCover() {
         }
         // Add the biggest vertex to the backbone vertices
         backboneVertices.insert(biggestCoverVertex);
+	isBackboneVertex[biggestCoverVertex] = 1;
         candidates.erase(biggestCoverVertex);
     }
 
