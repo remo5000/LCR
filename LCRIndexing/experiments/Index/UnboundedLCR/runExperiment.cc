@@ -250,6 +250,9 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
+    // TODO formalize
+    map<string, double> nameToBackboneVertexRatio;
+
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
@@ -369,6 +372,12 @@ int main(int argc, char *argv[]) {
               cout << "Error with index=" << indexName << endl;
               return 1;
           }
+
+	  if (index->getIndexType() == indexns::IndexType::Backbone) {
+		BackboneIndex* bi = (BackboneIndex*)index;
+		nameToBackboneVertexRatio[indexName] = ((double)bi->getBackBoneVertices().size() / (double)N);
+	  }
+
         }
         else
         {
@@ -590,6 +599,16 @@ int main(int argc, char *argv[]) {
         if( i < noOfMethods-1 )
             myfile << ",";
 
+    }
+
+    // TODO make more robust
+    cout << "\n\n\n";
+    for(int i = 0; i < methodNames.size(); i++)
+    {
+	string methodName = methodNames[i];
+	if (nameToBackboneVertexRatio.count(methodName)) {
+	    cout << methodName << ": " << nameToBackboneVertexRatio[methodName] << endl;
+	}
     }
 
     myfile.flush();
