@@ -260,11 +260,11 @@ int main(int argc, char *argv[]) {
 
         long altSize = -1;
 
-        if( i == 0 )
+        if( i == __COUNTER__ )
             index = new BFSIndex(graph.get());
 
         // LI (no extensions)
-        if( i == 1 )
+        if( i == __COUNTER__ )
 	      {
             int k = 1250 + sqrt(N);
             if (k >= N) k = sqrt(N);
@@ -273,7 +273,7 @@ int main(int argc, char *argv[]) {
 	      }
 
         // LI+ (both extensions)
-        if( i == 2 )
+        if( i == __COUNTER__ )
 	      {
             int k = 1250 + sqrt(N);
             if (k >= N) k = sqrt(N);
@@ -289,7 +289,7 @@ int main(int argc, char *argv[]) {
         unsigned int localDist = 2;
 
         // // Backbone(LMC, BFS)
-        // if (i == 3) {
+        // if (i == __COUNTER__) {
         //     index = new BackboneIndex(
         //             graph.get(),
         //             localDist,
@@ -300,7 +300,7 @@ int main(int argc, char *argv[]) {
         //     );
         // }
         // Backbone(1SCD, BFS)
-        if (i == 3) {
+        if (i == __COUNTER__) {
             index = new BackboneIndex(
                     graph.get(),
                     localDist,
@@ -311,7 +311,7 @@ int main(int argc, char *argv[]) {
             );
         }
         // Backbone(1SCR, BFS)
-        if (i == 4) {
+        if (i == __COUNTER__) {
             index = new BackboneIndex(
                     graph.get(),
                     localDist,
@@ -323,7 +323,7 @@ int main(int argc, char *argv[]) {
         }
 
         // Backbone(1SCD, LINOEXT)
-        if (i == 5) {
+        if (i == __COUNTER__) {
             index = new BackboneIndex(
                     graph.get(),
                     localDist,
@@ -335,7 +335,7 @@ int main(int argc, char *argv[]) {
         }
 
         // Backbone(1SCD, LIEXT)
-        if (i == 6) {
+        if (i == __COUNTER__) {
             index = new BackboneIndex(
                     graph.get(),
                     localDist,
@@ -347,7 +347,7 @@ int main(int argc, char *argv[]) {
         }
 
         // // Zou
-        // if( i == 5 )
+        // if( i == __COUNTER__ )
         // {
         //     index = new Zou(graph);
         // }
