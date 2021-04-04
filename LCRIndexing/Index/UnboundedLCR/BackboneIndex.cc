@@ -982,18 +982,20 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 		    const Distance dist = triplet.dist;
 		    q.pop();
 
-		    auto it = outReachability.find(vertex);
-		    if (it == outReachability.end()) {
+		    if (isBackboneVertex[vertex]) {
+			auto it = outReachability.find(vertex);
+			if (it == outReachability.end()) {
 
-			// outReachability.reserve(outReachability.size()*2);
+			    // outReachability.reserve(outReachability.size()*2);
 
-			indexns::LabelSets lss = indexns::LabelSets();
-			lss.reserve( this->graph->getNumberOfLabels() * 2 );
-			lss.push_back(ls);
+			    indexns::LabelSets lss = indexns::LabelSets();
+			    lss.reserve( this->graph->getNumberOfLabels() * 2 );
+			    lss.push_back(ls);
 
-			outReachability.emplace(vertex, std::move(lss));
-		    } else {
-			if (!tryInsertLabelSet(ls, it->second)) continue;
+			    outReachability.emplace(vertex, std::move(lss));
+			} else {
+			    if (!tryInsertLabelSet(ls, it->second)) continue;
+			}
 		    }
 
 
@@ -1010,7 +1012,6 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 
 		for (const auto& p : outReachability) {
 		    const VertexID& vertex = p.first;
-		    if (!isBackboneVertex[vertex]) continue;
 
 		    const LabelSets& lss = p.second;
 
@@ -1036,18 +1037,20 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 		    const Distance dist = triplet.dist;
 		    q.pop();
 
-		    auto it = inReachability.find(vertex);
-		    if (it == inReachability.end()) {
+		    if (isBackboneVertex[vertex]) {
+			auto it = inReachability.find(vertex);
+			if (it == inReachability.end()) {
 
-			// inReachability.reserve(inReachability.size()*2);
+			    // inReachability.reserve(inReachability.size()*2);
 
-			indexns::LabelSets lss = indexns::LabelSets();
-			lss.reserve( this->graph->getNumberOfLabels() * 2 );
-			lss.push_back(ls);
+			    indexns::LabelSets lss = indexns::LabelSets();
+			    lss.reserve( this->graph->getNumberOfLabels() * 2 );
+			    lss.push_back(ls);
 
-			inReachability.emplace(vertex, std::move(lss));
-		    } else {
-			if (!tryInsertLabelSet(ls, it->second)) continue;
+			    inReachability.emplace(vertex, std::move(lss));
+			} else {
+			    if (!tryInsertLabelSet(ls, it->second)) continue;
+			}
 		    }
 
 		    if (dist == this->localSearchDistance) continue;
@@ -1063,7 +1066,6 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 
 		for (const auto& p : inReachability) {
 		    const VertexID& vertex = p.first;
-		    if (!isBackboneVertex[vertex]) continue;
 
 		    const LabelSets& lss = p.second;
 
