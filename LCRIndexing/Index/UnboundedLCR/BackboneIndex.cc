@@ -725,6 +725,11 @@ void BackboneIndex::oneSideConditionCover() {
 
 
     int numberOfConfirmedBackboneVertices = (int)((float)MIN_BACKBONE_RATIO * (float)vertices.size());
+    // TODO fix this for random ordering -- queries that should be true are getting false from query()
+    if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER) {
+	numberOfConfirmedBackboneVertices = 0;
+    }
+
     print("Resrving backbone vertices in advance...");
     print(numberOfConfirmedBackboneVertices);
     backboneVertices.reserve(numberOfConfirmedBackboneVertices);
