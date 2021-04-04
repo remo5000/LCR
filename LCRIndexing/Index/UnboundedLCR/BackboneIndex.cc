@@ -94,9 +94,13 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
     int N = graph->getNumberOfVertices();
     unsigned long size = getIndexSizeInBytesM();
 
-    size += this->graph->getGraphSizeInBytes();
+
+    // size += this->graph->getGraphSizeInBytes(); Exclude as this is not part of the index itself.
     size += this->backboneVertices.size()*sizeof(VertexID);
     size += this->backbone->getGraphSizeInBytes();
+
+    print("Backbone vertices and graph size");
+    print(size);
 
     if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
         size += this->backboneTransitiveClosure.getSizeInBytes();
@@ -104,10 +108,9 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS) {
         size += this->backboneLi->getIndexSizeInBytes();
-        size -= this->backbone->getGraphSizeInBytes();
-        size -= this->graph->getGraphSizeInBytes();
     }
 
+    unsigned long beforeCache = size;
     for (const auto& p : this->backboneReachableOut) {
         for (const auto& se : p) {
             size += sizeof(se.first);
@@ -125,6 +128,9 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
 	    }
         }
     }
+
+    print("Cache size:");
+    print(size - beforeCache);
 
     return size;
 };
