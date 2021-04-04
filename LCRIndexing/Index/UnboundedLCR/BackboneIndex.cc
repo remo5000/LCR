@@ -693,6 +693,7 @@ inline vector<VertexID> BackboneIndex::getVerticesInRandomOrder() {
     return res;
 }
 
+#define MIN_BACKBONE_RATIO 0.40
 void BackboneIndex::oneSideConditionCover() {
 
     print("    Ordering vertices...");
@@ -721,7 +722,16 @@ void BackboneIndex::oneSideConditionCover() {
     // TODO not sure how good of an impact this has.
     size_t maxUsedSize = 4096;
 
-    for (int i = 0; i < vertices.size(); i++) {
+
+    int numberOfConfirmedBackboneVertices = (int)((float)MIN_BACKBONE_RATIO * (float)vertices.size());
+    print("Resrving backbone vertices in advance...");
+    print(numberOfConfirmedBackboneVertices);
+    for (int i = 0; i < numberOfConfirmedBackboneVertices; i++) {
+        const VertexID& source = vertices[i];
+	backboneVertices.insert(source);
+	isBackboneVertex[source] = 1;
+    }
+    for (int i = numberOfConfirmedBackboneVertices; i < vertices.size(); i++) {
 
         if( (i%quotum) == 0)
         {
