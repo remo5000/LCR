@@ -693,10 +693,10 @@ inline vector<VertexID> BackboneIndex::getVerticesInRandomOrder() {
     return res;
 }
 
-#define MIN_BACKBONE_RATIO 0.40
+#define MIN_BACKBONE_RATIO 0.30
 void BackboneIndex::oneSideConditionCover() {
 
-    print("    Ordering vertices...");
+    print("Ordering vertices...");
     vector<VertexID> vertices;
     if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER) {
         vertices = this->getVerticesInDegreeOrder();
@@ -710,7 +710,7 @@ void BackboneIndex::oneSideConditionCover() {
     // Set bitset for fast checking
     this->isBackboneVertex = dynamic_bitset<>(N);
 
-    int quotum = vertices.size()/20;
+    int quotum = vertices.size()/100;
     if (!quotum) quotum++;
     auto constStartTime = getCurrentTimeInMilliSec();
 
@@ -726,14 +726,12 @@ void BackboneIndex::oneSideConditionCover() {
     int numberOfConfirmedBackboneVertices = (int)((float)MIN_BACKBONE_RATIO * (float)vertices.size());
     print("Resrving backbone vertices in advance...");
     print(numberOfConfirmedBackboneVertices);
-    for (int i = 0; i < numberOfConfirmedBackboneVertices; i++) {
-        const VertexID& source = vertices[i];
-	backboneVertices.insert(source);
-	isBackboneVertex[source] = 1;
-    }
-    for (int i = numberOfConfirmedBackboneVertices; i < vertices.size(); i++) {
+    backboneVertices.reserve(numberOfConfirmedBackboneVertices);
 
-        if( (i%quotum) == 0)
+    cout << this->name << "::oneSideConditionCover: begin" << endl;
+    for (int i = 0; i < vertices.size(); i++) {
+
+        if( ((i+1)%quotum) == 0)
         {
             double perc = i;
             perc /= vertices.size();
@@ -743,6 +741,14 @@ void BackboneIndex::oneSideConditionCover() {
         }
 
         const VertexID& source = vertices[i];
+
+	// Add to backbone by default if required.
+	if (i < numberOfConfirmedBackboneVertices) {
+	    backboneVertices.insert(source);
+	    isBackboneVertex[source] = 1;
+	    continue;
+	}
+
 
         queue<pair<VertexID, LabelSet>> q;
         q.push(make_pair(source, 0));
