@@ -8,6 +8,12 @@
 #include <map>
 #include <queue>
 
+#include <iostream>
+#include <utility>
+#include <thread>
+#include <chrono>
+
+
 #define DEBUG 0
 #define watch(x) if (DEBUG) cout << (#x) << " is " << (x) << endl; cout.flush();
 #define watch_vector(vect) if (DEBUG) cout << (#vect) << ": [";for (int i = 0; i < vect.size(); i++) if (DEBUG) cout << vect[i] << " "; if (DEBUG) cout << "]" << endl;
@@ -950,24 +956,166 @@ void BackboneIndex::indexBackbone() {
     }
 };
 
+Graph* BackboneIndex::getGraph() {
+    return  this->graph;
+}
+
+#define MAX_WORK_SIZE 128
+void cacheForVertices(BackboneIndex* index, VertexID start, VertexID endExclusive) {
+//	cout << "[ " << start << ", " << endExclusive << ")" << endl << flush;
+    if (start >= endExclusive) return;
+    if (endExclusive - start > MAX_WORK_SIZE) {
+	int mid = (endExclusive + start) / 2;
+	std::thread left(cacheForVertices, index, start, mid);
+	std::thread right(cacheForVertices, index, mid, endExclusive);
+	left.join();
+	right.join();
+	return;
+    }
+
+    for (VertexID source = start; source < endExclusive; source++) {
+
+	for (int out = 0; out < 2; out++) {
+	    if (out) {
+		// Outward
+		queue<Triplet> q;
+		Triplet t;
+		t.x = source;
+		t.ls = 0;
+		t.dist = 0;
+		q.push(t);
+
+		unordered_map<VertexID, LabelSets> outReachability;
+
+		while(q.size()) {
+		    const Triplet triplet = q.front();
+		    const VertexID vertex = triplet.x;
+		    const LabelSet ls = triplet.ls;
+		    const Distance dist = triplet.dist;
+		    q.pop();
+
+		    if (index->isBackboneVertex[vertex]) {
+			auto it = outReachability.find(vertex);
+			if (it == outReachability.end()) {
+
+			    // outReachability.reserve(outReachability.size()*2);
+
+			    indexns::LabelSets lss = indexns::LabelSets();
+			    lss.reserve( index->getGraph()->getNumberOfLabels() * 2 );
+			    lss.push_back(ls);
+
+			    outReachability.emplace(vertex, std::move(lss));
+			} else {
+			    if (!tryInsertLabelSet(ls, it->second)) continue;
+			}
+		    }
+
+
+		    if (dist == index->localSearchDistance) continue;
+
+		    for (const SmallEdge& se : index->getGraph()->getOutNeighbours(vertex)) {
+			Triplet newTriplet;
+			newTriplet.x = se.first;
+			newTriplet.ls = joinLabelSets(ls, se.second);
+			newTriplet.dist = dist+1;
+			q.push(newTriplet);
+		    }
+		}
+
+		for (const auto& p : outReachability) {
+		    const VertexID& vertex = p.first;
+
+		    const LabelSets& lss = p.second;
+
+		    int pos = 0;
+		    Tuples& tuples = index->backboneReachableOut[source];
+		    tuples.emplace_back(vertex, std::move(lss) );
+		}
+	    } else {
+		// Inward
+		queue<Triplet> q;
+		Triplet t;
+		t.x = source;
+		t.ls = 0;
+		t.dist = 0;
+		q.push(t);
+
+		unordered_map<VertexID, LabelSets> inReachability;
+
+		while(q.size()) {
+		    const Triplet triplet = q.front();
+		    const VertexID vertex = triplet.x;
+		    const LabelSet ls = triplet.ls;
+		    const Distance dist = triplet.dist;
+		    q.pop();
+
+		    if (index->isBackboneVertex[vertex]) {
+			auto it = inReachability.find(vertex);
+			if (it == inReachability.end()) {
+
+			    // inReachability.reserve(inReachability.size()*2);
+
+			    indexns::LabelSets lss = indexns::LabelSets();
+			    lss.reserve( index->getGraph()->getNumberOfLabels() * 2 );
+			    lss.push_back(ls);
+
+			    inReachability.emplace(vertex, std::move(lss));
+			} else {
+			    if (!tryInsertLabelSet(ls, it->second)) continue;
+			}
+		    }
+
+		    if (dist == index->localSearchDistance) continue;
+
+		    for (const SmallEdge& se : index->getGraph()->getInNeighbours(vertex)) {
+			Triplet newTriplet;
+			newTriplet.x = se.first;
+			newTriplet.ls = joinLabelSets(ls, se.second);
+			newTriplet.dist = dist+1;
+			q.push(newTriplet);
+		    }
+		}
+
+		for (const auto& p : inReachability) {
+		    const VertexID& vertex = p.first;
+
+		    const LabelSets& lss = p.second;
+
+		    int pos = 0;
+		    Tuples& tuples = index->backboneReachableIn[source];
+		    tuples.emplace_back(vertex, std::move(lss) );
+		}
+	    }
+	}
+    }
+}
+
 void BackboneIndex::cacheVertexToBackboneReachability() {
 
     int quotum = N/20;
     if (!quotum) quotum++;
     auto constStartTime = getCurrentTimeInMilliSec();
+        // if( (source%quotum) == 0)
+        // {
+        //     double perc = source;
+        //     perc /= N;
+        //     perc *= 100.0;
+        //     double timePassed = getCurrentTimeInMilliSec()-constStartTime;
+        //     cout << this->name << "::cacheVertexToBackboneReachability " << perc << "%" << ", time(s)=" << (timePassed) << endl;
+        // }
 
     this->backboneReachableOut = TuplesList(N);
     this->backboneReachableIn = TuplesList(N);
-    for (VertexID source = 0; source < N; source++) {
 
-        if( (source%quotum) == 0)
-        {
-            double perc = source;
-            perc /= N;
-            perc *= 100.0;
-            double timePassed = getCurrentTimeInMilliSec()-constStartTime;
-            cout << this->name << "::cacheVertexToBackboneReachability " << perc << "%" << ", time(s)=" << (timePassed) << endl;
-        }
+    std::thread t(cacheForVertices, this, 0, N);
+    t.join();
+
+    double timePassed = getCurrentTimeInMilliSec()-constStartTime;
+    cout << this->name << "::cacheVertexToBackboneReachability " << "100%" << ", time(s)=" << (timePassed) << endl;
+
+    return;
+
+    for (VertexID source = 0; source < N; source++) {
 
 	for (int out = 0; out < 2; out++) {
 	    if (out) {

@@ -409,7 +409,6 @@ class BackboneIndex : public Index
 
         unsigned long getIndexSizeInBytes();
 
-    private:
         unsigned int N;
 
         BackboneVertexSelectionMethod backboneVertexSelectionMethod;
@@ -437,6 +436,7 @@ class BackboneIndex : public Index
         inline bool queryBackbone(VertexID source, VertexID target, LabelSet ls);
         inline bool computeQuery(VertexID source, VertexID target, LabelSet ls);
 
+	Graph* getGraph();
 
 
         // -- Indexing method specific --
@@ -480,5 +480,6 @@ class BackboneIndex : public Index
 	inline unordered_set<VertexID> accessBackboneInSet(VertexID target, LabelSet ls);
 	inline vector<VertexID> accessBackboneIn(VertexID target, LabelSet ls);
 	TuplesList backboneReachableIn;
+    private:
 };
 #endif
