@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
     loadQueryFile(edge_file + "0.true", tmpSet); // load the two query files
     int noOfQueries = tmpSet.size();
 
-    int noOfMethods = 7; // the total number of methods
+    int noOfMethods = 6; // the total number of methods
     if( argc == 5 )
     {
         noOfMethods = atoi(argv[4]);
@@ -313,17 +313,17 @@ int main(int argc, char *argv[]) {
                     LocalSearchMethod::UNIDIRECTIONAL_BFS
             );
         }
-        // Backbone(1SCR, BFS)
-        if (i == __COUNTER__) {
-            index = new BackboneIndex(
-                    graph.get(),
-                    localDist,
-                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER,
-                    BackboneEdgeCreationMethod::BFS,
-                    BackboneIndexingMethod::BFS,
-                    LocalSearchMethod::UNIDIRECTIONAL_BFS
-            );
-        }
+        // // Backbone(1SCR, BFS)
+        // if (i == __COUNTER__) {
+        //     index = new BackboneIndex(
+        //             graph.get(),
+        //             localDist,
+        //             BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER,
+        //             BackboneEdgeCreationMethod::BFS,
+        //             BackboneIndexingMethod::BFS,
+        //             LocalSearchMethod::UNIDIRECTIONAL_BFS
+        //     );
+        // }
 
         // Backbone(1SCD, LINOEXT)
         if (i == __COUNTER__) {
