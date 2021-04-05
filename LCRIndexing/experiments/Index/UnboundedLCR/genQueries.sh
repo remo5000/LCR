@@ -1,7 +1,9 @@
 #!/bin/sh
 
+set -x 
+
 # TODO set pattern here
-datasets=`ls experiments/graphs/real/stringFc.edge | sed 's:\.edge::g'`;
+datasets=`ls experiments/graphs/real/web-Stanford.edge | sed 's:\.edge::g'`;
 for ds in $datasets;
 do
     dsp=`echo $ds | sed 's/.*\///'`;
@@ -13,16 +15,14 @@ do
     L1=`expr $L / 4`;
     L2=`expr $L / 2`;
     L3=`expr $L - 2`;
+    NUM_QUERIES=10;
+	
 
     tmp=`mktemp`
     if [ ! -f "${ds}.querylog" ];
     then
-        echo "L=${L}";
-        echo "build/default/genQuery ${ds}.edge 3 1000 ${L1} ${L2} ${L3} > ${tmp}";
-        build/default/genQuery ${ds}.edge 3 1000 ${L1} ${L2} ${L3} > ${tmp}
-        echo "cp ${tmp} ${ds}.querylog";
-        cp ${tmp} ${ds}.querylog
-        echo "rm ${tmp}";
-        rm ${tmp}
+        build/default/genQuery ${ds}.edge 3 ${NUM_QUERIES} ${L1} ${L2} ${L3} > ${tmp};
+        cp ${tmp} ${ds}.querylog;
+        rm ${tmp};
     fi
 done;
