@@ -26,7 +26,7 @@ wget http://konect.cc/files/download.tsv.web-NotreDame.tar.bz2
 bzip2 -df download.tsv.web-NotreDame.tar.bz2
 tar -xf download.tsv.web-NotreDame.tar
 cat web-NotreDame/out.web-NotreDame | tail -n +3 > web-NotreDame.edge
-python3 generateSyntheticLabels.py web-NotreDame.edge
+cat web-NotreDame.edge | ./generateSyntheticLabels.py > ../web-NotreDame.edge
 mv web-NotreDame.edge ../
 
 rm download.tsv.web-NotreDame.tar
