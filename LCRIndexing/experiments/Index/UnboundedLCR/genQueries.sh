@@ -15,7 +15,7 @@ do
     L1=`expr $L / 4`;
     L2=`expr $L / 2`;
     L3=`expr $L - 2`;
-    NUM_QUERIES=10;
+    NUM_QUERIES=1000;
 	
 
     tmp=`mktemp`
