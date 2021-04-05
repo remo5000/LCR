@@ -838,55 +838,80 @@ void BackboneIndex::selectBackboneVertices() {
     }
 };
 
+
+void bfsFromBackboneVertex() {
+
+}
+
+
 void BackboneIndex::createBackboneEdges() {
-    if (this->backboneEdgeCreationMethod == BackboneEdgeCreationMethod::BFS) {
-
-        // Set backbone
-        EdgeSet* emptyEdgeSet = new EdgeSet();
-        DGraph* dg = new DGraph(emptyEdgeSet, N, 0, true);
-        backbone = std::unique_ptr<DGraph>(dg);
-
-        // From each source in the backbone, do a BFS on the original graph until you hit a backbone.
-        for (const VertexID& source : backboneVertices) {
-            LabelledReachMap backboneReachability(this->graph->getNumberOfLabels());
-            LabelledReachMap graphReachability(this->graph->getNumberOfLabels());
-
-            queue<pair<VertexID, LabelSet>> q;
-            q.push(make_pair(source, 0));
-
-            while (q.empty() == false) {
-                VertexID vertex;
-                LabelSet ls;
-                std::tie(vertex, ls) = q.front();
-                q.pop();
-
-                if (graphReachability.isPresent(vertex, ls))
-                    continue;
-                else
-                    graphReachability.insert(vertex, ls);
-
-                if (vertex != source && isBackboneVertex[vertex]) {
-                    backboneReachability.insert(vertex, ls);
-                    continue;
-                }
-
-                for(const auto& p : graph->getOutNeighbours(vertex)) {
-                    VertexID neighbor = p.first;
-                    LabelSet ls2 = p.second;
-                    LabelSet newLs = joinLabelSets(ls, ls2);
-
-                    q.push(make_pair(neighbor, newLs));
-                }
-            }
-
-            // Add the (minimal) reachability information to the graph
-            graphReachability.addToGraphWithSource(source, backbone.get());
-        }
-
-    } else {
+    if (this->backboneEdgeCreationMethod != BackboneEdgeCreationMethod::BFS) {
         print("Unsupported backboneEdgeCreationMethod. Backtrace here to check how it happened.");
         exit(1);
     }
+
+    // Set backbone
+    EdgeSet* emptyEdgeSet = new EdgeSet();
+    DGraph* dg = new DGraph(emptyEdgeSet, N, 0, true);
+    backbone = std::unique_ptr<DGraph>(dg);
+
+    auto constStartTime = getCurrentTimeInMilliSec();
+    int quotum = backboneVertices.size()/20;
+    if (!quotum) quotum++;
+    int numProcessed = 0;
+
+    // From each source in the backbone, do a BFS on the original graph until you hit a backbone.
+    for (const VertexID& source : backboneVertices) {
+
+        if( (numProcessed++%quotum) == 0  )
+        {
+            double perc = numProcessed;
+            perc /= backboneVertices.size();
+            perc *= 100.0;
+            double timePassed = getCurrentTimeInMilliSec()-constStartTime;
+            cout << this->name << "::createBackboneEdges " << perc << "%" << ", time(s)=" << (timePassed) << endl;
+        }
+
+	LabelledReachMap backboneReachability(this->graph->getNumberOfLabels());
+	LabelledReachMap graphReachability(this->graph->getNumberOfLabels());
+
+	queue<pair<VertexID, LabelSet>> q;
+	q.push(make_pair(source, 0));
+
+	while (q.empty() == false) {
+	    VertexID vertex;
+	    LabelSet ls;
+	    std::tie(vertex, ls) = q.front();
+	    q.pop();
+
+	    if (graphReachability.isPresent(vertex, ls))
+		continue;
+	    else
+		graphReachability.insert(vertex, ls);
+
+	    if (vertex != source && isBackboneVertex[vertex]) {
+		backboneReachability.insert(vertex, ls);
+		continue;
+	    }
+
+	    for(const auto& p : graph->getOutNeighbours(vertex)) {
+		VertexID neighbor = p.first;
+		LabelSet ls2 = p.second;
+		LabelSet newLs = joinLabelSets(ls, ls2);
+
+		q.push(make_pair(neighbor, newLs));
+	    }
+	}
+
+	// Add the (minimal) reachability information to the graph
+	backboneReachability.addToGraphWithSource(source, backbone.get());
+    }
+
+    double timePassed = getCurrentTimeInMilliSec()-constStartTime;
+    cout << this->name 
+	<< "::createBackboneEdges" 
+	<< ", time(s)=" << (timePassed) 
+	<< endl;
 };
 
 void BackboneIndex::indexBackbone() {

@@ -9,7 +9,6 @@
 #include <curses.h>
 #include <time.h>
 #include <chrono>
-#include <unordered_set>
 #include <thread>
 
 using namespace std;
@@ -154,19 +153,17 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
     // each query should require at least <MIN_DIFFICULTY> or at most <MAX_DIFFICULTY> steps in a
     // labeled BFS search. The queries in the total query set should have varying
     // difficulties within this range.
-    int MIN_DIFFICULTY;
-    int MAX_DIFFICULTY;
+    int MAX_DIFFICULTY = 0;
+    int MIN_DIFFICULTY = 0;
     if( N >= 500000 )
     {
         MAX_DIFFICULTY = 50 + N/50;
-        // MIN_DIFFICULTY = 50 + min((int) log2(N), N);
-        MIN_DIFFICULTY = 1;
+        MIN_DIFFICULTY = 50 + min((int) log2(N), N);
     }
     else
     {
         MAX_DIFFICULTY = max((int) N/10 , 4);
-        // MIN_DIFFICULTY = min((int) log2(N), N);
-        MIN_DIFFICULTY = 1;
+        MIN_DIFFICULTY = min((int) log2(N), N);
     }
 
     if( MAX_DIFFICULTY <= (MIN_DIFFICULTY-2) )
@@ -199,40 +196,34 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
         int roundNo = 1;
         while( qss[i].size() < nq || qss[i+1].size() < nq )
         {
-            // a random minimal difficulty
-            int minDiff = max(
-                min(
-                    MAX_DIFFICULTY,
-                    diffDistribution(generator2)) - roundNo/10 ,
-                MIN_DIFFICULTY);
+            int minDiff = max(min(MAX_DIFFICULTY, diffDistribution(generator2)) - roundNo/10 , MIN_DIFFICULTY); // a random minimal difficulty
             VertexID s = vertexDistribution(generator); // a random start point
-            // VertexID t = vertexDistribution(generator); // another random point
+	    VertexID t = vertexDistribution(generator); // another random point
             int quotum = min(nq, max((nq/100) + (roundNo / 100), 1));
 
-            // minDiff can scale down if no queries are generated
-            minDiff = max(1, minDiff - (roundNo/100) );
+            minDiff = max(1, minDiff - (roundNo/100) ); // minDiff can scale down
+            // if no queries are generated
 
             cout << "genQuery with minDiff=" << minDiff << ",s=" << s << ",quotum=" << quotum << endl;
-
-            unordered_set<VertexID> visited;
+            vector< int > distances;
 
             // loop over all nodes that have minimal difficulty
             int c = 0;
-            for (
-                int tried = 0;
-                tried <= max((N/500),100);
-                tried++)
+	    int tried = 0;
+            for(; t < N; t++)
             {
-
-                VertexID t = vertexDistribution(generator); // another random point
-
-                // Ensure s -> t not self edge, and that we havent tried s->t before
-                if( s == t || visited.count(t))
+                if( s == t )
                 {
-                    tried--;
                     continue;
                 }
-                visited.insert(t);
+
+                tried++;
+
+                if( c < 2 && tried > min((N/500),100) )
+                {
+                    break;
+                }
+                //cout << "genQuery: t=" << t << ",distances[t]=" << distances[t] << endl;
 
                 // try 10 random labelsets from s to t
                 int k = 0;
@@ -247,7 +238,7 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
                     int actualDist = max(ind->getVisitedSetSize(), 0);
                     Query q = make_pair( make_pair(s,t), ls);
 
-                    cout << "genQuery: ,s=" << s << ",t=" << t << ",minDiff=" << minDiff << ",actualDist=" << actualDist << endl;
+                    //cout << "genQuery: ,s=" << s << ",t=" << t << ",minDiff=" << minDiff << ",actualDist=" << actualDist << endl;
 
                     if( actualDist < minDiff )
                     {
