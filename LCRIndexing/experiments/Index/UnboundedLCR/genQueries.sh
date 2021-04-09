@@ -3,7 +3,7 @@
 set -x 
 
 # TODO set pattern here
-datasets=`ls experiments/graphs/real/web-Stanford.edge | sed 's:\.edge::g'`;
+datasets=`ls ./experiments/graphs/real/web-NotreDame.edge | sed 's:\.edge::g'`;
 for ds in $datasets;
 do
     dsp=`echo $ds | sed 's/.*\///'`;
@@ -17,7 +17,6 @@ do
     L3=`expr $L - 2`;
     NUM_QUERIES=1000;
 	
-
     tmp=`mktemp`
     if [ ! -f "${ds}.querylog" ];
     then

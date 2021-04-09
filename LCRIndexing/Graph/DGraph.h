@@ -43,7 +43,7 @@ class DGraph : public Graph
 
         int getNumberOfVertices();
         int getNumberOfLabels();
-        int getNumberOfEdges();
+        int getNumberOfEdges() const;
 
         void addNode();
         void removeNode(graphns::VertexID w);

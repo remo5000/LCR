@@ -15,13 +15,19 @@ def configure(ctx):
   # ctx.env.append_value('LINKFLAGS', ['-fsanitize=address'])
   # ctx.env.append_value('LSAN_OPTIONS', ['verbosity=1:log_threads=1'])
 
+  ctx.env.CXX = "/home/v/vignesh/clang-stuff/clang+llvm-11.0.0-x86_64-linux-gnu-ubuntu-20.04/bin/clang++ -pthread" # default compiler
+  # ctx.env.CXX = "/usr/bin/g++ -pthread -fopenmp" # default compiler
   ctx.check_tool('compiler_cxx')
 
   # Unused libraries
   # ctx.check_cxx(lib = ['glog', 'gflags'], uselib_store = 'common')
 
+  # ctx.env['ENABLE_THREADING'] = True
+  # ctx.env['CCFLAGS_PTHREAD'] = '-pthread'
+  # ctx.env.CXXFLAGS += ['-pthread']
+
   # Deubug flags
-  # ctx.env.CXXFLAGS += ['-g', '-Wno-return-type', '-I/usr/local/include/', '-std=c++11']
+  # ctx.env.CXXFLAGS += ['-g', '-Wno-return-type', '-I/usr/local/include/', '-I/lib', '-I/usr/lib/', '-I/usr/lib64/', '-std=c++11']
   # ctx.env.CXXFLAGS += ['-Wno-return-type', '-I/usr/local/include/', '-std=c++11']
 
   # Experiment flags (Uncomment for faster but less debuggable code)

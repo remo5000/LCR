@@ -515,7 +515,7 @@ using namespace boost;
 
             virtual int getNumberOfVertices() = 0;
             virtual int getNumberOfLabels() = 0;
-            virtual int getNumberOfEdges() = 0;
+            virtual int getNumberOfEdges() const = 0;
 
             void DijkstraSSP(graphns::VertexID v1, vector< int >& distances)
             {

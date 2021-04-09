@@ -198,7 +198,6 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
         {
             int minDiff = max(min(MAX_DIFFICULTY, diffDistribution(generator2)) - roundNo/10 , MIN_DIFFICULTY); // a random minimal difficulty
             VertexID s = vertexDistribution(generator); // a random start point
-	    VertexID t = vertexDistribution(generator); // another random point
             int quotum = min(nq, max((nq/100) + (roundNo / 100), 1));
 
             minDiff = max(1, minDiff - (roundNo/100) ); // minDiff can scale down
@@ -210,8 +209,11 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
             // loop over all nodes that have minimal difficulty
             int c = 0;
 	    int tried = 0;
-            for(; t < N; t++)
-            {
+	    for (int tt = 0; tt < 20; tt++) {
+            //for(; t < tBound; t++)
+            // {
+		VertexID t = vertexDistribution(generator); // another random point
+
                 if( s == t )
                 {
                     continue;
@@ -219,7 +221,7 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
 
                 tried++;
 
-                if( c < 2 && tried > min((N/500),100) )
+                if( tried > 500)
                 {
                     break;
                 }
@@ -238,7 +240,7 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
                     int actualDist = max(ind->getVisitedSetSize(), 0);
                     Query q = make_pair( make_pair(s,t), ls);
 
-                    //cout << "genQuery: ,s=" << s << ",t=" << t << ",minDiff=" << minDiff << ",actualDist=" << actualDist << endl;
+                    cout << "genQuery: ,s=" << s << ",t=" << t << ",minDiff=" << minDiff << ",actualDist=" << actualDist << endl;
 
                     if( actualDist < minDiff )
                     {
@@ -276,6 +278,44 @@ void generateAllQueriesC(int nqs, int nq, QuerySets& qss, BFSIndex* ind, Graph* 
                     break;
                 }
             }
+
+	    if (c == 0) {
+		// Give a handout
+		LabelSet ls = 0;
+		ls = generateLabelSet(ls, nK, L, labelDistribution, generator3);
+		dynamic_bitset<> canReach = dynamic_bitset<>(N);
+		ind->queryAll(s,ls,canReach);
+		for (VertexID j = vertexDistribution(generator); j < N; j++) {
+		    if (j == s) continue;
+		    if (!canReach[j]) continue;
+
+                    bool b = ind->query(s,j,ls);
+                    int actualDist = max(ind->getVisitedSetSize(), 0);
+                    Query q = make_pair( make_pair(s,j), ls);
+		    cout << "genQuery: ,s=" << s << ",t=" << j << ",minDiff= HANDOUT,"<< ",actualDist=" << actualDist << endl;
+
+                    if( b == true)
+                    {
+                        if( qss[i].size() < nq && qss[i].count( q ) == 0 )
+                        {
+                            qss[i].insert( q );
+			    cout << "q=(" << s << "," << j << "," << ls << ") with " << b << ",actualDiff=" << actualDist << endl;                            
+		            c++;
+                        }
+                    }
+                    else
+                    {
+                        if( qss[i+1].size() < nq && qss[i+1].count( q ) == 0 )
+                        {
+                            qss[i+1].insert( q );
+                            cout << "q=(" << s << "," << j << "," << ls << ") with " << b << ",actualDiff=" << actualDist << endl;
+                            c++;
+                        }
+                    }
+
+		    break;
+		}
+	    }
 
             //cout << "genQuery: roundNo=" << roundNo << ",qss[i].size()=" << qss[i].size() << ",qss[i+1].size()=" << qss[i+1].size() << endl;
             roundNo++;

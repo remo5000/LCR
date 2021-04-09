@@ -1279,6 +1279,10 @@ void BackboneIndex::buildIndex()
 
     print("Computing backbone edges");
     createBackboneEdges();
+    print("Computed backbone vertices. |E*|:");
+    print(this->backbone->getNumberOfEdges());
+    print("|E*|/|E| :");
+    print((double)this->backbone->getNumberOfEdges() / (double)this->graph->getNumberOfEdges());
 
     print("Indexing backbone");
     indexBackbone();

@@ -252,6 +252,7 @@ int main(int argc, char *argv[]) {
 
     // TODO formalize
     map<string, double> nameToBackboneVertexRatio;
+    map<string, double> nameToBackboneEdgeRatio;
 
 
     // Here we loop over all methods
@@ -376,6 +377,7 @@ int main(int argc, char *argv[]) {
 	  if (index->getIndexType() == indexns::IndexType::Backbone) {
 		BackboneIndex* bi = (BackboneIndex*)index;
 		nameToBackboneVertexRatio[indexName] = ((double)bi->getBackBoneVertices().size() / (double)N);
+		nameToBackboneEdgeRatio[indexName] = ((double)bi->getBackBone().getNumberOfEdges() / (double)M);
 	  }
 
         }
@@ -602,14 +604,23 @@ int main(int argc, char *argv[]) {
     }
 
     // TODO make more robust
-    cout << "\n\n\n";
+    cout << "\n";
     for(int i = 0; i < methodNames.size(); i++)
     {
 	string methodName = methodNames[i];
 	if (nameToBackboneVertexRatio.count(methodName)) {
-	    cout << methodName << ": " << nameToBackboneVertexRatio[methodName] << endl;
+	    cout << methodName << " |V*|/|V|: " << nameToBackboneVertexRatio[methodName] << endl;
 	}
     }
+    cout << "\n";
+    for(int i = 0; i < methodNames.size(); i++)
+    {
+	string methodName = methodNames[i];
+	if (nameToBackboneEdgeRatio.count(methodName)) {
+	    cout << methodName << " |E*|/|E|: " << nameToBackboneEdgeRatio[methodName] << endl;
+	}
+    }
+
 
     myfile.flush();
     myfile.close();
