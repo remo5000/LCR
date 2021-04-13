@@ -437,6 +437,9 @@ class BackboneIndex : public Index
         inline bool bfsLocally(VertexID source, VertexID target, LabelSet ls);
         inline bool queryBackbone(VertexID source, VertexID target, LabelSet ls);
         inline bool computeQuery(VertexID source, VertexID target, LabelSet ls);
+	inline void markTargetsForBackboneBfs(VertexID target, LabelSet ls);
+	dynamic_bitset<> bfsBackboneTargets;
+
 
 	Graph* getGraph();
 
@@ -455,18 +458,12 @@ class BackboneIndex : public Index
         // BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER
         inline vector<VertexID> getVerticesInDegreeOrder();
 
-        // BackboneIndexingMethod::BFS
-	dynamic_bitset<> bfsBackboneTargets;
-	inline void markTargetsForBackboneBfs(VertexID target, LabelSet ls);
-        inline bool bfsBackbone(VertexID source, VertexID target, LabelSet ls);
 
+        // BackboneIndexingMethod::BFS
         // BackboneIndexingMethod::TRANSITIVE_CLOSURE
         backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
-        bool backboneQueryTransitiveClosure(VertexID source, VertexID target, LabelSet ls);
-
         // BackboneIndexingMethod::LANDMARK_*
         unique_ptr<LandmarkedIndex> backboneLi;
-        inline bool backboneQueryLandmarks(VertexID source, VertexID target, LabelSet ls);
 
         // LocalSearchMethod::UNIDIRECTIONAL_BFS
         inline bool uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);

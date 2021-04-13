@@ -384,83 +384,56 @@ inline void BackboneIndex::markTargetsForBackboneBfs(VertexID target, LabelSet l
     }
 }
 
-inline bool BackboneIndex::bfsBackbone(
-    VertexID source,
-    VertexID target,
-    LabelSet ls
-) {
-    log("-- starting backbone BFS --:");
-
-    unsigned int pos;
-    queue<VertexID> q = accessBackboneOutQueue(source, ls);
-
-    dynamic_bitset<>& targets = this->bfsBackboneTargets;
-
-    dynamic_bitset<> marked = dynamic_bitset<>(this->backbone->getNumberOfVertices());
-
-    while (q.empty() == false) {
-        VertexID x = q.front();
-        q.pop();
-
-        if( targets[x] == 1) {
-	    return true;
-	}
-
-        if( marked[x] == 1 )
-        {
-            continue;
-        }
-        marked[x] = 1;
-
-        for(const auto& se : this->backbone->getOutNeighbours(x)) {
-            if( isLabelSubset(se.second, ls) == true )
-            {
-                q.push( se.first );
-            }
-        }
-    }
-
-    return false;
-}
-
-
-bool BackboneIndex::backboneQueryTransitiveClosure(
-    VertexID source,
-    VertexID target,
-    LabelSet ls
-) {
-
-    log("-- starting backbone TC query --:");
-
-    vector<VertexID> outgoingBackboneQueue = accessBackboneOut(source, ls);
-    vector<VertexID> incomingBackboneQueue = accessBackboneIn(target, ls);
-
-    for (const auto& u : outgoingBackboneQueue)
-        for (const auto& v : incomingBackboneQueue)
-            if (u == v || this->backboneTransitiveClosure.isPresent(u, v, ls))
-                return true;
-    return false;
-
-}
-
-inline bool BackboneIndex::backboneQueryLandmarks(VertexID source, VertexID target, LabelSet ls) {
-    log("-- starting backbone TC query --:");
-
-    vector<VertexID> sources = accessBackboneOut(source, ls);
-    unordered_set<VertexID> targets = accessBackboneInSet(target, ls);
-    return this->backboneLi->query(sources, targets, bfsBackboneTargets, ls);
-};
-
 inline bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls) {
+
+    markTargetsForBackboneBfs(target, ls);
+
     if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
-        return this->bfsBackbone(source, target, ls);
-    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
-        return this->backboneQueryTransitiveClosure(source, target, ls);
+		log("-- starting backbone BFS --:");
+
+		unsigned int pos;
+		queue<VertexID> q = accessBackboneOutQueue(source, ls);
+		dynamic_bitset<>& targets = this->bfsBackboneTargets;
+		dynamic_bitset<> marked = dynamic_bitset<>(this->backbone->getNumberOfVertices());
+
+		while (q.empty() == false) {
+			VertexID x = q.front();
+			q.pop();
+
+			if( targets[x] == 1) {
+				return true;
+			}
+
+			if( marked[x] == 1 )
+			{
+				continue;
+			}
+			marked[x] = 1;
+
+			for(const auto& se : this->backbone->getOutNeighbours(x)) {
+				if( isLabelSubset(se.second, ls) == true )
+				{
+					q.push( se.first );
+				}
+			}
+		}
+
+		return false;
+	} else if (this->backboneIndexingMethod == BackboneIndexingMethod::TRANSITIVE_CLOSURE) {
+		vector<VertexID> outgoingBackboneQueue = accessBackboneOut(source, ls);
+		vector<VertexID> incomingBackboneQueue = accessBackboneIn(target, ls);
+		for (const auto& u : outgoingBackboneQueue)
+			for (const auto& v : incomingBackboneQueue)
+				if (u == v || this->backboneTransitiveClosure.isPresent(u, v, ls))
+					return true;
+		return false;
     } else if (
             this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
-        return this->backboneQueryLandmarks(source, target, ls);
+		vector<VertexID> sources = accessBackboneOut(source, ls);
+		unordered_set<VertexID> targets = accessBackboneInSet(target, ls);
+		return this->backboneLi->query(sources, targets, bfsBackboneTargets, ls);
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);
@@ -480,8 +453,6 @@ inline bool BackboneIndex::computeQuery(VertexID source, VertexID target, LabelS
 
     if (this->bfsLocally(source, target, ls)) return true;
 
-    // TODO make this more portable
-    markTargetsForBackboneBfs(target, ls);
     return this->queryBackbone(source, target, ls);
 }
 
