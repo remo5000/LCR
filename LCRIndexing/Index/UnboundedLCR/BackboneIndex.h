@@ -409,6 +409,8 @@ class BackboneIndex : public Index
 
         unsigned long getIndexSizeInBytes();
 
+    private:
+
         unsigned int N;
 
         BackboneVertexSelectionMethod backboneVertexSelectionMethod;
@@ -480,6 +482,5 @@ class BackboneIndex : public Index
 	inline unordered_set<VertexID> accessBackboneInSet(VertexID target, LabelSet ls);
 	inline vector<VertexID> accessBackboneIn(VertexID target, LabelSet ls);
 	TuplesList backboneReachableIn;
-    private:
 };
 #endif
