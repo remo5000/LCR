@@ -2,16 +2,11 @@
 
 set -x 
 
-# TODO set pattern here
-datasets=`ls ./experiments/graphs/real/web-NotreDame.edge | sed 's:\.edge::g'`;
+datasets=`find experiments/graphs/ | egrep '\.edge$' | sed 's:\.edge::g'`;
 for ds in $datasets;
 do
     dsp=`echo $ds | sed 's/.*\///'`;
     L=`cat ${ds}.edge | awk '{ if( $3 in used ){ } else { used[$3]=1; print $3 } }' | wc -l`;
-    # # TODO set number of labels here
-    # L1=1;
-    # L2=2;
-    # L3=2;
     L1=`expr $L / 4`;
     L2=`expr $L / 2`;
     L3=`expr $L - 2`;

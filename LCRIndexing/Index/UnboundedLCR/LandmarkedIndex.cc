@@ -1444,21 +1444,12 @@ bool LandmarkedIndex::query(
 {
     auto isLandmark = [this] (VertexID a, VertexID b) -> bool
     {
-	bool bb = vToLandmark[b];
-	if (vToLandmark[a] == bb) {
-	    return a <= b;
-	} else {
-	    return b < 0;
-	}
-        // if (vToLandmark[a] != -1 && vToLandmark[b] != -1)
-        //     return a <= b;
-        // if (vToLandmark[a] == -1 && vToLandmark[b] == -1)
-        //     return a <= b;
-        // if (vToLandmark[a] != -1 && vToLandmark[b] == -1)
-        //     return 1;
-        // if (vToLandmark[a] == -1 && vToLandmark[b] != -1)
-        //     return 0;
-        // else exit(1);
+		bool bb = vToLandmark[b];
+		if (vToLandmark[a] == bb) {
+			return a <= b;
+		} else {
+			return b < 0;
+		}
     };
     std::sort(sources.begin(), sources.end(), isLandmark);
 

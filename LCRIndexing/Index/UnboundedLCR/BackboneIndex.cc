@@ -103,8 +103,6 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
     int N = graph->getNumberOfVertices();
     unsigned long size = getIndexSizeInBytesM();
 
-
-    // size += this->graph->getGraphSizeInBytes(); Exclude as this is not part of the index itself.
     size += this->backboneVertices.size()*sizeof(VertexID);
     size += this->backbone->getGraphSizeInBytes();
 
@@ -271,22 +269,6 @@ inline vector<VertexID> BackboneIndex::accessBackboneOut(VertexID source, LabelS
 	    }
     }
     return outgoingBackboneQueue;
-	
-    // vector<VertexID> outgoingBackboneQueue;
-    // const SmallEdgeSet& outSes = this->backboneReachableOut[source];
-    // unsigned int pos = 0;
-    // while(pos < outSes.size()) {
-    //     VertexID v = outSes[pos].first;
-    //     while(pos < outSes.size() && outSes[pos].first == v) {
-    //         if (isLabelSubset(outSes[pos].second, ls)) {
-    //             outgoingBackboneQueue.push_back(v);
-    //             break;
-    //         }
-    //         pos++;
-    //     }
-    //     while(pos < outSes.size() && outSes[pos].first == v) pos++;
-    // }
-    // return outgoingBackboneQueue;
 }
 
 inline vector<VertexID> BackboneIndex::accessBackboneIn(VertexID target, LabelSet ls) {
@@ -837,11 +819,6 @@ void BackboneIndex::selectBackboneVertices() {
 };
 
 
-void bfsFromBackboneVertex() {
-
-}
-
-
 void BackboneIndex::createBackboneEdges() {
     if (this->backboneEdgeCreationMethod != BackboneEdgeCreationMethod::BFS) {
         print("Unsupported backboneEdgeCreationMethod. Backtrace here to check how it happened.");
@@ -979,10 +956,6 @@ void BackboneIndex::indexBackbone() {
     }
 };
 
-Graph* BackboneIndex::getGraph() {
-    return  this->graph;
-}
-
 void BackboneIndex::cacheVertexToBackboneReachability() {
     auto constStartTime = getCurrentTimeInMilliSec();
 
@@ -1020,7 +993,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 							// outReachability.reserve(outReachability.size()*2);
 
 							indexns::LabelSets lss = indexns::LabelSets();
-							lss.reserve( this->getGraph()->getNumberOfLabels() * 2 );
+							lss.reserve( this->graph->getNumberOfLabels() * 2 );
 							lss.push_back(ls);
 
 							outReachability.emplace(vertex, std::move(lss));
@@ -1032,7 +1005,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 
 					if (dist == this->localSearchDistance) continue;
 
-					for (const SmallEdge& se : this->getGraph()->getOutNeighbours(vertex)) {
+					for (const SmallEdge& se : this->graph->getOutNeighbours(vertex)) {
 						Triplet newTriplet;
 						newTriplet.x = se.first;
 						newTriplet.ls = joinLabelSets(ls, se.second);
@@ -1075,7 +1048,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 							// inReachability.reserve(inReachability.size()*2);
 
 							indexns::LabelSets lss = indexns::LabelSets();
-							lss.reserve( this->getGraph()->getNumberOfLabels() * 2 );
+							lss.reserve( this->graph->getNumberOfLabels() * 2 );
 							lss.push_back(ls);
 
 							inReachability.emplace(vertex, std::move(lss));
@@ -1086,7 +1059,7 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
 
 					if (dist == this->localSearchDistance) continue;
 
-					for (const SmallEdge& se : this->getGraph()->getInNeighbours(vertex)) {
+					for (const SmallEdge& se : this->graph->getInNeighbours(vertex)) {
 						Triplet newTriplet;
 						newTriplet.x = se.first;
 						newTriplet.ls = joinLabelSets(ls, se.second);

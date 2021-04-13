@@ -440,10 +440,6 @@ class BackboneIndex : public Index
 	inline void markTargetsForBackboneBfs(VertexID target, LabelSet ls);
 	dynamic_bitset<> bfsBackboneTargets;
 
-
-	Graph* getGraph();
-
-
         // -- Indexing method specific --
         // BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA
         void localMeetingCriteriaSetCover();
