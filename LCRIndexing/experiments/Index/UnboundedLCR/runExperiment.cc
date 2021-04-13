@@ -16,10 +16,14 @@
 #include <sys/time.h>
 
 #include "../../Index/UnboundedLCR/Index.h"
+
 #include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
-#include "../../Index/UnboundedLCR/Zou.cc"
+
+// TODO fix all the .cc imports after migrating to waf 2.0.20+
 #include "../../Index/UnboundedLCR/BackboneIndex.cc"
+// #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
+
+#include "../../Index/UnboundedLCR/Zou.cc"
 
 #include "../../Graph/DGraph.cc"
 
@@ -229,7 +233,7 @@ int main(int argc, char *argv[]) {
     cout << "number of query sets: " << noOfQuerySets << endl;
     cout << "number of queries in each true or false: " << noOfQueries << endl;
 
-    DGraph* graph = new DGraph(edge_file);
+    unique_ptr<DGraph> graph = unique_ptr<DGraph>(new DGraph(edge_file));
     int labelSetSize = graph->getNumberOfLabels();
 
     cout << "dataset: " << edge_file << " with |L|=" << labelSetSize << " and |V|=" << graph->getNumberOfVertices() << endl;
@@ -246,7 +250,10 @@ int main(int argc, char *argv[]) {
     int N = graph->getNumberOfVertices();
     int M = graph->getNumberOfEdges();
 
-    noOfMethods = 5;
+    // TODO formalize
+    map<string, double> nameToBackboneVertexRatio;
+    map<string, double> nameToBackboneEdgeRatio;
+
 
     // Here we loop over all methods
     for(int i = firstMethod; i < noOfMethods; i++)
@@ -257,48 +264,97 @@ int main(int argc, char *argv[]) {
 
         long altSize = -1;
 
-        if( i == 0 )
-            index = new BFSIndex(graph);
-
-        // LI+ (both extensions)
-        if( i == 1 )
-	      {
-            int k = 1250 + sqrt(N);
-            if (k >= N) k = sqrt(N);
-            int b = 20;
-            index = new LandmarkedIndex(graph, true, true, k, b);
-	      }
+        if( i == __COUNTER__ )
+            index = new BFSIndex(graph.get());
 
         // LI (no extensions)
-        if( i == 2 )
+        if( i == __COUNTER__ )
 	      {
             int k = 1250 + sqrt(N);
             if (k >= N) k = sqrt(N);
             int b = 20;
-            index = new LandmarkedIndex(graph, false, false, k, b);
+            index = new LandmarkedIndex(graph.get(), false, false, k, b);
 	      }
 
-        // Full-LI
-        if( i == 3 )
+        // LI+ (both extensions)
+        if( i == __COUNTER__ )
 	      {
-            int k = N;
-            int b = 0;
-            index = new LandmarkedIndex(graph, false, false, k, b);
+            int k = 1250 + sqrt(N);
+            if (k >= N) k = sqrt(N);
+            int b = 20;
+            index = new LandmarkedIndex(graph.get(), true, true, k, b);
 	      }
 
-        // Backbone;
-        if (i == 4) {
-            float logn = log2(N);
-            float loglogn = log2(log2(N));
-            unsigned int localDist = max(2, (int)loglogn);
-            index = new BackboneIndex(graph, localDist);
+        float logn = log2(N);
+        float loglogn = log2(log2(N));
+        // unsigned int localDist = max(2, (int)loglogn);
+	// We switch to 2 as it is the only viable option for 
+	// dense, large graphs.
+        unsigned int localDist = 2;
+
+        // // Backbone(LMC, BFS)
+        // if (i == __COUNTER__) {
+        //     index = new BackboneIndex(
+        //             graph.get(),
+        //             localDist,
+        //             BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA,
+        //             BackboneEdgeCreationMethod::BFS,
+        //             BackboneIndexingMethod::BFS,
+        //             LocalSearchMethod::UNIDIRECTIONAL_BFS
+        //     );
+        // }
+        // Backbone(1SCD, BFS)
+        if (i == __COUNTER__) {
+            index = new BackboneIndex(
+                    graph.get(),
+                    localDist,
+                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
+                    BackboneEdgeCreationMethod::BFS,
+                    BackboneIndexingMethod::BFS,
+                    LocalSearchMethod::UNIDIRECTIONAL_BFS
+            );
+        }
+        // // Backbone(1SCR, BFS)
+        // if (i == __COUNTER__) {
+        //     index = new BackboneIndex(
+        //             graph.get(),
+        //             localDist,
+        //             BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER,
+        //             BackboneEdgeCreationMethod::BFS,
+        //             BackboneIndexingMethod::BFS,
+        //             LocalSearchMethod::UNIDIRECTIONAL_BFS
+        //     );
+        // }
+
+        // Backbone(1SCD, LINOEXT)
+        if (i == __COUNTER__) {
+            index = new BackboneIndex(
+                    graph.get(),
+                    localDist,
+                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
+                    BackboneEdgeCreationMethod::BFS,
+                    BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS,
+                    LocalSearchMethod::UNIDIRECTIONAL_BFS
+            );
         }
 
-        // Zou
-        if( i == 5 )
-        {
-            index = new Zou(graph);
+        // Backbone(1SCD, LIEXT)
+        if (i == __COUNTER__) {
+            index = new BackboneIndex(
+                    graph.get(),
+                    localDist,
+                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
+                    BackboneEdgeCreationMethod::BFS,
+                    BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS,
+                    LocalSearchMethod::UNIDIRECTIONAL_BFS
+            );
         }
+
+        // // Zou
+        // if( i == __COUNTER__ )
+        // {
+        //     index = new Zou(graph);
+        // }
 
 
         if( index->didCompleteBuilding() == true )
@@ -317,6 +373,13 @@ int main(int argc, char *argv[]) {
               cout << "Error with index=" << indexName << endl;
               return 1;
           }
+
+	  if (index->getIndexType() == indexns::IndexType::Backbone) {
+		BackboneIndex* bi = (BackboneIndex*)index;
+		nameToBackboneVertexRatio[indexName] = ((double)bi->getBackBoneVertices().size() / (double)N);
+		nameToBackboneEdgeRatio[indexName] = ((double)bi->getBackBone().getNumberOfEdges() / (double)M);
+	  }
+
         }
         else
         {
@@ -490,19 +553,17 @@ int main(int argc, char *argv[]) {
 
     // Compute speed-ups compared BFS, the first method
     // The other methods should be faster
-    for(int i = 1; i < methodNames.size(); i++)
-    {
-        for(int j = 0; j < noOfQuerySets; j++)
-        {
-            myfile << methodNames[i] << "-su-true-" << j << ",";
-            myfile << methodNames[i] << "-su-false-" << j;
+    for (int i = 0; i < methodNames.size(); i++) {
+      for (int j = 0; j < noOfQuerySets; j++) {
+        myfile << methodNames[i] << "-su-true-" << j << ",";
+        myfile << methodNames[i] << "-su-false-" << j;
 
-            if( j < noOfQuerySets-1 )
-                myfile << ",";
-        }
+        if (j < noOfQuerySets - 1)
+          myfile << ",";
+      }
 
-        if( i < noOfMethods-1 )
-            myfile << ",";
+      if (i < noOfMethods - 1)
+        myfile << ",";
     }
 
     myfile << endl;
@@ -541,6 +602,25 @@ int main(int argc, char *argv[]) {
             myfile << ",";
 
     }
+
+    // TODO make more robust
+    cout << "\n";
+    for(int i = 0; i < methodNames.size(); i++)
+    {
+	string methodName = methodNames[i];
+	if (nameToBackboneVertexRatio.count(methodName)) {
+	    cout << methodName << " |V*|/|V|: " << nameToBackboneVertexRatio[methodName] << endl;
+	}
+    }
+    cout << "\n";
+    for(int i = 0; i < methodNames.size(); i++)
+    {
+	string methodName = methodNames[i];
+	if (nameToBackboneEdgeRatio.count(methodName)) {
+	    cout << methodName << " |E*|/|E|: " << nameToBackboneEdgeRatio[methodName] << endl;
+	}
+    }
+
 
     myfile.flush();
     myfile.close();

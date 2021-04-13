@@ -48,14 +48,25 @@ using namespace std;
 
     namespace landmarkedns
     {
-        typedef struct
+        class BitEntry {
+            public:
+                LabelSet ls;
+                VertexID x;
+                int dist;
+                int id;
+        };
+
+        //Overload the < operator.
+        bool operator< (const BitEntry &x, const BitEntry &y)
         {
-            LabelSet ls;
-            VertexID x;
-            int dist;
-            int id;
+            return x.dist > y.dist;
         }
-        BitEntry;
+        //Overload the > operator.
+        bool operator> (const BitEntry &x, const BitEntry &y)
+        {
+            return x.dist < y.dist;
+        }
+
 
         typedef vector< Triplet > BitEntries;
 
@@ -74,7 +85,7 @@ using namespace std;
 
         struct PQBitEntries
         {
-            bool operator()(BitEntry const & t1, BitEntry const & t2)
+            bool operator()(const BitEntry& t1, const BitEntry& t2)
             {
                 // return "true" if "p1" is ordered before "p2", for example:
                 return t1.dist > t2.dist;
@@ -114,7 +125,7 @@ using namespace std;
             LandmarkedIndex(Graph* mg, int noOfLandmarks, int method, int propagateCode, bool doIndexOthers, int othersBudget);
             LandmarkedIndex(Graph* mg, int noOfLandmarks, int method, int propagateCode, bool doIndexOthers, int othersBudget, int coverPercentage);
             LandmarkedIndex(Graph* mg, int noOfLandmarks, int method, int propagateCode, bool doIndexOthers, int othersBudget, int coverPercentage, bool doExtensive);
-            ~LandmarkedIndex();
+            ~LandmarkedIndex() = default;
 
             /*
             Method called by all constructors. Does the actual work.
@@ -128,7 +139,11 @@ using namespace std;
 
             bool query(VertexID source, VertexID target, LabelSet ls);
             // For BackboneIndex to use
-            bool query(vector<VertexID>& sources, const unordered_set<VertexID>& targets, LabelSet ls);
+            bool query(
+		    vector<VertexID>& sources, 
+		    const unordered_set<VertexID>& targets, 
+		    const dynamic_bitset<>& isInTargets, 
+		    LabelSet ls);
             bool queryShell(VertexID source, VertexID target, LabelSet ls);
             bool queryShellAdapted(VertexID source, VertexID target, LabelSet ls);
             bool queryDirect(VertexID source, VertexID target, LabelSet ls);
@@ -147,8 +162,13 @@ using namespace std;
             void buildIndex(int continueCode);
 
             int labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance);
-            inline int labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
-                priority_queue< landmarkedns::BitEntry, vector<landmarkedns::BitEntry>, landmarkedns::PQBitEntries >* q);
+            int labelledBFSPerLM(
+                VertexID w,
+                bool doPropagate,
+                bool isMaintenance,
+                priority_queue<landmarkedns::BitEntry>& q);
+            int labelledBFSPerLM(VertexID w, bool doPropagate, bool isMaintenance,
+                                                  landmarkedns::BitEntry source);
             int labelledBFSPerNonLM(VertexID w, bool doPropagate);
 
             bool tryInsert(VertexID w, VertexID v, LabelSet ls);

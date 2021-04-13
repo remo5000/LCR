@@ -354,7 +354,7 @@ int DGraph::getNumberOfLabels()
     return L;
 };
 
-int DGraph::getNumberOfEdges()
+int DGraph::getNumberOfEdges() const
 {
     return M;
 };

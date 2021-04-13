@@ -1,4 +1,7 @@
 #!/bin/sh
+
+set -x 
+
 datasets=`find experiments/graphs/ | egrep '\.edge$' | sed 's:\.edge::g'`;
 for ds in $datasets;
 do
@@ -7,11 +10,13 @@ do
     L1=`expr $L / 4`;
     L2=`expr $L / 2`;
     L3=`expr $L - 2`;
-
+    NUM_QUERIES=1000;
+	
+    tmp=`mktemp`
     if [ ! -f "${ds}.querylog" ];
     then
-        echo "L=${L}";
-        echo "build/default/genQuery ${ds}.edge 3 1000 ${L1} ${L2} ${L3} > ${ds}.querylog";
-        build/default/genQuery ${ds}.edge 3 1000 ${L1} ${L2} ${L3} > ${ds}.querylog
+        build/default/genQuery ${ds}.edge 3 ${NUM_QUERIES} ${L1} ${L2} ${L3} > ${tmp};
+        cp ${tmp} ${ds}.querylog;
+        rm ${tmp};
     fi
 done;

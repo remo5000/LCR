@@ -403,7 +403,7 @@ using namespace boost;
         /*
         Takes the union of two labelsets
         */
-        inline LabelSet joinLabelSets(LabelSet& ls1, LabelSet& ls2)
+        inline LabelSet joinLabelSets(const LabelSet& ls1, const LabelSet& ls2)
         {
             return ls1 | ls2;
         }
@@ -515,7 +515,7 @@ using namespace boost;
 
             virtual int getNumberOfVertices() = 0;
             virtual int getNumberOfLabels() = 0;
-            virtual int getNumberOfEdges() = 0;
+            virtual int getNumberOfEdges() const = 0;
 
             void DijkstraSSP(graphns::VertexID v1, vector< int >& distances)
             {
