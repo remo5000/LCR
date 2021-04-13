@@ -1,6 +1,7 @@
 #include "BackboneIndex.h"
 #include <vector>
 #include <algorithm>
+#include <random>
 #include <utility>
 #include <tuple>
 #include <memory>
@@ -688,8 +689,12 @@ inline vector<VertexID> BackboneIndex::getVerticesInDegreeOrder() {
 
 inline vector<VertexID> BackboneIndex::getVerticesInRandomOrder() {
     vector<VertexID> res;
-    for(VertexID i = 0; i < N; i++) res.push_back(i);
-    std::random_shuffle ( res.begin(), res.end() );
+    for(VertexID i = 0; i < N; i++) {
+		res.push_back(i);
+	}
+
+	std::shuffle(std::begin(res), std::end(res), std::random_device());
+
     return res;
 }
 
@@ -719,15 +724,15 @@ void BackboneIndex::oneSideConditionCover() {
     // dense graphs have big neighborhoods.
     // Even for small graphs, will be ~= 3^k <= 1000 most of the time.
     unordered_map<VertexID, vector<LabelSet>> m;
-    // TODO not sure how good of an impact this has.
+    // TODO initial perf analysis shows that this is good, but we need to measure more.
     size_t maxUsedSize = 4096;
 
 
     int numberOfConfirmedBackboneVertices = (int)((float)MIN_BACKBONE_RATIO * (float)vertices.size());
-    // TODO fix this for random ordering -- queries that should be true are getting false from query()
-    if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER) {
-	numberOfConfirmedBackboneVertices = 0;
-    }
+    // // TODO fix this for random ordering -- queries that should be true are getting false from query()
+    // if (this->backboneVertexSelectionMethod == BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_RANDOM_ORDER) {
+	// numberOfConfirmedBackboneVertices = 0;
+    // }
 
     print("Resrving backbone vertices in advance...");
     print(numberOfConfirmedBackboneVertices);
@@ -747,12 +752,12 @@ void BackboneIndex::oneSideConditionCover() {
 
         const VertexID& source = vertices[i];
 
-	// Add to backbone by default if required.
-	if (i < numberOfConfirmedBackboneVertices) {
-	    backboneVertices.insert(source);
-	    isBackboneVertex[source] = 1;
-	    continue;
-	}
+		// Add to backbone by default if required.
+		if (i < numberOfConfirmedBackboneVertices) {
+			backboneVertices.insert(source);
+			isBackboneVertex[source] = 1;
+			continue;
+		}
 
 
         queue<pair<VertexID, LabelSet>> q;
