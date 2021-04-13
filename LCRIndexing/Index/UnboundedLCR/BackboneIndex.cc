@@ -13,6 +13,8 @@
 #include <thread>
 #include <chrono>
 
+#include <omp.h>
+
 
 #define DEBUG 0
 #define watch(x) if (DEBUG) cout << (#x) << " is " << (x) << endl; cout.flush();
@@ -248,6 +250,10 @@ inline bool BackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet
 
 inline vector<VertexID> BackboneIndex::accessBackboneOut(VertexID source, LabelSet ls) {
     vector<VertexID> outgoingBackboneQueue;
+	if (backboneVertices.count(source)) {
+		outgoingBackboneQueue.push_back(source);
+		return outgoingBackboneQueue;
+	}
     for (const Tuple& tuple : this->backboneReachableOut[source]) {
 	    const VertexID& v = tuple.first;
 
@@ -284,6 +290,10 @@ inline vector<VertexID> BackboneIndex::accessBackboneOut(VertexID source, LabelS
 
 inline vector<VertexID> BackboneIndex::accessBackboneIn(VertexID target, LabelSet ls) {
     vector<VertexID> outgoingBackboneQueue;
+	if (backboneVertices.count(target)) {
+		outgoingBackboneQueue.push_back(target);
+		return outgoingBackboneQueue;
+	}
     for (const Tuple& tuple : this->backboneReachableIn[target]) {
 	    const VertexID& v = tuple.first;
 
@@ -305,6 +315,10 @@ inline vector<VertexID> BackboneIndex::accessBackboneIn(VertexID target, LabelSe
 
 inline queue<VertexID> BackboneIndex::accessBackboneOutQueue(VertexID source, LabelSet ls) {
     queue<VertexID> outgoingBackboneQueue;
+	if (backboneVertices.count(source)) {
+		outgoingBackboneQueue.push(source);
+		return outgoingBackboneQueue;
+	}
     for (const Tuple& tuple : this->backboneReachableOut[source]) {
 	    const VertexID& v = tuple.first;
 
@@ -325,6 +339,10 @@ inline queue<VertexID> BackboneIndex::accessBackboneOutQueue(VertexID source, La
 
 inline unordered_set<VertexID> BackboneIndex::accessBackboneInSet(VertexID target, LabelSet ls) {
     unordered_set<VertexID> targets;
+	if (backboneVertices.count(target)) {
+		targets.insert(target);
+		return targets;
+	}
     for (const Tuple& tuple : this->backboneReachableIn[target]) {
 	    const VertexID& v = tuple.first;
 
@@ -345,6 +363,10 @@ inline unordered_set<VertexID> BackboneIndex::accessBackboneInSet(VertexID targe
 
 inline void BackboneIndex::markTargetsForBackboneBfs(VertexID target, LabelSet ls) {
     bfsBackboneTargets = dynamic_bitset<>(this->backbone->getNumberOfVertices());
+	if (backboneVertices.count(target)) {
+		bfsBackboneTargets[target] = 1;
+		return;
+	}
     for (const Tuple& tuple : this->backboneReachableIn[target]) {
 	    const VertexID& v = tuple.first;
 
@@ -1132,8 +1154,125 @@ void BackboneIndex::cacheVertexToBackboneReachability() {
     this->backboneReachableOut = TuplesList(N);
     this->backboneReachableIn = TuplesList(N);
 
-    std::thread t(cacheForVertices, this, 0, N);
-    t.join();
+    // std::thread t(cacheForVertices, this, 0, N);
+    // t.join();
+	
+	#pragma omp parallel for
+    for (VertexID source = 0; source < N; source++) {
+		for (int out = 0; out < 2; out++) {
+			if (out) {
+				// Outward
+				queue<Triplet> q;
+				Triplet t;
+				t.x = source;
+				t.ls = 0;
+				t.dist = 0;
+				q.push(t);
+
+				unordered_map<VertexID, LabelSets> outReachability;
+
+				while(q.size()) {
+					const Triplet triplet = q.front();
+					const VertexID vertex = triplet.x;
+					const LabelSet ls = triplet.ls;
+					const Distance dist = triplet.dist;
+					q.pop();
+
+					if (this->isBackboneVertex[vertex]) {
+						auto it = outReachability.find(vertex);
+						if (it == outReachability.end()) {
+
+							// outReachability.reserve(outReachability.size()*2);
+
+							indexns::LabelSets lss = indexns::LabelSets();
+							lss.reserve( this->getGraph()->getNumberOfLabels() * 2 );
+							lss.push_back(ls);
+
+							outReachability.emplace(vertex, std::move(lss));
+						} else {
+							if (!tryInsertLabelSet(ls, it->second)) continue;
+						}
+					}
+
+
+					if (dist == this->localSearchDistance) continue;
+
+					for (const SmallEdge& se : this->getGraph()->getOutNeighbours(vertex)) {
+						Triplet newTriplet;
+						newTriplet.x = se.first;
+						newTriplet.ls = joinLabelSets(ls, se.second);
+						newTriplet.dist = dist+1;
+						q.push(newTriplet);
+					}
+				}
+
+				for (const auto& p : outReachability) {
+					const VertexID& vertex = p.first;
+
+					const LabelSets& lss = p.second;
+
+					int pos = 0;
+					Tuples& tuples = this->backboneReachableOut[source];
+					tuples.emplace_back(vertex, std::move(lss) );
+				}
+			} else {
+				// Inward
+				queue<Triplet> q;
+				Triplet t;
+				t.x = source;
+				t.ls = 0;
+				t.dist = 0;
+				q.push(t);
+
+				unordered_map<VertexID, LabelSets> inReachability;
+
+				while(q.size()) {
+					const Triplet triplet = q.front();
+					const VertexID vertex = triplet.x;
+					const LabelSet ls = triplet.ls;
+					const Distance dist = triplet.dist;
+					q.pop();
+
+					if (this->isBackboneVertex[vertex]) {
+						auto it = inReachability.find(vertex);
+						if (it == inReachability.end()) {
+
+							// inReachability.reserve(inReachability.size()*2);
+
+							indexns::LabelSets lss = indexns::LabelSets();
+							lss.reserve( this->getGraph()->getNumberOfLabels() * 2 );
+							lss.push_back(ls);
+
+							inReachability.emplace(vertex, std::move(lss));
+						} else {
+							if (!tryInsertLabelSet(ls, it->second)) continue;
+						}
+					}
+
+					if (dist == this->localSearchDistance) continue;
+
+					for (const SmallEdge& se : this->getGraph()->getInNeighbours(vertex)) {
+						Triplet newTriplet;
+						newTriplet.x = se.first;
+						newTriplet.ls = joinLabelSets(ls, se.second);
+						newTriplet.dist = dist+1;
+						q.push(newTriplet);
+					}
+				}
+
+				for (const auto& p : inReachability) {
+					const VertexID& vertex = p.first;
+
+					const LabelSets& lss = p.second;
+
+					int pos = 0;
+					Tuples& tuples = this->backboneReachableIn[source];
+					tuples.emplace_back(vertex, std::move(lss) );
+				}
+			}
+		}
+	}
+	
 
     double timePassed = getCurrentTimeInMilliSec()-constStartTime;
     cout << this->name << "::cacheVertexToBackboneReachability " << "100%" << ", time(s)=" << (timePassed) << endl;
