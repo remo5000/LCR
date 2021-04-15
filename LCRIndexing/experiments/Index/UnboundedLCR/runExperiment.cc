@@ -165,7 +165,7 @@ int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTime
             double avg = 0.0;
             vector< double > avgs;
 
-            for(int k = 0; k < 5; k++)
+            for(int k = 0; k < NUMBER_OF_RUNS; k++)
             {
                 if( index->query(from, to, ls) == true )
                 {
