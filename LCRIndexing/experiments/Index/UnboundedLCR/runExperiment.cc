@@ -21,6 +21,7 @@
 
 // TODO fix all the .cc imports after migrating to waf 2.0.20+
 #include "../../Index/UnboundedLCR/BackboneIndex.cc"
+#include "../../Index/UnboundedLCR/TwoHopIndex.cc"
 // #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 
 #include "../../Index/UnboundedLCR/Zou.cc"
@@ -264,26 +265,30 @@ int main(int argc, char *argv[]) {
 
         long altSize = -1;
 
+
         if( i == __COUNTER__ )
             index = new BFSIndex(graph.get());
 
         // LI (no extensions)
         if( i == __COUNTER__ )
-	      {
+	   {
             int k = 1250 + sqrt(N);
-            if (k >= N) k = sqrt(N);
-            int b = 20;
-            index = new LandmarkedIndex(graph.get(), false, false, k, b);
-	      }
+             if (k >= N) k = sqrt(N);
+             int b = 20;
+             index = new LandmarkedIndex(graph.get(), false, false, k, b);
+	       }
 
-        // LI+ (both extensions)
         if( i == __COUNTER__ )
-	      {
-            int k = 1250 + sqrt(N);
-            if (k >= N) k = sqrt(N);
-            int b = 20;
-            index = new LandmarkedIndex(graph.get(), true, true, k, b);
-	      }
+            index = new TwoHopIndex(graph.get());
+
+        // // LI+ (both extensions)
+        // if( i == __COUNTER__ )
+	    //   {
+        //     int k = 1250 + sqrt(N);
+        //     if (k >= N) k = sqrt(N);
+        //     int b = 20;
+        //     index = new LandmarkedIndex(graph.get(), true, true, k, b);
+	    //   }
 
         float logn = log2(N);
         float loglogn = log2(log2(N));
@@ -311,6 +316,16 @@ int main(int argc, char *argv[]) {
                     BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
                     BackboneEdgeCreationMethod::BFS,
                     BackboneIndexingMethod::BFS,
+                    LocalSearchMethod::UNIDIRECTIONAL_BFS
+            );
+        }
+        if (i == __COUNTER__) {
+            index = new BackboneIndex(
+                    graph.get(),
+                    localDist,
+                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
+                    BackboneEdgeCreationMethod::BFS,
+                    BackboneIndexingMethod::BACKBONE,
                     LocalSearchMethod::UNIDIRECTIONAL_BFS
             );
         }
