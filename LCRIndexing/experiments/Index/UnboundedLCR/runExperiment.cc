@@ -23,6 +23,8 @@
 #include "../../Index/UnboundedLCR/BackboneIndex.cc"
 // #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 
+#include "../../Index/UnboundedLCR/TwoHopIndex.cc"
+
 #include "../../Index/UnboundedLCR/Zou.cc"
 
 #include "../../Graph/DGraph.cc"
@@ -266,6 +268,10 @@ int main(int argc, char *argv[]) {
 
         if( i == __COUNTER__ )
             index = new BFSIndex(graph.get());
+
+        // P2H
+        if( i == __COUNTER__ )
+            index = new TwoHopIndex(graph.get());
 
         // LI (no extensions)
         if( i == __COUNTER__ )
