@@ -272,14 +272,15 @@ int main(int argc, char *argv[]) {
         if( i == __COUNTER__ )
             index = new TwoHopIndex(graph.get());
 
-        // LI (no extensions)
-        if( i == __COUNTER__ )
-	      {
-            int k = 1250 + sqrt(N);
-            if (k >= N) k = sqrt(N);
-            int b = 20;
-            index = new LandmarkedIndex(graph.get(), false, false, k, b);
-	      }
+        // // LI (no extensions)
+        // if( i == __COUNTER__ )
+	//       {
+        //     int k = 1250 + sqrt(N);
+        //     if (k >= N) k = sqrt(N);
+        //     int b = 20;
+        //     index = new LandmarkedIndex(graph.get(), false, false, k, b);
+	//       }
+
 
         // LI+ (both extensions)
         if( i == __COUNTER__ )
