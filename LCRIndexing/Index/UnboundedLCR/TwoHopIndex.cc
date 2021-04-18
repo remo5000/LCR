@@ -119,8 +119,6 @@ void TwoHopIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canRe
 
 void TwoHopIndex::buildIndex()
 {
-    int quorum = N/100;
-
     // Use degree ordering for vertices
     struct sort_pred
     {
@@ -130,7 +128,7 @@ void TwoHopIndex::buildIndex()
         }
     };
     vector< pair< VertexID, int > > degreePerNode;
-    for (VertexID i = 0; i < N; i++) 
+    for (VertexID i = 0; i < N; i++)
         degreePerNode.push_back(
             make_pair(
                 i,
@@ -143,26 +141,22 @@ void TwoHopIndex::buildIndex()
     // Keep track of already-processed vertices
     dynamic_bitset<> done = dynamic_bitset<>(N);
 
-    for (const auto& p : degreePerNode) {
-        const VertexID& source = p.first;
+    for (int i = 0; i < degreePerNode.size(); i++) {
+    // for (const auto& p : degreePerNode) {
+        const VertexID& source = degreePerNode[i].first;
 
-        if (source % quorum == 0) {
-            double perc = source;
-            perc /= N;
-            perc *= 100;
-            cout << "TwoHopIndex::buildIndex(): " << perc << "% done..." << endl;
-        }
-
-        // Mark it as done to prevent unnecessary loops
-        done[source] = 1;
+        double perc = i;
+        perc /= N;
+        perc *= 100;
+        cout << "TwoHopIndex::buildIndex(): " << perc << "% done..." << endl;
 
         for (int outwards = 0; outwards < 2; outwards++) {
             auto getNeighbors = [&](VertexID v) {
-                return outwards 
-                    ? this->graph->getOutNeighbours(v) 
+                return outwards
+                    ? this->graph->getOutNeighbours(v)
                     : this->graph->getInNeighbours(v);
             };
-            TuplesList& tuplesList =  outwards 
+            TuplesList& tuplesList =  outwards
                 ? this->inIndex
                 : this->outIndex;
 
@@ -174,14 +168,15 @@ void TwoHopIndex::buildIndex()
                 std::tie(vertex, ls) = q.front();
                 q.pop();
 
+
+                // Vertex has already been indexed (Rule 1)
+                if (done[vertex])
+                    continue;
+
                 for (const auto& smallEdge : getNeighbors(vertex)) {
                     const VertexID& neighbor = smallEdge.first;
                     const LabelSet& ls2 = smallEdge.second;
                     const LabelSet& newLs = joinLabelSets(ls, ls2);
-
-                    // Vertex has already been indexed (Rule 1)
-                    if (done[neighbor])
-                        continue;
 
                     // Vertex already has a dominating entry for 'source'
                     Tuples& tuples = tuplesList[neighbor];
@@ -202,5 +197,7 @@ void TwoHopIndex::buildIndex()
                 }
             }
         }
+
+        done[source] = 1;
     }
 };
