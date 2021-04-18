@@ -1,6 +1,7 @@
 #include "../../Graph/Graph.h"
 #include "../../Graph/DGraph.h"
 #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
+#include "../../Index/UnboundedLCR/TwoHopIndex.cc"
 #include "Index.h"
 
 #include <set>
@@ -371,6 +372,7 @@ enum class BackboneIndexingMethod {
     LANDMARK_NO_EXTENSIONS,
     LANDMARK_ALL_EXTENSIONS,
     LANDMARK_FULL,
+    TWOHOP,
 };
 
 enum class LocalSearchMethod {
@@ -461,6 +463,8 @@ class BackboneIndex : public Index
         backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
         // BackboneIndexingMethod::LANDMARK_*
         unique_ptr<LandmarkedIndex> backboneLi;
+        // BackboneIndexingMethod::TWOHOP
+        unique_ptr<TwoHopIndex> backboneTwoHopIndex;
 
         // LocalSearchMethod::UNIDIRECTIONAL_BFS
         inline bool uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);
