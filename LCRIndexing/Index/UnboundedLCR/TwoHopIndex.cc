@@ -35,6 +35,49 @@ unsigned long TwoHopIndex::getIndexSizeInBytes()
     return getIndexSizeInBytesM();
 };
 
+bool TwoHopIndex::computeQueryBackbone(
+		const vector<VertexID>& sources,
+		const vector<VertexID>& targets,
+		const dynamic_bitset<>& isInTargets,
+		const LabelSet& ls)
+{
+    for (const VertexID& source : sources) {
+        for (const Tuple& tuple : this->outIndex[source]) {
+            const VertexID& outVertex = tuple.first;
+
+            if (!labelSetInLabelSets(ls, tuple.second))
+                continue;
+
+            if (isInTargets[outVertex])
+                return true;
+
+            for (const VertexID& target : targets) {
+                int pos;
+                if (findTupleInTuples(outVertex, this->inIndex[target], pos)) {
+                    Tuple& tuple = this->inIndex[target][pos];
+                    if (labelSetInLabelSets(ls, tuple.second))
+                        return true;
+                }
+            }
+
+        }
+    }
+
+    return false;
+};
+
+bool TwoHopIndex::queryBackbone(
+		const vector<VertexID>& sources,
+		const vector<VertexID>& targets,
+		const dynamic_bitset<>& isInTargets,
+		const LabelSet& ls)
+{
+    queryStart = getCurrentTimeInMilliSec();
+    bool b = this->computeQueryBackbone(sources, targets, isInTargets, ls);
+    queryEndTime = getCurrentTimeInMilliSec();
+    return b;
+};
+
 bool TwoHopIndex::computeQuery(VertexID source, VertexID target, LabelSet ls)
 {
     if (source == target) return true;
