@@ -77,13 +77,41 @@ void TwoHopIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canRe
 void TwoHopIndex::buildIndex()
 {
     int quorum = N/100;
-    for (VertexID source = 0; source < this->N; source++) {
+
+    // Use degree ordering for vertices
+    struct sort_pred
+    {
+        bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right)
+        {
+            return left.second > right.second;
+        }
+    };
+    vector< pair< VertexID, int > > degreePerNode;
+    for (VertexID i = 0; i < N; i++) 
+        degreePerNode.push_back(
+            make_pair(
+                i,
+                // Use product of inDeg and outDeg
+                this->graph->getOutNeighbours(i).size() *  this->graph->getInNeighbours(i).size()
+            )
+        );
+    sort(degreePerNode.begin(), degreePerNode.end(), sort_pred());
+
+    // Keep track of already-processed vertices
+    dynamic_bitset<> done = dynamic_bitset<>(N);
+
+    for (const auto& p : degreePerNode) {
+        const VertexID& source = p.first;
+
         if (source % quorum == 0) {
             double perc = source;
             perc /= N;
             perc *= 100;
             cout << "TwoHopIndex::buildIndex(): " << perc << "% done..." << endl;
         }
+
+        // Mark it as done to prevent unnecessary loops
+        done[source] = 1;
 
         for (int outwards = 0; outwards < 2; outwards++) {
             auto getNeighbors = [&](VertexID v) {
@@ -109,7 +137,7 @@ void TwoHopIndex::buildIndex()
                     const LabelSet& newLs = joinLabelSets(ls, ls2);
 
                     // Vertex has already been indexed (Rule 1)
-                    if (neighbor < source) 
+                    if (done[neighbor])
                         continue;
 
                     // Vertex already has a dominating entry for 'source'
