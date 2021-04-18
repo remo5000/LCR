@@ -81,7 +81,7 @@ bool TwoHopIndex::queryBackbone(
 bool TwoHopIndex::computeQuery(VertexID source, VertexID target, LabelSet ls)
 {
     if (source == target) return true;
-    if (ls == 0) return true;
+    if (ls == 0) return false;
 
     for (const Tuple& tuple : this->outIndex[source]) {
         const VertexID& outVertex = tuple.first;
