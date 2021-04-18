@@ -15,8 +15,8 @@ TwoHopIndex::TwoHopIndex(Graph* mg)
 	N = graph->getNumberOfVertices();
     indexType = IndexType::TwoHop;
 
-	inIndex.resize(N);
-	outIndex.resize(N);
+    inIndex.resize(N);
+    outIndex.resize(N);
 
     queryStart = 0.0;
     queryEndTime = 0.0;
@@ -100,14 +100,12 @@ void TwoHopIndex::buildIndex()
 				VertexID vertex;
 				LabelSet ls;
 				std::tie(vertex, ls) = q.front();
-				// cout << vertex << endl;
 				q.pop();
 
 				for (const auto& smallEdge : getNeighbors(vertex)) {
 					const VertexID& neighbor = smallEdge.first;
 					const LabelSet& ls2 = smallEdge.second;
 					const LabelSet& newLs = joinLabelSets(ls, ls2);
-					// cout << "    " << neighbor << endl;
 
 					// Vertex has already been indexed (Rule 1)
 					if (neighbor < source) 
@@ -128,17 +126,9 @@ void TwoHopIndex::buildIndex()
 						continue;
 					}
 					
-					if (source == 44 && outwards) {
-						cout << "44 -" << labelSetToLetters(newLs) << "-> " << neighbor << endl;
-					}
-					if (source == 1813 && !outwards) {
-						cout << "1813 <-" << labelSetToLetters(newLs) << "- " << neighbor << endl;
-					}
-
 					q.push(make_pair(neighbor, newLs));
 				}
 			}
-			// cout << source << endl;
 		}
 	}
 };
