@@ -100,9 +100,7 @@ bool TwoHopIndex::computeQuery(VertexID source, VertexID target, LabelSet ls)
         }
     }
 
-    int pos;
-    return findTupleInTuples(source, this->inIndex[target], pos)
-        && labelSetInLabelSets(ls, this->inIndex[target][pos].second);
+    return false;
 };
 
 bool TwoHopIndex::query(VertexID source, VertexID target, LabelSet ls)
