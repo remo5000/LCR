@@ -22,8 +22,7 @@
 // TODO fix all the .cc imports after migrating to waf 2.0.20+
 #include "../../Index/UnboundedLCR/BackboneIndex.cc"
 // #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
-
-#include "../../Index/UnboundedLCR/TwoHopIndex.cc"
+//#include "../../Index/UnboundedLCR/TwoHopIndex.cc"
 
 #include "../../Index/UnboundedLCR/Zou.cc"
 
@@ -332,17 +331,29 @@ int main(int argc, char *argv[]) {
         //     );
         // }
 
-        // Backbone(1SCD, LINOEXT)
+        // Backbone(1SCD, P2H)
         if (i == __COUNTER__) {
             index = new BackboneIndex(
                     graph.get(),
                     localDist,
                     BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
                     BackboneEdgeCreationMethod::BFS,
-                    BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS,
+                    BackboneIndexingMethod::TWOHOP,
                     LocalSearchMethod::UNIDIRECTIONAL_BFS
             );
         }
+
+        // // Backbone(1SCD, LINOEXT)
+        // if (i == __COUNTER__) {
+        //     index = new BackboneIndex(
+        //             graph.get(),
+        //             localDist,
+        //             BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
+        //             BackboneEdgeCreationMethod::BFS,
+        //             BackboneIndexingMethod::LANDMARK_NO_EXTENSIONS,
+        //             LocalSearchMethod::UNIDIRECTIONAL_BFS
+        //     );
+        // }
 
         // Backbone(1SCD, LIEXT)
         if (i == __COUNTER__) {
