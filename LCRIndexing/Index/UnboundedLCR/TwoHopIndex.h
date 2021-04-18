@@ -11,17 +11,17 @@ class TwoHopIndex : public Index
 {
     public:
 
-        TwoHopIndex(Graph* mg);
-        ~TwoHopIndex() = default;
+	TwoHopIndex(Graph* mg);
+	~TwoHopIndex() = default;
 
-        bool query(VertexID source, VertexID target, LabelSet ls);
-        void queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach);
-        unsigned long getIndexSizeInBytes();
+	bool query(VertexID source, VertexID target, LabelSet ls);
+	void queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach);
+	unsigned long getIndexSizeInBytes();
 
     private:
-        int visitedSetSize;
-        void buildIndex();
-        bool computeQuery(VertexID source, VertexID target, LabelSet ls);
+	int visitedSetSize;
+	void buildIndex();
+	bool computeQuery(VertexID source, VertexID target, LabelSet ls);
 
 	indexns::TuplesList inIndex;
 	indexns::TuplesList outIndex;
