@@ -34,7 +34,7 @@ def configure(ctx):
 
 def build(bld):
 
-  IndexList = ['BFSIndex', 'DoubleBFS', 'LandmarkedIndex', 'Zou', 'ClusteredExactIndex', 'BackboneIndex'];
+  IndexList = ['BFSIndex', 'DoubleBFS', 'LandmarkedIndex', 'Zou', 'ClusteredExactIndex', 'BackboneIndex', 'TwoHopIndex'];
 
   bld(features     = 'cxx cstaticlib',
       source       = ['Graph/DGraph.cc'],
@@ -72,6 +72,12 @@ def build(bld):
   bld(features     = 'cxx cstaticlib',
       source       = ['Index/UnboundedLCR/BackboneIndex.cc'],
       target       = 'BackboneIndex',
+      includes     = ['.'],
+      uselib_local = '')
+
+  bld(features     = 'cxx cstaticlib',
+      source       = ['Index/UnboundedLCR/TwoHopIndex.cc'],
+      target       = 'TwoHopIndex',
       includes     = ['.'],
       uselib_local = '')
 

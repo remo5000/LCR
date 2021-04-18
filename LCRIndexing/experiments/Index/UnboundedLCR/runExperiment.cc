@@ -23,6 +23,8 @@
 #include "../../Index/UnboundedLCR/BackboneIndex.cc"
 // #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
 
+#include "../../Index/UnboundedLCR/TwoHopIndex.cc"
+
 #include "../../Index/UnboundedLCR/Zou.cc"
 
 #include "../../Graph/DGraph.cc"
@@ -117,6 +119,7 @@ int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTime
         int query_times = trueSet.size();
         int i = 0;
 
+	int NUMBER_OF_RUNS = 5;
         for (auto p : trueSet)
         {
             VertexID from = p.first.first;
@@ -127,7 +130,6 @@ int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTime
             double avg = 0.0;
             vector< double > avgs;
 
-            int NUMBER_OF_RUNS = 5;
             for(int k = 0; k < NUMBER_OF_RUNS; k++)
             {
                 if( index->query(from, to, ls) == false )
@@ -165,7 +167,7 @@ int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTime
             double avg = 0.0;
             vector< double > avgs;
 
-            for(int k = 0; k < 5; k++)
+            for(int k = 0; k < NUMBER_OF_RUNS; k++)
             {
                 if( index->query(from, to, ls) == true )
                 {
@@ -266,6 +268,10 @@ int main(int argc, char *argv[]) {
 
         if( i == __COUNTER__ )
             index = new BFSIndex(graph.get());
+
+        // P2H
+        if( i == __COUNTER__ )
+            index = new TwoHopIndex(graph.get());
 
         // LI (no extensions)
         if( i == __COUNTER__ )
