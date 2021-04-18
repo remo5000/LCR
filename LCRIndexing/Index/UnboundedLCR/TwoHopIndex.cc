@@ -40,25 +40,26 @@ bool TwoHopIndex::computeQuery(VertexID source, VertexID target, LabelSet ls)
     if (source == target) return true;
     if (ls == 0) return true;
 
-    unordered_set<VertexID> out;
     for (const Tuple& tuple : this->outIndex[source]) {
         const VertexID& outVertex = tuple.first;
-        if (labelSetInLabelSets(ls, tuple.second)) {
-            if (outVertex == target) return true;
-            out.insert(outVertex);
-        }
-    }
 
-    for (const Tuple& tuple : this->inIndex[target]) {
-        const VertexID& inVertex = tuple.first;
-        if (
-                (out.count(inVertex) || inVertex == source) // either a 2hop or a single hop
-                && labelSetInLabelSets(ls, tuple.second)) { // label set is usable for the hop(s)
+        if (!labelSetInLabelSets(ls, tuple.second)
+            continue;
+
+        if (outVertex == target)
             return true;
+
+        int pos;
+        if (findTupleInTuples(outVertex, this->inIndex[target], pos)) {
+            Tuple& tuple = this->inIndex[target][pos];
+            if (labelSetInLabelSets(ls, tuple.second))
+                return true;
         }
     }
 
-    return false;
+    int pos;
+    return findTupleInTuples(source, this->inIndex[target], pos)
+        && labelSetInLabelSets(ls, this->inIndex[target][pos].second);
 };
 
 bool TwoHopIndex::query(VertexID source, VertexID target, LabelSet ls)
@@ -80,7 +81,7 @@ void TwoHopIndex::buildIndex()
         if (source % quorum == 0) {
             double perc = source;
             perc /= N;
-            perc /= 100;
+            perc *= 100;
             cout << "TwoHopIndex::buildIndex(): " << perc << "% done..." << endl;
         }
 

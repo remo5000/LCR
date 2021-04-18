@@ -7,6 +7,12 @@ using namespace graphns;
 #ifndef TWOHOPINDEX_H
 #define TWOHOPINDEX_H
 
+/**
+P2H Index, adapted from the paper, "Answering Billion-Scale Label-Constrained Reachability Queries within Microsecond".
+
+ACM Ref:
+You Peng, Ying Zhang, Xuemin Lin, Lu Qin, and Wenjie Zhang. 2020. Answering billion-scale label-constrained reachability queries within microsecond. Proc. VLDB Endow. 13, 6 (February 2020), 812–825. DOI:https://doi.org/10.14778/3380750.3380753
+*/
 class TwoHopIndex : public Index
 {
     public:
