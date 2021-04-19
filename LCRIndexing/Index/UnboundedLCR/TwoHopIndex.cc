@@ -36,10 +36,10 @@ unsigned long TwoHopIndex::getIndexSizeInBytes()
 };
 
 bool TwoHopIndex::computeQueryBackbone(
-		const vector<VertexID>& sources,
-		const vector<VertexID>& targets,
-		const dynamic_bitset<>& isInTargets,
-		const LabelSet& ls)
+    const vector<VertexID>& sources,
+    const vector<VertexID>& targets,
+    const dynamic_bitset<>& isInTargets,
+    const LabelSet& ls)
 {
     for (const VertexID& source : sources) {
         for (const Tuple& tuple : this->outIndex[source]) {
@@ -67,10 +67,10 @@ bool TwoHopIndex::computeQueryBackbone(
 };
 
 bool TwoHopIndex::queryBackbone(
-		const vector<VertexID>& sources,
-		const vector<VertexID>& targets,
-		const dynamic_bitset<>& isInTargets,
-		const LabelSet& ls)
+    const vector<VertexID>& sources,
+    const vector<VertexID>& targets,
+    const dynamic_bitset<>& isInTargets,
+    const LabelSet& ls)
 {
     queryStart = getCurrentTimeInMilliSec();
     bool b = this->computeQueryBackbone(sources, targets, isInTargets, ls);

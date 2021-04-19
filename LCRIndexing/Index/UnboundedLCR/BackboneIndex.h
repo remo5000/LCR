@@ -81,12 +81,12 @@ namespace backbonens {
             }
             inline SmallEdgeSet toSmallEdgeSet() const {
                 SmallEdgeSet ses;
-		for (const Tuple& tuple : tuples) {
-			for (const LabelSet& ls : tuple.second) {
-				ses.push_back(make_pair(tuple.first, ls));
-			}
-		}
-		return ses;
+                for (const Tuple& tuple : tuples) {
+                    for (const LabelSet& ls : tuple.second) {
+                        ses.push_back(make_pair(tuple.first, ls));
+                    }
+                }
+                return ses;
             }
         private:
             Tuples tuples;
@@ -357,27 +357,27 @@ namespace backbonens {
 }
 
 enum class BackboneVertexSelectionMethod {
-    LOCAL_MEETING_CRITERIA,
-    ONE_SIDE_CONDITION_DEGREE_ORDER,
-    ONE_SIDE_CONDITION_RANDOM_ORDER
+LOCAL_MEETING_CRITERIA,
+ONE_SIDE_CONDITION_DEGREE_ORDER,
+ONE_SIDE_CONDITION_RANDOM_ORDER
 };
 
 enum class BackboneEdgeCreationMethod {
-    BFS
+BFS
 };
 
 enum class BackboneIndexingMethod {
-    BFS,
-    TRANSITIVE_CLOSURE,
-    LANDMARK_NO_EXTENSIONS,
-    LANDMARK_ALL_EXTENSIONS,
-    LANDMARK_FULL,
-    TWOHOP,
+BFS,
+TRANSITIVE_CLOSURE,
+LANDMARK_NO_EXTENSIONS,
+LANDMARK_ALL_EXTENSIONS,
+LANDMARK_FULL,
+TWOHOP,
 };
 
 enum class LocalSearchMethod {
-    UNIDIRECTIONAL_BFS,
-    BIDIRECTIONAL_BFS
+UNIDIRECTIONAL_BFS,
+BIDIRECTIONAL_BFS
 };
 
 class BackboneIndex : public Index
@@ -425,7 +425,7 @@ class BackboneIndex : public Index
         unsigned int localSearchDistance;
         // The backbone vertices
         unordered_set<VertexID> backboneVertices;
-	dynamic_bitset<> isBackboneVertex;
+        dynamic_bitset<> isBackboneVertex;
         // The backbone itself
         // unique_ptr<const DGraph> backbone;
         unique_ptr<DGraph> backbone;
@@ -440,8 +440,8 @@ class BackboneIndex : public Index
         inline bool bfsLocally(VertexID source, VertexID target, LabelSet ls);
         inline bool queryBackbone(VertexID source, VertexID target, LabelSet ls);
         inline bool computeQuery(VertexID source, VertexID target, LabelSet ls);
-	inline void markTargetsForBackboneBfs(VertexID target, LabelSet ls);
-	dynamic_bitset<> bfsBackboneTargets;
+        inline void markTargetsForBackboneBfs(VertexID target, LabelSet ls);
+        dynamic_bitset<> bfsBackboneTargets;
 
         // -- Indexing method specific --
         // BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA
@@ -474,11 +474,11 @@ class BackboneIndex : public Index
         // -- Misc --
         // Speedup reachable backbone vertices discovery
         void cacheVertexToBackboneReachability();
-	inline queue<VertexID> accessBackboneOutQueue(VertexID source, LabelSet ls);
-	inline vector<VertexID> accessBackboneOut(VertexID source, LabelSet ls);
-	TuplesList backboneReachableOut;
-	inline unordered_set<VertexID> accessBackboneInSet(VertexID target, LabelSet ls);
-	inline vector<VertexID> accessBackboneIn(VertexID target, LabelSet ls);
-	TuplesList backboneReachableIn;
+        inline queue<VertexID> accessBackboneOutQueue(VertexID source, LabelSet ls);
+        inline vector<VertexID> accessBackboneOut(VertexID source, LabelSet ls);
+        TuplesList backboneReachableOut;
+        inline unordered_set<VertexID> accessBackboneInSet(VertexID target, LabelSet ls);
+        inline vector<VertexID> accessBackboneIn(VertexID target, LabelSet ls);
+        TuplesList backboneReachableIn;
 };
 #endif
