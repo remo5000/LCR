@@ -43,7 +43,8 @@ BackboneIndex::BackboneIndex(
     BackboneVertexSelectionMethod backboneVertexSelectionMethod,
     BackboneEdgeCreationMethod backboneEdgeCreationMethod,
     BackboneIndexingMethod backboneIndexingMethod,
-    LocalSearchMethod localSearchMethod
+    LocalSearchMethod localSearchMethod,
+	unsigned int previousBackboneVerticesSize
 ) {
     this->graph = mg;
     this->localSearchDistance = localSearchDistance;
@@ -64,6 +65,7 @@ BackboneIndex::BackboneIndex(
     this->backboneEdgeCreationMethod = backboneEdgeCreationMethod;
     this->backboneIndexingMethod = backboneIndexingMethod;
     this->localSearchMethod = localSearchMethod;
+	this->previousBackboneVerticesSize = previousBackboneVerticesSize;
 
     // Construct index
     this->didComplete = false;
@@ -92,6 +94,8 @@ BackboneIndex::BackboneIndex(
         this->name += "LANDMARK_ALL_EXTENSIONS";
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
         this->name += "LANDMARK_FULL";
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::BACKBONE) {
+        this->name += "BACKBONE";
     } else {
         this->name += "UNKNOWN";
     }
@@ -115,7 +119,9 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS) {
         size += this->backboneLi->getIndexSizeInBytes();
-    }
+	}  else if (this->backboneIndexingMethod == BackboneIndexingMethod::BACKBONE) {
+        size += this->backboneBackboneIndex->getIndexSizeInBytes();
+	}
 
     unsigned long beforeCache = size;
     for (const auto& p : this->backboneReachableOut) {
@@ -236,6 +242,43 @@ bool BackboneIndex::biDirectionalLocalBfs(VertexID source, VertexID target, Labe
         return false;
 };
 
+inline bool BackboneIndex::bfsLocallyMultiple(
+	const vector<VertexID>& sources, 
+	const unordered_set<VertexID>& targets, 
+	const dynamic_bitset<>& isInTargets,
+	const LabelSet ls
+	) {
+    if (this->localSearchMethod != LocalSearchMethod::UNIDIRECTIONAL_BFS) {
+        print("Unsupported localSearchMethod. Backtrace here to check how it happened.");
+        exit(1);
+    }
+
+	queue<VertexID> sourceOut;
+	for (const auto& source : sources)
+		sourceOut.push(source);
+
+	for (int round = 0; round < this->localSearchDistance+1; round++) {
+		for (int itemsInCurrentLevel = sourceOut.size(); itemsInCurrentLevel > 0; itemsInCurrentLevel--) {
+			VertexID vertex = sourceOut.front();
+			sourceOut.pop();
+
+			if (isInTargets[vertex]) return true;
+
+			for(const auto& p : this->graph->getOutNeighbours(vertex)) {
+				VertexID neighbor = p.first;
+				LabelSet ls2 = p.second;
+
+				if (!isLabelSubset(ls2, ls)) continue;
+				if (this->isBackboneVertex[neighbor]) continue;
+
+				sourceOut.push(neighbor);
+			}
+		}
+	}
+
+	return false;
+}
+
 inline bool BackboneIndex::bfsLocally(VertexID source, VertexID target, LabelSet ls) {
     if (this->localSearchMethod == LocalSearchMethod::UNIDIRECTIONAL_BFS) {
         return this->uniDirectionalLocalBfs(source, target, ls);
@@ -344,8 +387,11 @@ inline unordered_set<VertexID> BackboneIndex::accessBackboneInSet(VertexID targe
     return targets;
 }
 
-inline void BackboneIndex::markTargetsForBackboneBfs(VertexID target, LabelSet ls) {
+inline void BackboneIndex::clearTargetsForBackboneBfs() {
     bfsBackboneTargets = dynamic_bitset<>(this->backbone->getNumberOfVertices());
+}
+
+inline void BackboneIndex::markTargetsForBackboneBfs(VertexID target, LabelSet ls) {
 	if (backboneVertices.count(target)) {
 		bfsBackboneTargets[target] = 1;
 		return;
@@ -367,8 +413,79 @@ inline void BackboneIndex::markTargetsForBackboneBfs(VertexID target, LabelSet l
     }
 }
 
-inline bool BackboneIndex::queryBackbone(VertexID source, VertexID target, LabelSet ls) {
+inline bool BackboneIndex::computeInBackboneMultiple(
+	const vector<VertexID>& sources, 
+	const unordered_set<VertexID>& targets, 
+	const dynamic_bitset<>& isInTargets,
+	const LabelSet ls
+) {
 
+	clearTargetsForBackboneBfs();
+	for (const auto& target : targets)
+		markTargetsForBackboneBfs(target, ls);
+
+    if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
+		log("-- starting backbone BFS --:");
+
+		queue<VertexID> q;
+		for (const auto& source : sources)
+			for (const auto& v : accessBackboneOut(source, ls))
+				q.push(v);
+
+		dynamic_bitset<>& targets = this->bfsBackboneTargets;
+		dynamic_bitset<> marked = dynamic_bitset<>(this->backbone->getNumberOfVertices());
+
+		while (q.empty() == false) {
+			VertexID x = q.front();
+			q.pop();
+
+			if( targets[x] == 1) {
+				return true;
+			}
+
+			if( marked[x] == 1 )
+			{
+				continue;
+			}
+			marked[x] = 1;
+
+			for(const auto& se : this->backbone->getOutNeighbours(x)) {
+				if( isLabelSubset(se.second, ls) == true )
+				{
+					q.push( se.first );
+				}
+			}
+		}
+
+		return false;
+	} else if (this->backboneIndexingMethod == BackboneIndexingMethod::BACKBONE) {
+		vector<VertexID> outgoingBackboneQueue;
+		for (const auto& source : sources)
+			for (const auto& v : accessBackboneOut(source, ls))
+				outgoingBackboneQueue.push_back(v);
+
+		unordered_set<VertexID> incomingBackboneQueue;
+		dynamic_bitset<> isInIncomingBackboneQueue = dynamic_bitset<>(this->backbone->getNumberOfVertices());
+		for (const auto& target : targets)
+			for (const auto& v : accessBackboneIn(target, ls)) {
+				incomingBackboneQueue.insert(v);
+				isInIncomingBackboneQueue[v] = 1;
+			}
+
+		return this->backboneBackboneIndex->queryBackbone(
+				outgoingBackboneQueue, 
+				incomingBackboneQueue, 
+				isInIncomingBackboneQueue, 
+				ls);
+	} else {
+		print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
+		exit(1);
+    }
+}
+
+inline bool BackboneIndex::computeInBackbone(VertexID source, VertexID target, LabelSet ls) {
+
+	clearTargetsForBackboneBfs();
     markTargetsForBackboneBfs(target, ls);
 
     if (this->backboneIndexingMethod == BackboneIndexingMethod::BFS) {
@@ -417,7 +534,22 @@ inline bool BackboneIndex::queryBackbone(VertexID source, VertexID target, Label
 		vector<VertexID> sources = accessBackboneOut(source, ls);
 		unordered_set<VertexID> targets = accessBackboneInSet(target, ls);
 		return this->backboneLi->query(sources, targets, bfsBackboneTargets, ls);
-    } else {
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::BACKBONE) {
+		vector<VertexID> outgoingBackboneQueue = accessBackboneOut(source, ls);
+
+		unordered_set<VertexID> incomingBackboneQueue;
+		dynamic_bitset<> isInIncomingBackboneQueue = dynamic_bitset<>(this->graph->getNumberOfVertices());
+		for (auto x : accessBackboneIn(target, ls)) {
+			incomingBackboneQueue.insert(x);
+			isInIncomingBackboneQueue[x] = 1;
+		}
+
+		return this->backboneBackboneIndex->queryBackbone(
+				outgoingBackboneQueue, 
+				incomingBackboneQueue, 
+				isInIncomingBackboneQueue, 
+				ls);
+	} else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);
     }
@@ -436,7 +568,7 @@ inline bool BackboneIndex::computeQuery(VertexID source, VertexID target, LabelS
 
     if (this->bfsLocally(source, target, ls)) return true;
 
-    return this->queryBackbone(source, target, ls);
+    return this->computeInBackbone(source, target, ls);
 }
 
 bool BackboneIndex::query(VertexID source, VertexID target, LabelSet ls)
@@ -450,6 +582,29 @@ bool BackboneIndex::query(VertexID source, VertexID target, LabelSet ls)
     // cout << "BackboneIndex::query answer =" << b << endl;
     return b;
 }
+
+bool BackboneIndex::queryBackbone(
+	const vector<VertexID>& sources, 
+	const unordered_set<VertexID>& targets, 
+	const dynamic_bitset<>& isInTargets,
+	const LabelSet ls
+	) {
+
+    queryStart = getCurrentTimeInMilliSec();
+
+    if (ls == 0) return false;
+
+	bool b = false;
+	if (this->bfsLocallyMultiple(sources, targets, isInTargets, ls)) 
+		b = true;
+	else
+		b = this->computeInBackboneMultiple(sources, targets, isInTargets, ls);
+
+    queryEndTime = getCurrentTimeInMilliSec();
+    // cout << "BackboneIndex::queryBackbone answer =" << b << endl;
+    return b;
+};
+
 
 // For some reason this is blank for a lot of methods -- we shall leave it blank for now.
 void BackboneIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach)
@@ -950,7 +1105,31 @@ void BackboneIndex::indexBackbone() {
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), true, true, k, b));
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, this->backbone->getNumberOfVertices(), 0));
-    } else {
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::BACKBONE) {
+		// Base case
+		int maxAllowed = (this->previousBackboneVerticesSize*7)/10;
+		if (previousBackboneVerticesSize > 0 && this->backboneVertices.size() > maxAllowed) {
+			print("NOT Recursing");
+			this->backboneIndexingMethod = BackboneIndexingMethod::BFS;
+			this->indexBackbone();
+			return;
+		}
+
+		print("Recursing");
+		print(this->backboneVertices.size());
+		print(N);
+		print("---");
+        this->backboneBackboneIndex = unique_ptr<BackboneIndex>(
+				new BackboneIndex(
+					this->backbone.get(),
+					this->localSearchDistance,
+					this->backboneVertexSelectionMethod,
+					this->backboneEdgeCreationMethod,
+					BackboneIndexingMethod::BACKBONE,
+					this->localSearchMethod,
+					this->backboneVertices.size()
+					));
+	} else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);
     }
@@ -1108,7 +1287,7 @@ void BackboneIndex::buildIndex()
 
     print("Computing backbone edges");
     createBackboneEdges();
-    print("Computed backbone vertices. |E*|:");
+    print("Computed backbone edges. |E*|:");
     print(this->backbone->getNumberOfEdges());
     print("|E*|/|E| :");
     print((double)this->backbone->getNumberOfEdges() / (double)this->graph->getNumberOfEdges());

@@ -371,12 +371,14 @@ enum class BackboneIndexingMethod {
     LANDMARK_NO_EXTENSIONS,
     LANDMARK_ALL_EXTENSIONS,
     LANDMARK_FULL,
+    BACKBONE,
 };
 
 enum class LocalSearchMethod {
     UNIDIRECTIONAL_BFS,
     BIDIRECTIONAL_BFS
 };
+
 
 class BackboneIndex : public Index
 {
@@ -387,8 +389,25 @@ class BackboneIndex : public Index
             BackboneVertexSelectionMethod backboneVertexSelectionMethod,
             BackboneEdgeCreationMethod backboneEdgeCreationMethod,
             BackboneIndexingMethod backboneIndexingMethod,
-            LocalSearchMethod localSearchMethod
+            LocalSearchMethod localSearchMethod,
+            unsigned int previousBackboneVerticesSize
         );
+        BackboneIndex(
+            Graph* mg,
+            unsigned int localSearchDistance,
+            BackboneVertexSelectionMethod backboneVertexSelectionMethod,
+            BackboneEdgeCreationMethod backboneEdgeCreationMethod,
+            BackboneIndexingMethod backboneIndexingMethod,
+            LocalSearchMethod localSearchMethod
+        ): BackboneIndex(
+                mg,
+                localSearchDistance,
+                backboneVertexSelectionMethod,
+                backboneEdgeCreationMethod,
+                backboneIndexingMethod,
+                localSearchMethod,
+		(unsigned int) 0
+            ) {};
         BackboneIndex(Graph* mg, unsigned int localSearchDistance)
             : BackboneIndex(
                 mg,
@@ -436,10 +455,31 @@ class BackboneIndex : public Index
 
         // General querying
         inline bool bfsLocally(VertexID source, VertexID target, LabelSet ls);
-        inline bool queryBackbone(VertexID source, VertexID target, LabelSet ls);
+        inline bool computeInBackbone(VertexID source, VertexID target, LabelSet ls);
         inline bool computeQuery(VertexID source, VertexID target, LabelSet ls);
+	inline void clearTargetsForBackboneBfs();
 	inline void markTargetsForBackboneBfs(VertexID target, LabelSet ls);
 	dynamic_bitset<> bfsBackboneTargets;
+
+	// Recursive querying
+        bool queryBackbone(
+		const vector<VertexID>& sources, 
+		const unordered_set<VertexID>& targets, 
+		const dynamic_bitset<>& isInTargets,
+		const LabelSet ls
+		);
+	inline bool bfsLocallyMultiple(
+		const vector<VertexID>& sources, 
+		const unordered_set<VertexID>& targets, 
+		const dynamic_bitset<>& isInTargets,
+		const LabelSet ls
+		);
+	inline bool computeInBackboneMultiple(
+		const vector<VertexID>& sources, 
+		const unordered_set<VertexID>& targets, 
+		const dynamic_bitset<>& isInTargets,
+		const LabelSet ls
+		);
 
         // -- Indexing method specific --
         // BackboneVertexSelectionMethod::LOCAL_MEETING_CRITERIA
@@ -461,6 +501,9 @@ class BackboneIndex : public Index
         backbonens::LabelledDistancedReachabilityMap backboneTransitiveClosure;
         // BackboneIndexingMethod::LANDMARK_*
         unique_ptr<LandmarkedIndex> backboneLi;
+        // BackboneIndexingMethod::BACKBONE
+	unique_ptr<BackboneIndex> backboneBackboneIndex;
+	unsigned int previousBackboneVerticesSize;
 
         // LocalSearchMethod::UNIDIRECTIONAL_BFS
         inline bool uniDirectionalLocalBfs(VertexID source, VertexID target, LabelSet ls);
