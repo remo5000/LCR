@@ -35,10 +35,53 @@ unsigned long TwoHopIndex::getIndexSizeInBytes()
     return getIndexSizeInBytesM();
 };
 
+bool TwoHopIndex::computeQueryBackbone(
+		const vector<VertexID>& sources,
+		const vector<VertexID>& targets,
+		const dynamic_bitset<>& isInTargets,
+		const LabelSet& ls)
+{
+    for (const VertexID& source : sources) {
+        for (const Tuple& tuple : this->outIndex[source]) {
+            const VertexID& outVertex = tuple.first;
+
+            if (!labelSetInLabelSets(ls, tuple.second))
+                continue;
+
+            if (isInTargets[outVertex])
+                return true;
+
+            for (const VertexID& target : targets) {
+                int pos;
+                if (findTupleInTuples(outVertex, this->inIndex[target], pos)) {
+                    Tuple& tuple = this->inIndex[target][pos];
+                    if (labelSetInLabelSets(ls, tuple.second))
+                        return true;
+                }
+            }
+
+        }
+    }
+
+    return false;
+};
+
+bool TwoHopIndex::queryBackbone(
+		const vector<VertexID>& sources,
+		const vector<VertexID>& targets,
+		const dynamic_bitset<>& isInTargets,
+		const LabelSet& ls)
+{
+    queryStart = getCurrentTimeInMilliSec();
+    bool b = this->computeQueryBackbone(sources, targets, isInTargets, ls);
+    queryEndTime = getCurrentTimeInMilliSec();
+    return b;
+};
+
 bool TwoHopIndex::computeQuery(VertexID source, VertexID target, LabelSet ls)
 {
     if (source == target) return true;
-    if (ls == 0) return true;
+    if (ls == 0) return false;
 
     for (const Tuple& tuple : this->outIndex[source]) {
         const VertexID& outVertex = tuple.first;
@@ -57,9 +100,7 @@ bool TwoHopIndex::computeQuery(VertexID source, VertexID target, LabelSet ls)
         }
     }
 
-    int pos;
-    return findTupleInTuples(source, this->inIndex[target], pos)
-        && labelSetInLabelSets(ls, this->inIndex[target][pos].second);
+    return false;
 };
 
 bool TwoHopIndex::query(VertexID source, VertexID target, LabelSet ls)
@@ -74,24 +115,55 @@ void TwoHopIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canRe
 {
 };
 
+vector<VertexID> getVerticesInDegreeOrder(Graph* graph)
+{
+    // Use degree ordering for vertices
+    struct sort_pred
+    {
+        bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right)
+        {
+            return left.second > right.second;
+        }
+    };
+    vector< pair< VertexID, int > > degreePerNode;
+    for (VertexID i = 0; i < graph->getNumberOfVertices(); i++)
+        degreePerNode.push_back(
+            make_pair(
+                i,
+                // Use product of inDeg and outDeg
+                graph->getOutNeighbours(i).size() *  graph->getInNeighbours(i).size()
+            )
+        );
+    sort(degreePerNode.begin(), degreePerNode.end(), sort_pred());
+
+    vector<VertexID> result;
+    for (const auto& p : degreePerNode) result.push_back(p.first);
+    return result;
+};
+
+
 void TwoHopIndex::buildIndex()
 {
-    int quorum = N/100;
-    for (VertexID source = 0; source < this->N; source++) {
-        if (source % quorum == 0) {
-            double perc = source;
-            perc /= N;
-            perc *= 100;
-            cout << "TwoHopIndex::buildIndex(): " << perc << "% done..." << endl;
-        }
+
+    // Keep track of already-processed vertices
+    dynamic_bitset<> done = dynamic_bitset<>(N);
+
+    vector<VertexID> vertices = getVerticesInDegreeOrder(this->graph);
+    for (int i = 0; i < vertices.size(); i++) {
+        const VertexID& source = vertices[i];
+
+        double perc = i;
+        perc /= N;
+        perc *= 100;
+        cout << "TwoHopIndex::buildIndex(): " << perc << "% done..." << endl;
 
         for (int outwards = 0; outwards < 2; outwards++) {
             auto getNeighbors = [&](VertexID v) {
-                return outwards 
-                    ? this->graph->getOutNeighbours(v) 
+                return outwards
+                    ? this->graph->getOutNeighbours(v)
                     : this->graph->getInNeighbours(v);
             };
-            TuplesList& tuplesList =  outwards 
+            TuplesList& tuplesList =  outwards
                 ? this->inIndex
                 : this->outIndex;
 
@@ -103,16 +175,17 @@ void TwoHopIndex::buildIndex()
                 std::tie(vertex, ls) = q.front();
                 q.pop();
 
+
+                // Vertex has already been indexed (Rule 1)
+                if (done[vertex])
+                    continue;
+
                 for (const auto& smallEdge : getNeighbors(vertex)) {
                     const VertexID& neighbor = smallEdge.first;
                     const LabelSet& ls2 = smallEdge.second;
                     const LabelSet& newLs = joinLabelSets(ls, ls2);
 
-                    // Vertex has already been indexed (Rule 1)
-                    if (neighbor < source) 
-                        continue;
-
-                    // Vertex already has a dominating entry for 'source'
+                    // Vertex already has a dominating entry for 'source' (Rule 2 and 3)
                     Tuples& tuples = tuplesList[neighbor];
                     int pos;
                     if (!findTupleInTuples(source, tuples, pos)) {
@@ -131,5 +204,7 @@ void TwoHopIndex::buildIndex()
                 }
             }
         }
+
+        done[source] = 1;
     }
 };

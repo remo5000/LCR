@@ -92,6 +92,8 @@ BackboneIndex::BackboneIndex(
         this->name += "LANDMARK_ALL_EXTENSIONS";
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
         this->name += "LANDMARK_FULL";
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TWOHOP) {
+        this->name += "TWOHOP";
     } else {
         this->name += "UNKNOWN";
     }
@@ -115,7 +117,9 @@ unsigned long BackboneIndex::getIndexSizeInBytes()
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL
             || this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_ALL_EXTENSIONS) {
         size += this->backboneLi->getIndexSizeInBytes();
-    }
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TWOHOP) {
+        size += this->backboneTwoHopIndex->getIndexSizeInBytes();
+	}
 
     unsigned long beforeCache = size;
     for (const auto& p : this->backboneReachableOut) {
@@ -417,6 +421,10 @@ inline bool BackboneIndex::queryBackbone(VertexID source, VertexID target, Label
 		vector<VertexID> sources = accessBackboneOut(source, ls);
 		unordered_set<VertexID> targets = accessBackboneInSet(target, ls);
 		return this->backboneLi->query(sources, targets, bfsBackboneTargets, ls);
+	} else if (this->backboneIndexingMethod == BackboneIndexingMethod::TWOHOP) {
+		vector<VertexID> sources = accessBackboneOut(source, ls);
+		vector<VertexID> targets = accessBackboneIn(target, ls);
+		this->backboneTwoHopIndex->queryBackbone(sources, targets, bfsBackboneTargets, ls);
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);
@@ -950,6 +958,8 @@ void BackboneIndex::indexBackbone() {
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), true, true, k, b));
     } else if (this->backboneIndexingMethod == BackboneIndexingMethod::LANDMARK_FULL) {
         this->backboneLi = unique_ptr<LandmarkedIndex>(new LandmarkedIndex(this->backbone.get(), false, false, this->backbone->getNumberOfVertices(), 0));
+    } else if (this->backboneIndexingMethod == BackboneIndexingMethod::TWOHOP) {
+        this->backboneTwoHopIndex = unique_ptr<TwoHopIndex>(new TwoHopIndex(this->backbone.get()));
     } else {
         print("Unsupported backboneIndexingMethod. Backtrace here to check how it happened.");
         exit(1);

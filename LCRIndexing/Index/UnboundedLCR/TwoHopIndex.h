@@ -21,6 +21,11 @@ class TwoHopIndex : public Index
 	~TwoHopIndex() = default;
 
 	bool query(VertexID source, VertexID target, LabelSet ls);
+	bool queryBackbone(
+		const vector<VertexID>& sources,
+		const vector<VertexID>& targets,
+		const dynamic_bitset<>& isInTargets,
+		const LabelSet& ls);
 	void queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canReach);
 	unsigned long getIndexSizeInBytes();
 
@@ -28,6 +33,11 @@ class TwoHopIndex : public Index
 	int visitedSetSize;
 	void buildIndex();
 	bool computeQuery(VertexID source, VertexID target, LabelSet ls);
+	bool computeQueryBackbone(
+		const vector<VertexID>& sources,
+		const vector<VertexID>& targets,
+		const dynamic_bitset<>& isInTargets,
+		const LabelSet& ls);
 
 	indexns::TuplesList inIndex;
 	indexns::TuplesList outIndex;
