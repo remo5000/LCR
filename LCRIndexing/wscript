@@ -41,7 +41,7 @@ def configure(ctx):
 
 def build(bld):
 
-  IndexList = ['BFSIndex', 'DoubleBFS', 'LandmarkedIndex', 'Zou', 'ClusteredExactIndex', 'BackboneIndex', 'TwoHopIndex'];
+  IndexList = ['BFSIndex', 'LandmarkedIndex', 'BackboneIndex', 'TwoHopIndex'];
 
   bld(features     = 'cxx cxxshlib',
       source       = ['Graph/DGraph.cc'],
@@ -60,21 +60,10 @@ def build(bld):
       includes     = ['.'])
 
   bld(features     = 'cxx cxxshlib',
-      source       = ['Index/UnboundedLCR/DoubleBFS.cc'],
-      target       = 'DoubleBFS',
-      includes     = ['.'],
-      use = '')
-
-  bld(features     = 'cxx cxxshlib',
       source       = ['Index/UnboundedLCR/LandmarkedIndex.cc'],
       target       = 'LandmarkedIndex',
       includes     = ['.'])
 
-  bld(features     = 'cxx cxxshlib',
-      source       = ['Index/UnboundedLCR/Zou.cc'],
-      target       = 'Zou',
-      includes     = ['.'],
-      use = ['DGraph'])
 
   bld(features     = 'cxx cxxshlib',
       source       = ['Index/UnboundedLCR/BackboneIndex.cc'],
@@ -87,24 +76,6 @@ def build(bld):
       target       = 'TwoHopIndex',
       includes     = ['.'],
       use = '')
-
-  bld(features     = 'cxx cxxshlib',
-      source       = ['Index/UnboundedLCR/NeighbourExchange.cc'],
-      target       = 'NeighbourExchange',
-      includes     = ['.'],
-      use = '')
-
-  bld(features     = 'cxx cxxshlib',
-      source       = ['Index/UnboundedLCR/PartialIndex.cc'],
-      target       = 'Partial',
-      includes     = ['.'],
-      use = '')
-
-  bld(features     = 'cxx cxxshlib',
-      source       = ['Index/UnboundedLCR/ClusteredExactIndex.cc'],
-      target       = 'ClusteredExactIndex',
-      includes     = ['.'],
-      use = ['DGraph', 'DoubleBFS'])
 
   bld(features     = 'cxx cprogram',
       source       = ['experiments/genStats.cc'],
@@ -143,44 +114,13 @@ def build(bld):
       use = ['LandmarkedIndex'])
 
   bld(features     = 'cxx cprogram',
-      source       = ['tests/Index/UnboundedLCR/DoubleBFSTest.cc'],
-      target       = 'DoubleBFSTest',
-      includes     = ['.'],
-      use = ['LandmarkedIndex'])
-
-  bld(features     = 'cxx cprogram',
       source       = ['tests/Index/UnboundedLCR/BFSTest.cc'],
       target       = 'BFSTest',
       includes     = ['.'],
       use = ['LandmarkedIndex'])
 
   bld(features     = 'cxx cprogram',
-      source       = ['tests/Index/UnboundedLCR/ZouTest.cc'],
-      target       = 'ZouTest',
-      includes     = ['.'],
-      use = ['Zou'])
-
-  bld(features     = 'cxx cprogram',
       source       = ['tests/Index/UnboundedLCR/BackboneIndexTest.cc'],
       target       = 'BackboneIndexTest',
       includes     = ['.'],
       use = ['BackboneIndex'])
-
-  bld(features     = 'cxx cxxshlib',
-      source       = ['Index/UnboundedLCR/WD/LandmarkedIndexWD.cc'],
-      target       = 'LandmarkedIndexWD',
-      includes     = ['.']
-      )
-
-  bld(features     = 'cxx cprogram',
-      source       = ['tests/Index/UnboundedLCR/WD/LandmarkedIndexWDTest.cc'],
-      target       = 'LandmarkedIndexWDTest',
-      includes     = ['.'],
-      use = ['LandmarkedIndexWD']
-      )
-
-  bld(features     = 'cxx cprogram',
-      source       = ['experiments/Index/UnboundedLCR/runWDExperiment.cc'],
-      target       = 'runWDExperiment',
-      includes     = ['.'],
-      use = ['LandmarkedIndex', 'LandmarkedIndexWD'] )
