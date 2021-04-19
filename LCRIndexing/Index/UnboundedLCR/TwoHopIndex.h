@@ -1,4 +1,4 @@
-#include "../../Graph/Graph.h"
+#include "Graph/Graph.h"
 #include "Index.h"
 
 using namespace indexns;

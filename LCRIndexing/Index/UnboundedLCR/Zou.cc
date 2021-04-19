@@ -1,4 +1,5 @@
 #include "Zou.h"
+#include "Graph/DGraph.h"
 
 #include <queue>
 #include <iostream>
