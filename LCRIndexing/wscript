@@ -4,8 +4,8 @@ APPNAME = 'lcr'
 srcdir = '.'
 blddir = 'build'
 
-def set_options(ctx):
-  ctx.tool_options('compiler_cxx')
+def options(opt):
+    opt.load('compiler_cxx')
 
 def configure(ctx):
 
@@ -16,7 +16,7 @@ def configure(ctx):
   # ctx.env.append_value('LSAN_OPTIONS', ['verbosity=1:log_threads=1'])
 
   ctx.env.CXX = "/usr/bin/g++" # default compiler
-  ctx.check_tool('compiler_cxx')
+  ctx.load('compiler_cxx')
 
   # Use openMP
   ctx.env.CXXFLAGS += ["-I/usr/local/include/"]
