@@ -43,7 +43,7 @@ def build(bld):
 
   IndexList = ['BFSIndex', 'DoubleBFS', 'LandmarkedIndex', 'Zou', 'ClusteredExactIndex', 'BackboneIndex', 'TwoHopIndex'];
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Graph/DGraph.cc'],
       target       = 'DGraph',
       includes     = ['.'])
@@ -54,53 +54,53 @@ def build(bld):
       includes     = ['.'],
       uselib_local = ['DGraph'])
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/BFSIndex.cc'],
       target       = 'BFSIndex',
       includes     = ['.'])
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/DoubleBFS.cc'],
       target       = 'DoubleBFS',
       includes     = ['.'],
       uselib_local = '')
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/LandmarkedIndex.cc'],
       target       = 'LandmarkedIndex',
       includes     = ['.'])
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/Zou.cc'],
       target       = 'Zou',
       includes     = ['.'],
       uselib_local = '')
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/BackboneIndex.cc'],
       target       = 'BackboneIndex',
       includes     = ['.'],
       uselib_local = '')
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/TwoHopIndex.cc'],
       target       = 'TwoHopIndex',
       includes     = ['.'],
       uselib_local = '')
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/NeighbourExchange.cc'],
       target       = 'NeighbourExchange',
       includes     = ['.'],
       uselib_local = '')
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/PartialIndex.cc'],
       target       = 'Partial',
       includes     = ['.'],
       uselib_local = '')
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/ClusteredExactIndex.cc'],
       target       = 'ClusteredExactIndex',
       includes     = ['.'],
@@ -166,7 +166,7 @@ def build(bld):
       includes     = ['.'],
       uselib_local = ['BackboneIndex'])
 
-  bld(features     = 'cxx cstaticlib',
+  bld(features     = 'cxx cxxstlib',
       source       = ['Index/UnboundedLCR/WD/LandmarkedIndexWD.cc'],
       target       = 'LandmarkedIndexWD',
       includes     = ['.']
