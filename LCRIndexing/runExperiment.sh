@@ -28,7 +28,7 @@ set -x
 # /tmp and /temp are on local FS -- prevents I/O from being a bottleneck
 TMP=$(mktemp)
 echo "start time: $TIME" >> $TMP
-./build/default/runExperiment ${EDGE_FILE} ${NUM_TESTS} ${CSV_FILE} ${NUM_METHODS} >> ${TMP}
+./build/runExperiment ${EDGE_FILE} ${NUM_TESTS} ${CSV_FILE} ${NUM_METHODS} | tee -a ${TMP}
 cp ${TMP} ${OUT_FILE}
 rm $TMP
 END_TIME=$(date +%m-%d-%y-%R:%S)
