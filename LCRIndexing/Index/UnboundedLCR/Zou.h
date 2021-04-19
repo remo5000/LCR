@@ -1,5 +1,4 @@
 #include "Index.h"
-#include "../../Graph/DGraph.h"
 #include <memory>
 
 #include <boost/dynamic_bitset.hpp>

@@ -1,8 +1,8 @@
-#include "../../Graph/Graph.h"
-#include "../../Graph/DGraph.h"
-#include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
-#include "../../Index/UnboundedLCR/TwoHopIndex.cc"
+#include "Graph/Graph.h"
+#include "Graph/DGraph.h"
 #include "Index.h"
+#include "Index/UnboundedLCR/LandmarkedIndex.h"
+#include "Index/UnboundedLCR/TwoHopIndex.h"
 
 #include <set>
 #include <unordered_set>

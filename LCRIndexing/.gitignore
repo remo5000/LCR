@@ -1,4 +1,4 @@
-.lock-wscript
-.waf-*
+.lock-waf*
+.waf3-*
 build/
 experiments/graphs/real/scripts/

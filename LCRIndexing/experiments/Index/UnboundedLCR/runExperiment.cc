@@ -15,18 +15,13 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#include "../../Index/UnboundedLCR/Index.h"
-
-#include "../../Index/UnboundedLCR/BFSIndex.cc"
-
-// TODO fix all the .cc imports after migrating to waf 2.0.20+
-#include "../../Index/UnboundedLCR/BackboneIndex.cc"
-// #include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
-//#include "../../Index/UnboundedLCR/TwoHopIndex.cc"
-
-#include "../../Index/UnboundedLCR/Zou.cc"
-
-#include "../../Graph/DGraph.cc"
+#include "Graph/DGraph.h"
+#include "Index/UnboundedLCR/Index.h"
+#include "Index/UnboundedLCR/BFSIndex.h"
+#include "Index/UnboundedLCR/BackboneIndex.h"
+#include "Index/UnboundedLCR/LandmarkedIndex.h"
+#include "Index/UnboundedLCR/TwoHopIndex.h"
+#include "Index/UnboundedLCR/Zou.h"
 
 using namespace std;
 using namespace indexns;
@@ -332,17 +327,17 @@ int main(int argc, char *argv[]) {
         //     );
         // }
 
-        // Backbone(1SCD, P2H)
-        if (i == __COUNTER__) {
-            index = new BackboneIndex(
-                    graph.get(),
-                    localDist,
-                    BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
-                    BackboneEdgeCreationMethod::BFS,
-                    BackboneIndexingMethod::TWOHOP,
-                    LocalSearchMethod::UNIDIRECTIONAL_BFS
-            );
-        }
+        // // Backbone(1SCD, P2H)
+        // if (i == __COUNTER__) {
+        //     index = new BackboneIndex(
+        //             graph.get(),
+        //             localDist,
+        //             BackboneVertexSelectionMethod::ONE_SIDE_CONDITION_DEGREE_ORDER,
+        //             BackboneEdgeCreationMethod::BFS,
+        //             BackboneIndexingMethod::TWOHOP,
+        //             LocalSearchMethod::UNIDIRECTIONAL_BFS
+        //     );
+        // }
 
         // // Backbone(1SCD, LINOEXT)
         // if (i == __COUNTER__) {

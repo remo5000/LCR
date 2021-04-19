@@ -15,10 +15,10 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#include "../../Index/UnboundedLCR/Index.h"
-#include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
-#include "../../Graph/DGraph.cc"
+#include "Index/UnboundedLCR/Index.h"
+#include "Index/UnboundedLCR/BFSIndex.cc"
+#include "Index/UnboundedLCR/LandmarkedIndex.cc"
+#include "Graph/DGraph.cc"
 
 using namespace std;
 using namespace indexns;

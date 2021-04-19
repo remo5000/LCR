@@ -24,8 +24,8 @@ as a string or insert a LabelSet into a set of LabelSets.
 #ifndef INDEX_H
 #define INDEX_H
 
-#include "../../Graph/Graph.h"
-//#include "../Index/ClusteredExactIndex.h
+#include "Graph/Graph.h"
+//#include "Index/ClusteredExactIndex.h
 
 #include <cstdlib>
 #include <sstream>

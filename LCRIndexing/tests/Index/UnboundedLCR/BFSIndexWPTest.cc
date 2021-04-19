@@ -1,8 +1,8 @@
-#include "../../../Graph/Graph.h"
-#include "../../../Graph/DGraph.cc"
-#include "../../../Index/UnboundedLCR/IndexWP.h"
-#include "../../../Index/UnboundedLCR/BFSIndexWP.cc"
-#include "../../../Index/UnboundedLCR/BFSIndex.cc"
+#include "Graph/Graph.h"
+#include "Graph/DGraph.cc"
+#include "Index/UnboundedLCR/IndexWP.h"
+#include "Index/UnboundedLCR/BFSIndexWP.cc"
+#include "Index/UnboundedLCR/BFSIndex.cc"
 
 using namespace graphns;
 using namespace indexwpns;

@@ -1,5 +1,5 @@
-#include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Graph/DGraph.cc"
+#include "Index/UnboundedLCR/BFSIndex.cc"
+#include "Graph/DGraph.cc"
 
 #include <iostream>
 #include <random>
