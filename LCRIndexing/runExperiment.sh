@@ -1,4 +1,5 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
+
 
 EDGE_FILE=$1
 NUM_TESTS="${2:-3}"
