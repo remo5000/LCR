@@ -21,7 +21,6 @@
 #include "Index/UnboundedLCR/BackboneIndex.h"
 #include "Index/UnboundedLCR/LandmarkedIndex.h"
 #include "Index/UnboundedLCR/TwoHopIndex.h"
-#include "Index/UnboundedLCR/Zou.h"
 
 using namespace std;
 using namespace indexns;
@@ -362,13 +361,6 @@ int main(int argc, char *argv[]) {
                     LocalSearchMethod::UNIDIRECTIONAL_BFS
             );
         }
-
-        // // Zou
-        // if( i == __COUNTER__ )
-        // {
-        //     index = new Zou(graph);
-        // }
-
 
         if( index->didCompleteBuilding() == true )
         {
