@@ -1,5 +1,5 @@
-#include "../../Index/UnboundedLCR/BackboneIndex.cc"
-#include "../../Graph/DGraph.cc"
+#include "Index/UnboundedLCR/BackboneIndex.cc"
+#include "Graph/DGraph.cc"
 
 #include <string>
 

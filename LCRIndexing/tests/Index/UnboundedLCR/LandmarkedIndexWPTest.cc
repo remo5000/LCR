@@ -1,5 +1,5 @@
-#include "../../Index/UnboundedLCR/LandmarkedIndexWP.cc"
-#include "../../Graph/DGraph.cc"
+#include "Index/UnboundedLCR/LandmarkedIndexWP.cc"
+#include "Graph/DGraph.cc"
 
 void test(bool a, int& t)
 {

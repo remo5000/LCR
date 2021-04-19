@@ -1,6 +1,6 @@
-#include "../../Index/UnboundedLCR/LandmarkedIndex.cc"
-#include "../../Index/UnboundedLCR/BFSIndex.cc"
-#include "../../Graph/DGraph.cc"
+#include "Index/UnboundedLCR/LandmarkedIndex.cc"
+#include "Index/UnboundedLCR/BFSIndex.cc"
+#include "Graph/DGraph.cc"
 
 #include <string>
 

@@ -1,5 +1,5 @@
-#include "../../Index/UnboundedLCR/WD/LandmarkedIndexWD.cc"
-#include "../../Graph/DGraph.cc"
+#include "Index/UnboundedLCR/WD/LandmarkedIndexWD.cc"
+#include "Graph/DGraph.cc"
 
 #include <string>
 
