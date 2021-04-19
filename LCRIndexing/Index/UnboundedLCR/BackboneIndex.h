@@ -398,6 +398,7 @@ class BackboneIndex : public Index
                 BackboneIndexingMethod::BFS,
                 LocalSearchMethod::UNIDIRECTIONAL_BFS
             ) {};
+        ~BackboneIndex() = default;
 
         // To implement Index
         bool query(VertexID source, VertexID target, LabelSet ls);

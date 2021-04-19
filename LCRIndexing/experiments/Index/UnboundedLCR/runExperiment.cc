@@ -180,12 +180,12 @@ int runTestsPerIndex(Index* index, vector< vector< vector<double> > >& queryTime
             }
 
             sort( avgs.begin(), avgs.end() );
-            for(int k = 0; k < 3; k++)
+            for(int k = 0; k < NUMBER_OF_RUNS; k++)
             {
                 avg += avgs[k];
             }
 
-            avg /= 3;
+            avg /= NUMBER_OF_RUNS;
             cout << "*Query " << i << ": (" << from << "," << to << "," << labelSetToString(ls) << ", false), avg=" << print_digits(avg,11) << endl;
             i++;
 
