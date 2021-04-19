@@ -43,7 +43,7 @@ bool TwoHopIndex::computeQuery(VertexID source, VertexID target, LabelSet ls)
     for (const Tuple& tuple : this->outIndex[source]) {
         const VertexID& outVertex = tuple.first;
 
-        if (!labelSetInLabelSets(ls, tuple.second)
+        if (!labelSetInLabelSets(ls, tuple.second))
             continue;
 
         if (outVertex == target)

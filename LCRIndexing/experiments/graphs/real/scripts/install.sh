@@ -89,7 +89,8 @@ python3 generateSyntheticLabels.py soc-pokec-relationships.edge
 mv soc-pokec-relationships.edge ../
 
 # robots
-wget http://tinyurl.com/gnexfoy -o robots_net-graph-2014-07-07.dot
+wget http://tinyurl.com/gnexfoy
+mv gnexfoy robots_net-graph-2014-07-07.dot
 # See robots.py on what to run in order to prepare the file for parsing.
 # Then, run 
 # python3 robots.py
