@@ -115,7 +115,7 @@ void TwoHopIndex::queryAll(VertexID source, LabelSet ls, dynamic_bitset<>& canRe
 {
 };
 
-void TwoHopIndex::buildIndex()
+vector<VertexID> getVerticesInDegreeOrder(Graph* graph)
 {
     // Use degree ordering for vertices
     struct sort_pred
@@ -126,22 +126,31 @@ void TwoHopIndex::buildIndex()
         }
     };
     vector< pair< VertexID, int > > degreePerNode;
-    for (VertexID i = 0; i < N; i++)
+    for (VertexID i = 0; i < graph->getNumberOfVertices(); i++)
         degreePerNode.push_back(
             make_pair(
                 i,
                 // Use product of inDeg and outDeg
-                this->graph->getOutNeighbours(i).size() *  this->graph->getInNeighbours(i).size()
+                graph->getOutNeighbours(i).size() *  graph->getInNeighbours(i).size()
             )
         );
     sort(degreePerNode.begin(), degreePerNode.end(), sort_pred());
 
+    vector<VertexID> result;
+    for (const auto& p : degreePerNode) result.push_back(p.first);
+    return result;
+};
+
+
+void TwoHopIndex::buildIndex()
+{
+
     // Keep track of already-processed vertices
     dynamic_bitset<> done = dynamic_bitset<>(N);
 
-    for (int i = 0; i < degreePerNode.size(); i++) {
-    // for (const auto& p : degreePerNode) {
-        const VertexID& source = degreePerNode[i].first;
+    vector<VertexID> vertices = getVerticesInDegreeOrder(this->graph);
+    for (int i = 0; i < vertices.size(); i++) {
+        const VertexID& source = vertices[i];
 
         double perc = i;
         perc /= N;
@@ -176,7 +185,7 @@ void TwoHopIndex::buildIndex()
                     const LabelSet& ls2 = smallEdge.second;
                     const LabelSet& newLs = joinLabelSets(ls, ls2);
 
-                    // Vertex already has a dominating entry for 'source'
+                    // Vertex already has a dominating entry for 'source' (Rule 2 and 3)
                     Tuples& tuples = tuplesList[neighbor];
                     int pos;
                     if (!findTupleInTuples(source, tuples, pos)) {
