@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 
 import sys, random, math, snap;
 from snap import *;
@@ -11,7 +11,7 @@ def exitMain():
     sys.exit(1);
 
 if(len(sys.argv) < 6):
-    print("usage python2.7 " + sys.argv[0] + " |V| <avg. degree per node> |L| {uni|norm|exp} {pa|ff|pl|er}");
+    print("usage python3 " + sys.argv[0] + " |V| <avg. degree per node> |L| {uni|norm|exp} {pa|ff|pl|er}");
     exitMain();
 
 try:
